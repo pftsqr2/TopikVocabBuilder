@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TOPIK I 단어장</title>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sw:275px;--hh:54px;
+  --bg:#faf7f2;--surf:#fff;--surf2:#fff8ed;--surf3:#fdf5ec;
+  --brd:#e8ddd0;--brd2:#f0e8dc;
+  --tx:#2d1f0f;--tx2:#7c6a58;--tx3:#b0998a;
+  --a:#c2773a;--ad:#7c3d12;--al:#fef3c7;--am:#fde68a;
+  --l1:#16a34a;--l1bg:#f0fdf4;--l1bd:#bbf7d0;
+  --l2:#d97706;--l2bg:#fffbeb;--l2bd:#fde68a;
+  --l3:#dc2626;--l3bg:#fff1f2;--l3bd:#fecaca;
+  --shad:rgba(160,110,60,.10);--shad2:rgba(160,110,60,.18)}
+body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:var(--bg);color:var(--tx);min-height:100vh}
+
+/* ── Auth Modal ── */
+#auth-overlay{position:fixed;inset:0;background:rgba(50,20,5,.6);z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:16px}
+#auth-box{background:var(--surf);border-radius:20px;width:100%;max-width:360px;
+  padding:32px 28px;box-shadow:0 12px 50px rgba(100,40,5,.25);
+  border:1.5px solid var(--brd)}
+.auth-logo{text-align:center;font-size:2rem;margin-bottom:4px}
+.auth-title{text-align:center;font-size:1.05rem;font-weight:800;color:var(--tx);margin-bottom:4px}
+.auth-sub{text-align:center;font-size:.78rem;color:var(--tx3);margin-bottom:22px}
+.auth-tabs{display:flex;background:var(--surf3);border-radius:10px;padding:3px;
+  margin-bottom:20px;gap:3px}
+.atab{flex:1;padding:7px;border-radius:8px;border:none;cursor:pointer;
+  font-size:.83rem;font-weight:700;background:transparent;color:var(--tx2);transition:.15s}
+.atab.active{background:var(--surf);color:var(--tx);
+  box-shadow:0 1px 4px var(--shad)}
+.ainput{width:100%;padding:10px 14px;border:1.5px solid var(--brd);border-radius:10px;
+  font-size:.88rem;margin-bottom:10px;outline:none;
+  font-family:inherit;background:var(--surf);color:var(--tx);transition:.15s}
+.ainput:focus{border-color:var(--a)}
+.abtn{width:100%;padding:12px;border-radius:10px;border:none;cursor:pointer;
+  font-size:.9rem;font-weight:700;font-family:inherit;
+  background:linear-gradient(135deg,var(--ad),var(--a));color:#fff;
+  box-shadow:0 2px 10px rgba(180,80,20,.3);transition:.15s;margin-top:4px}
+.abtn:hover{opacity:.9;transform:translateY(-1px)}
+#auth-err{color:#dc2626;font-size:.78rem;min-height:18px;margin-bottom:6px;text-align:center}
+.aforgot{text-align:center;font-size:.76rem;color:var(--a);cursor:pointer;
+  margin-top:10px;text-decoration:underline}
+
+/* ── Header ── */
+#hdr{position:fixed;top:0;left:0;right:0;height:var(--hh);
+  background:linear-gradient(135deg,#6b3410,#a0531c);color:#fff;
+  display:flex;align-items:center;padding:0 18px;z-index:300;gap:10px;
+  box-shadow:0 2px 12px rgba(100,40,0,.28)}
+#hbg{font-size:1.3rem;cursor:pointer;display:none;background:none;border:none;color:#fff;padding:4px}
+.htxt .sub{font-size:.65rem;opacity:.6}
+.htxt h1{font-size:.95rem;font-weight:800}
+#srch{margin-left:auto;padding:7px 16px;border-radius:20px;border:none;
+  background:rgba(255,255,255,.15);color:#fff;font-size:.81rem;width:180px;outline:none}
+#srch::placeholder{color:rgba(255,255,255,.4)}
+#uarea{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.hchip{padding:5px 12px;border-radius:14px;border:1.5px solid rgba(255,255,255,.35);
+  background:transparent;color:#fff;font-size:.75rem;cursor:pointer;
+  font-family:inherit;font-weight:600;white-space:nowrap;transition:.15s}
+.hchip:hover{background:rgba(255,255,255,.15)}
+.hchip.gold{background:rgba(255,200,60,.2);border-color:rgba(255,200,60,.6);color:#ffe066}
+#uname{font-size:.75rem;color:rgba(255,255,255,.8);max-width:110px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── Sidebar ── */
+#sb{position:fixed;top:var(--hh);left:0;width:var(--sw);
+  height:calc(100vh - var(--hh));overflow-y:auto;
+  background:var(--surf2);border-right:1px solid var(--brd);z-index:200}
+#sb::-webkit-scrollbar{width:4px}
+#sb::-webkit-scrollbar-thumb{background:var(--brd);border-radius:2px}
+.ci{padding:9px 14px 9px 16px;cursor:pointer;border-left:4px solid transparent;
+  display:flex;align-items:flex-start;gap:8px;transition:.12s}
+.ci:hover{background:#fef1e3}
+.ci.active{background:#fdefd8;border-left-color:var(--cc,#c2773a)}
+.cn{font-size:.65rem;font-weight:700;color:var(--tx3);min-width:18px;padding-top:2px}
+.cl{flex:1;min-width:0}
+.cko{font-size:.82rem;font-weight:700;color:var(--tx)}
+.cen{font-size:.67rem;color:var(--tx2);margin-top:1px}
+.cprog{height:3px;background:var(--brd2);border-radius:2px;margin-top:5px;overflow:hidden}
+.cprogf{height:100%;border-radius:2px;transition:width .4s}
+.cnt{font-size:.67rem;color:var(--tx3);white-space:nowrap;padding-top:2px;flex-shrink:0}
+
+/* ── Main ── */
+#main{margin-left:var(--sw);margin-top:var(--hh);padding:24px;
+  min-height:calc(100vh - var(--hh))}
+
+/* ── Category header ── */
+.ch{border-radius:16px;padding:18px 22px;color:#fff;margin-bottom:20px;
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:10px;box-shadow:0 4px 18px rgba(0,0,0,.14)}
+.ch .tko{font-size:1.25rem;font-weight:800}
+.ch .ten{font-size:.82rem;opacity:.85;margin-top:2px}
+.ch .wc{font-size:.76rem;opacity:.75;text-align:right;line-height:1.7}
+
+/* ── Mode bar ── */
+.modebar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.mbtn{padding:7px 18px;border-radius:20px;border:2px solid var(--brd);
+  cursor:pointer;font-size:.82rem;font-weight:700;font-family:inherit;
+  background:var(--surf);color:var(--tx2);transition:.15s;
+  box-shadow:0 1px 3px var(--shad)}
+.mbtn:hover{background:var(--al);border-color:var(--a);color:var(--ad)}
+.mbtn.active{color:#fff;border-color:transparent}
+
+/* ── Level filter bar ── */
+
+/* Level badge */
+.grambadge{display:inline-flex;align-items:center;padding:1px 7px;border-radius:8px;
+  font-size:.65rem;font-weight:700;white-space:nowrap;margin-left:4px;vertical-align:middle}
+.gram-past{background:#e8f0fe;color:#1a56db;border:1px solid #a4c2f4}
+.gram-hon{background:#fef3e2;color:#b45309;border:1px solid #f6c06e}
+
+/* ── LIST VIEW ── */
+.blk{margin-bottom:18px;border-radius:14px;overflow:hidden;
+  box-shadow:0 2px 10px var(--shad);background:var(--surf)}
+.bh{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 16px;color:#fff;font-weight:700;font-size:.81rem;gap:8px}
+.bh-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fbt{padding:4px 11px;border-radius:12px;border:none;cursor:pointer;
+  background:rgba(255,255,255,.22);color:#fff;font-size:.73rem;font-weight:700;
+  font-family:inherit;transition:.15s;white-space:nowrap}
+.fbt:hover{background:rgba(255,255,255,.38)}
+.wt{width:100%;border-collapse:collapse}
+.wt th{padding:8px 12px;font-size:.76rem;font-weight:700;color:var(--tx2);
+  background:#fdf8f3;border-bottom:2px solid var(--brd2);text-align:left}
+.wt th:first-child,.wt td:first-child{text-align:center;width:40px}
+.wt td{padding:9px 12px;border-bottom:1px solid var(--brd2);font-size:.88rem;vertical-align:top}
+.wt tr:last-child td{border-bottom:none}
+.wt tr:hover td{background:#fef9f3}
+.kc{font-weight:700;color:var(--tx);font-size:.96rem}
+.ec{color:var(--tx2)}
+.sc{font-size:.77rem;color:var(--tx2);margin-top:3px;font-style:italic}
+.tb{background:none;border:none;cursor:pointer;font-size:.95rem;
+  opacity:.4;padding:3px 5px;border-radius:5px;transition:.15s}
+.tb:hover{opacity:1;background:var(--al)}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
+.spk{opacity:1;animation:pulse .5s infinite}
+
+/* ── CARD VIEW ── */
+#kv{max-width:560px;margin:0 auto}
+.sf-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.sfbtn{padding:5px 13px;border-radius:16px;border:none;cursor:pointer;
+  font-size:.77rem;font-weight:700;font-family:inherit;
+  background:var(--brd2);color:var(--tx2);transition:.15s}
+.sfbtn:hover{background:var(--al);color:var(--ad)}
+.sfbtn.active{color:#fff}
+.dir-bar{display:flex;gap:6px;margin-bottom:14px}
+.dbtn{padding:5px 16px;border-radius:16px;border:2px solid var(--brd);
+  cursor:pointer;font-size:.79rem;font-weight:700;font-family:inherit;
+  background:var(--surf);color:var(--tx2);transition:.15s}
+.dbtn.active{background:var(--ad);color:#fff;border-color:var(--ad)}
+.pgbar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.pgtrack{flex:1;height:7px;background:var(--brd2);border-radius:4px;overflow:hidden}
+.pgfill{height:100%;border-radius:4px;transition:width .3s}
+.pgnum{font-size:.79rem;color:var(--tx3);min-width:48px;text-align:right}
+.card-wrap{perspective:1000px;margin-bottom:18px}
+.card{background:var(--surf);border-radius:20px;min-height:210px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;padding:28px 24px;text-align:center;
+  box-shadow:0 6px 24px var(--shad);border:1.5px solid var(--brd2);
+  transition:box-shadow .15s,transform .15s;user-select:none;position:relative}
+.card:hover{box-shadow:0 10px 32px var(--shad2);transform:translateY(-2px)}
+.card-front,.card-back{width:100%}
+.cf-ko{font-size:1.85rem;font-weight:800;color:var(--tx);margin-bottom:8px}
+.cf-hint{font-size:.74rem;color:var(--tx3);margin-top:8px}
+.cb-en{font-size:1.25rem;font-weight:700;color:var(--tx);margin-bottom:8px}
+.cb-sen{font-size:.9rem;color:var(--tx2);margin-bottom:8px;font-style:italic}
+.card-tts-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.ctts{padding:5px 14px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;
+  font-size:.79rem;font-weight:600;background:var(--al);color:var(--ad);transition:.15s}
+.ctts:hover{background:var(--am)}
+.card-nav{display:flex;align-items:center;justify-content:center;gap:14px}
+.cnav{padding:8px 22px;border-radius:20px;border:1.5px solid var(--brd);cursor:pointer;
+  font-weight:700;font-size:.88rem;font-family:inherit;background:var(--surf);
+  color:var(--tx);box-shadow:0 2px 6px var(--shad);transition:.15s}
+.cnav:hover{background:var(--al);border-color:var(--a)}
+.cflipbtn{padding:8px 20px;border-radius:20px;border:none;cursor:pointer;
+  font-weight:700;font-size:.84rem;font-family:inherit;color:#fff;transition:.15s}
+
+/* ── QUIZ VIEW ── */
+#qv{max-width:560px;margin:0 auto}
+.qhdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.qscore{font-size:.9rem;font-weight:700;color:var(--ad);
+  background:var(--al);padding:5px 14px;border-radius:20px}
+.qreset{padding:5px 14px;border-radius:16px;border:none;cursor:pointer;font-family:inherit;
+  font-size:.77rem;font-weight:700;background:var(--brd2);color:var(--tx2);transition:.15s}
+.qreset:hover{background:var(--brd)}
+.qdir{display:flex;gap:6px;margin-bottom:14px}
+.qdbtn{padding:5px 16px;border-radius:16px;border:2px solid var(--brd);
+  cursor:pointer;font-size:.79rem;font-weight:700;font-family:inherit;
+  background:var(--surf);color:var(--tx2);transition:.15s}
+.qdbtn.active{background:var(--ad);color:#fff;border-color:var(--ad)}
+.qcard{background:var(--surf);border-radius:18px;padding:30px 24px;text-align:center;
+  box-shadow:0 4px 18px var(--shad);border:1.5px solid var(--brd2);
+  margin-bottom:16px;min-height:100px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.qword{font-size:1.65rem;font-weight:800;color:var(--tx);margin-bottom:6px}
+.qpron{font-size:.81rem;color:var(--tx3)}
+.qopts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.opt{padding:13px 10px;border-radius:12px;border:2px solid var(--brd);
+  cursor:pointer;font-size:.87rem;font-weight:600;font-family:inherit;
+  background:var(--surf);color:var(--tx);text-align:left;transition:.15s;line-height:1.4}
+.opt:hover:not(:disabled){background:var(--al);border-color:var(--a)}
+.opt.correct{background:#f0fdf4;border-color:#4caf50;color:#166534}
+.opt.wrong{background:#fff1f2;border-color:#f87171;color:#991b1b}
+.opt:disabled{cursor:default}
+.qnext{display:none;width:100%;padding:12px;border-radius:12px;border:none;
+  cursor:pointer;font-size:.9rem;font-weight:700;font-family:inherit;
+  background:linear-gradient(135deg,var(--ad),var(--a));color:#fff;
+  box-shadow:0 2px 10px rgba(160,80,20,.28);transition:.15s}
+.qnext:hover{opacity:.9}
+.qprogbar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+
+/* ── FLASHCARD MODAL ── */
+#fco{display:none;position:fixed;inset:0;background:rgba(60,25,5,.55);
+  z-index:600;align-items:center;justify-content:center}
+#fco.on{display:flex}
+#fcb{background:var(--surf);border-radius:20px;width:440px;max-width:94vw;
+  padding:24px;box-shadow:0 20px 60px rgba(100,50,10,.3);position:relative;
+  border:1.5px solid var(--brd2)}
+#fcc{position:absolute;top:12px;right:16px;font-size:1.3rem;
+  cursor:pointer;color:var(--tx3);background:none;border:none}
+#fct{font-size:.72rem;font-weight:700;color:var(--tx3);text-align:center;
+  margin-bottom:12px;letter-spacing:.5px;text-transform:uppercase}
+#fcd{background:var(--surf2);border-radius:16px;min-height:175px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;padding:24px;border:2px solid var(--brd2);user-select:none;
+  transition:background .15s;text-align:center}
+#fcd:hover{background:#fdefd8}
+#fcf{font-size:1.55rem;font-weight:800;color:var(--tx)}
+#fcen{font-size:1.1rem;font-weight:700;color:var(--tx);display:none;margin-bottom:6px}
+#fcsen{font-size:.88rem;color:var(--tx2);display:none;margin-top:4px;font-style:italic}
+#fch{font-size:.71rem;color:var(--tx3);margin-top:8px}
+.fcn{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px}
+.fnb{padding:7px 20px;border-radius:20px;border:none;cursor:pointer;font-family:inherit;
+  font-weight:700;font-size:.84rem;background:var(--brd2);color:var(--tx2);transition:.15s}
+.fnb:hover{background:var(--al);color:var(--ad)}
+#fck{font-size:.84rem;color:var(--tx3);min-width:52px;text-align:center}
+.fcbtns{display:flex;gap:8px;margin-top:10px}
+.fcbt{flex:1;padding:8px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;
+  font-size:.81rem;font-weight:700;background:var(--brd2);color:var(--tx2);transition:.15s}
+.fcbt:hover{background:var(--al);color:var(--ad)}
+
+/* ── MY PAGE MODAL ── */
+#mp-overlay{display:none;position:fixed;inset:0;background:rgba(50,20,5,.6);
+  z-index:800;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+#mp-overlay.open{display:flex}
+#mp-box{background:var(--bg);border-radius:20px;width:100%;max-width:720px;
+  min-height:80vh;box-shadow:0 16px 60px rgba(100,40,5,.3);
+  border:1.5px solid var(--brd);overflow:hidden;margin:auto}
+#mp-hdr{background:linear-gradient(135deg,#6b3410,#a0531c);color:#fff;
+  padding:20px 24px;display:flex;align-items:center;gap:12px}
+#mp-avatar{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+  font-weight:800;border:2px solid rgba(255,255,255,.4)}
+#mp-name{font-size:1rem;font-weight:700}
+#mp-email{font-size:.76rem;opacity:.7;margin-top:2px}
+#mp-close{margin-left:auto;background:rgba(255,255,255,.15);border:none;
+  color:#fff;font-size:1.2rem;cursor:pointer;border-radius:50%;
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.mp-tabs{display:flex;background:var(--surf2);border-bottom:1px solid var(--brd);
+  overflow-x:auto}
+.mptab{padding:12px 20px;border:none;background:transparent;cursor:pointer;
+  font-size:.82rem;font-weight:700;font-family:inherit;color:var(--tx2);
+  border-bottom:3px solid transparent;white-space:nowrap;transition:.15s}
+.mptab.active{color:var(--ad);border-bottom-color:var(--a)}
+.mp-panel{display:none;padding:22px}
+.mp-panel.active{display:block}
+.mp-stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:12px;margin-bottom:22px}
+.mp-stat{background:var(--surf);border-radius:14px;padding:14px 16px;
+  text-align:center;box-shadow:0 1px 6px var(--shad);border:1px solid var(--brd2)}
+.mp-stat .n{font-size:1.7rem;font-weight:800;color:var(--tx)}
+.mp-stat .l{font-size:.72rem;color:var(--tx3);margin-top:2px}
+.mp-sec-title{font-size:.82rem;font-weight:700;color:var(--tx2);
+  margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px}
+.mp-cat-list{display:flex;flex-direction:column;gap:7px;margin-bottom:20px}
+.mp-cat-row{display:flex;align-items:center;gap:10px;font-size:.81rem}
+.mp-cat-name{width:130px;flex-shrink:0;color:var(--tx);font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-cat-bar{flex:1;height:7px;background:var(--brd2);border-radius:4px;overflow:hidden}
+.mp-cat-fill{height:100%;border-radius:4px;transition:width .5s}
+.mp-cat-pct{width:36px;text-align:right;font-size:.75rem;color:var(--tx3)}
+.lv-stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.lv-stat-card{border-radius:12px;padding:14px;text-align:center;border:1.5px solid}
+.lv-stat-card .nn{font-size:1.4rem;font-weight:800}
+.lv-stat-card .lt{font-size:.75rem;margin-top:2px;font-weight:700}
+.lv-stat-card .lsub{font-size:.7rem;opacity:.7;margin-top:1px}
+.mp-log-table{width:100%;border-collapse:collapse;font-size:.79rem}
+.mp-log-table th{padding:7px 10px;background:var(--surf3);color:var(--tx2);
+  font-weight:700;text-align:left;border-bottom:2px solid var(--brd)}
+.mp-log-table td{padding:7px 10px;border-bottom:1px solid var(--brd2);color:var(--tx)}
+.mp-log-table tr:hover td{background:var(--surf3)}
+.badgep{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.7rem;font-weight:700}
+.bg-good{background:#f0fdf4;color:#166534}.bg-ok{background:#fffbeb;color:#92400e}
+.bg-low{background:#fff1f2;color:#991b1b}
+
+/* ── Streak widget ── */
+.streak-box{display:flex;align-items:center;gap:12px;background:var(--surf);
+  border-radius:14px;padding:14px 18px;margin-bottom:18px;
+  border:1.5px solid var(--brd2);box-shadow:0 1px 6px var(--shad)}
+.streak-fire{font-size:2rem}
+.streak-n{font-size:1.5rem;font-weight:800;color:var(--tx);line-height:1}
+.streak-lbl{font-size:.74rem;color:var(--tx3);margin-top:2px}
+
+/* ── Welcome ── */
+#wel{text-align:center;padding:70px 20px;color:var(--tx2)}
+#wel h2{font-size:1.5rem;color:var(--tx);margin-bottom:12px}
+#wel p{line-height:2;font-size:.92rem}
+
+/* ── Search results ── */
+#sv{display:none}
+.stag{display:inline-block;padding:2px 9px;border-radius:10px;
+  font-size:.7rem;color:#fff;font-weight:700;white-space:nowrap}
+
+/* ── Mobile ── */
+@media(max-width:700px){
+  #hbg{display:block}
+  #sb{transform:translateX(-100%);transition:transform .25s}
+  #sb.open{transform:translateX(0)}
+  #main{margin-left:0;padding:14px}
+  #srch{width:110px}
+  .qopts{grid-template-columns:1fr}
+  .lv-stat-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="auth-overlay">
+  <div id="auth-box">
+    <div class="auth-logo">📚</div>
+    <div class="auth-title">TOPIK I 단어장<br><span style="font-size:.75rem;font-weight:400;color:var(--tx3)">Korean Vocabulary</span></div>
+    <div class="auth-sub" id="auth-sub">학습 진도를 저장하려면 로그인하세요 · Log in to save your progress</div>
+    <div class="auth-tabs">
+      <button class="atab active" id="tab-login" onclick="switchAuthTab('login')">로그인 · Login</button>
+      <button class="atab" id="tab-register" onclick="switchAuthTab('register')">회원가입 · Sign Up</button>
+    </div>
+    <div id="auth-err"></div>
+    <input id="ain-name" class="ainput" type="text" placeholder="이름 · Name (Nickname)" style="display:none">
+    <input id="ain-email" class="ainput" type="email" placeholder="이메일 · Email address">
+    <input id="ain-pw" class="ainput" type="password" placeholder="비밀번호 · Password"
+      onkeydown="if(event.key==='Enter')submitAuth()">
+    <button class="abtn" onclick="submitAuth()" id="auth-submit-btn">로그인 · Login</button>
+    <div class="aforgot" onclick="sendReset()">비밀번호 찾기 · Forgot password?</div>
+  </div>
+</div>
+
+
+<div id="hdr">
+  <button id="hbg" onclick="toggleSB()">☰</button>
+  <div class="htxt">
+    <div class="sub">TOPIK I · 1,671단어 · 20 Categories</div>
+    <h1>📚 상황별 단어장 <span style="font-weight:400;opacity:.7;font-size:.82rem">· Vocabulary</span></h1>
+  </div>
+  <input id="srch" type="text" placeholder="🔍 검색 · Search..." oninput="doSearch(this.value)">
+  <div id="uarea">
+    <span id="uname"></span>
+    <button class="hchip" id="mypage-btn" onclick="openMyPage()" style="display:none">👤 My Page</button>
+    <button class="hchip gold" id="admin-btn" onclick="openAdmin()" style="display:none">📊 대시보드 · Dashboard</button>
+    <button class="hchip" id="logout-btn" onclick="doLogout()" style="display:none">로그아웃 · Logout</button>
+  </div>
+</div>
+
+
+<div id="sb"><div id="clist"></div></div>
+
+
+<div id="main">
+  <div id="wel">
+    <h2>📚 TOPIK I 상황별 단어장</h2><p style="font-size:1rem;color:var(--a);margin-top:-6px;margin-bottom:8px">Korean Vocabulary by Situation</p>
+    <p>왼쪽에서 카테고리를 선택해 학습을 시작하세요 · Select a category on the left to start.<br>
+    목록 · 카드 · 퀴즈 3가지 모드 · List, Card, and Quiz modes available.<br>
+    🟢 Level 1 (Easy) → 🟡 Level 2 (Medium) → 🔴 Level 3 (Hard)</p>
+  </div>
+  <div id="sv" style="display:none"></div>
+  <div id="cv" style="display:none">
+    <div id="cat-hdr" class="ch"></div>
+    <div class="modebar">
+      <button class="mbtn active" id="mb-list" onclick="setMode('list')">📋 목록 · List</button>
+      <button class="mbtn" id="mb-card" onclick="setMode('card')">🃏 카드 · Cards</button>
+      <button class="mbtn" id="mb-quiz" onclick="setMode('quiz')">❓ 퀴즈 · Quiz</button>
+    </div>
+    <div id="lv" style=""></div>
+    <div id="kv" style="display:none"></div>
+    <div id="qv" style="display:none"></div>
+  </div>
+</div>
+
+
+<div id="mp-overlay" onclick="if(event.target===this)closeMyPage()">
+  <div id="mp-box">
+    <div id="mp-hdr">
+      <div id="mp-avatar">?</div>
+      <div>
+        <div id="mp-name">—</div>
+        <div id="mp-email">—</div>
+      </div>
+      <button id="mp-close" onclick="closeMyPage()">✕</button>
+    </div>
+    <div class="mp-tabs">
+      <button class="mptab active" onclick="switchMpTab(0,this)">🏠 개요 · Overview</button>
+      <button class="mptab" onclick="switchMpTab(1,this)">📂 카테고리 · Categories</button>
+      <button class="mptab" onclick="switchMpTab(2,this)">📊 문법 · Grammar</button>
+      <button class="mptab" onclick="switchMpTab(3,this)">📝 퀴즈 기록 · Quiz History</button>
+    </div>
+    <div id="mp-panel-0" class="mp-panel active"></div>
+    <div id="mp-panel-1" class="mp-panel"></div>
+    <div id="mp-panel-2" class="mp-panel"></div>
+    <div id="mp-panel-3" class="mp-panel"></div>
+  </div>
+</div>
+
+
+<div id="fco">
+  <div id="fcb">
+    <button id="fcc" onclick="closeFC()">✕</button>
+    <div id="fct">FLASHCARD</div>
+    <div id="fcd" onclick="fcFlip()">
+      <div id="fcf"></div>
+      <div id="fcen"></div>
+      <div id="fcsen"></div>
+      <div id="fch">탭해서 뒤집기 · Tap to flip</div>
+    </div>
+    <div class="fcn">
+      <button class="fnb" onclick="fcNav(-1)">◀ 이전 · Prev</button>
+      <span id="fck"></span>
+      <button class="fnb" onclick="fcNav(1)">다음 · Next ▶</button>
+    </div>
+    <div class="fcbtns">
+      <button class="fcbt" onclick="fcTTS('ko')">🔊 한국어</button>
+      <button class="fcbt" onclick="fcTTS('en')">🔊 English</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA=[{"id":1,"ko":"인사 & 소개","en":"Greetings & Introductions","color":"#4472C4","short":"Greetings","words":[{"no":1,"k":"감사드립니다","e":"thank you","s":"항상 도와주셔서 감사드립니다.","lv":2},{"no":2,"k":"감사하다","e":"thank, appreciate","s":"친구가 도와줘서 정말 감사해요.","lv":2},{"no":3,"k":"감사합니다","e":"thank you","s":"선물 주셔서 감사합니다.","lv":2},{"no":4,"k":"계시다","e":"be, exist (honorific form)","s":"선생님이 교실에 계세요.","lv":1},{"no":5,"k":"고마웠습니다","e":"Thank you (past tense)","s":"그동안 정말 고마웠습니다.","lv":3},{"no":6,"k":"고맙다","e":"thank","s":"도와줘서 정말 고마워요.","lv":2},{"no":7,"k":"고맙습니다","e":"Thank you","s":"친절하게 안내해 주셔서 고맙습니다.","lv":2},{"no":8,"k":"괜찮다","e":"be okay","s":"조금 늦어도 괜찮아요.","lv":2},{"no":9,"k":"괜찮습니다","e":"It's fine.","s":"걱정 마세요, 괜찮습니다.","lv":2},{"no":10,"k":"그래","e":"Yes, Yeah","s":"그래, 알겠어.","lv":2},{"no":11,"k":"그렇구나","e":"well, I see.","s":"아, 그렇구나. 몰랐어요.","lv":3},{"no":12,"k":"그렇다","e":"Yes, that's it.","s":"네, 그래요.","lv":2},{"no":13,"k":"그렇습니다","e":"That's right.","s":"네, 그렇습니다.","lv":2},{"no":14,"k":"글쎄요","e":"I do not know., well, I guess ~","s":"글쎄요, 잘 모르겠어요.","lv":3},{"no":15,"k":"네","e":"yes, 4","s":"네, 알겠습니다.","lv":1},{"no":16,"k":"답장","e":"reply","s":"이메일에 답장을 했어요.","lv":2},{"no":17,"k":"덕분","e":"thanks for, thanks to","s":"선생님 덕분에 시험에 합격했어요.","lv":2},{"no":18,"k":"만나다","e":"meet","s":"오랜만에 친구를 만났어요.","lv":2},{"no":19,"k":"말씀","e":"words, remarks","s":"선생님 말씀을 잘 들어요.","lv":2},{"no":20,"k":"말씀하다","e":"talk","s":"좀 더 천천히 말씀해 주세요.","lv":2},{"no":21,"k":"맞습니다","e":"That's right.","s":"네, 맞습니다.","lv":1},{"no":22,"k":"맞아요","e":"That's right.","s":"맞아요, 그 말이 맞아요.","lv":1},{"no":23,"k":"메시지","e":"message","s":"친구에게 메시지를 보냈어요.","lv":3},{"no":24,"k":"모르겠습니다","e":"I don't know.","s":"글쎄요, 잘 모르겠습니다.","lv":2},{"no":25,"k":"모시다","e":"take you, serve you (honorific form)","s":"어른을 모시고 왔어요.","lv":1},{"no":26,"k":"미안하다","e":"sorry","s":"늦어서 미안해요.","lv":2},{"no":27,"k":"미안합니다","e":"I'm sorry.","s":"실수해서 정말 미안합니다.","lv":2},{"no":28,"k":"반갑다","e":"nice to meet, happy","s":"오랜만에 만나서 반가워요.","lv":2},{"no":29,"k":"반갑습니다","e":"Nice to meet you.","s":"처음 뵙겠습니다. 반갑습니다.","lv":2},{"no":30,"k":"봉투","e":"envelope","s":"편지를 봉투에 넣었어요.","lv":2},{"no":31,"k":"뵙다","e":"meet","s":"교수님을 처음 뵀어요.","lv":1},{"no":32,"k":"성함","e":"name","s":"성함이 어떻게 되세요?","lv":2},{"no":33,"k":"소개","e":"introduction","s":"자기 소개를 해 주세요.","lv":2},{"no":34,"k":"소개하다","e":"introduce","s":"새 친구를 소개해 줄게요.","lv":2},{"no":35,"k":"소포","e":"parcel","s":"소포를 부쳐야 해요.","lv":2},{"no":36,"k":"실례","e":"excuse","s":"실례지만 잠깐 여쭤봐도 될까요?","lv":2},{"no":37,"k":"실례하다","e":"be excused","s":"실례해서 죄송합니다.","lv":2},{"no":38,"k":"아뇨","e":"no","s":"아뇨, 저는 학생이에요.","lv":2},{"no":39,"k":"아니다","e":"no","s":"그것은 아니에요.","lv":2},{"no":40,"k":"아니오","e":"no","s":"아니오, 괜찮아요.","lv":3},{"no":41,"k":"아니요","e":"no","s":"그건 아니요.","lv":3},{"no":42,"k":"안녕하요","e":"hi, hello","s":"안녕하세요, 처음 뵙겠습니다.","lv":3},{"no":43,"k":"안녕하십니까","e":"hello","s":"안녕하십니까?","lv":3},{"no":44,"k":"알았습니다","e":"I understood.","s":"네, 알았습니다.","lv":2},{"no":45,"k":"얘기하다","e":"talk","s":"오랫동안 얘기를 나눴어요.","lv":2},{"no":46,"k":"어머","e":"oh, well","s":"어머, 깜짝이야!","lv":2},{"no":47,"k":"연락처","e":"contact information","s":"연락처를 남겨 주세요.","lv":3},{"no":48,"k":"예","e":"yes","s":"예, 알겠습니다.","lv":1},{"no":49,"k":"오래간만","e":"after a long time","s":"오래간만에 고향 친구를 만났어요.","lv":3},{"no":50,"k":"오래간만입니다","e":"Long time no see.","s":"오래간만입니다. 잘 지내셨어요?","lv":3},{"no":51,"k":"오랜만","e":"after a long time","s":"오랜만이에요.","lv":3},{"no":52,"k":"오랜만에","e":"after a long time","s":"오랜만에 만나서 반가워요.","lv":3},{"no":53,"k":"우표","e":"stamp","s":"우표를 모으는 취미가 있어요.","lv":2},{"no":54,"k":"응","e":"Yeah (answer)","s":"응, 알겠어.","lv":1},{"no":55,"k":"이름","e":"name","s":"이름이 뭐예요?","lv":2},{"no":56,"k":"이메일","e":"e-mail","s":"이메일로 연락하세요.","lv":3},{"no":57,"k":"이야기하다","e":"talk","s":"친구와 오랫동안 이야기했어요.","lv":3},{"no":58,"k":"인사","e":"greetings","s":"친구에게 인사를 했어요.","lv":2},{"no":59,"k":"인사하다","e":"greet","s":"선생님께 인사했어요.","lv":2},{"no":60,"k":"잔치","e":"party, feast","s":"생일 잔치를 열었어요.","lv":2},{"no":61,"k":"전화","e":"telephone","s":"전화를 받았어요.","lv":2},{"no":62,"k":"전화기","e":"telephone","s":"전화기가 고장났어요.","lv":3},{"no":63,"k":"전화번호","e":"phone number","s":"전화번호가 어떻게 돼요?","lv":3},{"no":64,"k":"죄송하다","e":"sorry","s":"늦어서 죄송해요.","lv":2},{"no":65,"k":"처음","e":"first, for the first time","s":"처음 만났어요.","lv":2},{"no":66,"k":"처음 뵙겠습니다","e":"Nice to meet you.","s":"처음 뵙겠습니다. 반갑습니다.","lv":3},{"no":67,"k":"축하","e":"celebration","s":"졸업 축하해요.","lv":2},{"no":68,"k":"축하하다","e":"celebrate","s":"생일을 축하해요.","lv":2},{"no":69,"k":"축하합니다","e":"congratulations","s":"합격을 진심으로 축하합니다.","lv":2},{"no":70,"k":"파티","e":"party","s":"생일 파티에 초대받았어요.","lv":2},{"no":71,"k":"편지","e":"letter","s":"외국 친구에게 편지를 썼어요.","lv":2},{"no":72,"k":"핸드폰","e":"cell phone, mobile phone","s":"핸드폰 배터리가 없어요.","lv":3},{"no":73,"k":"행사","e":"event","s":"회사 행사가 있어요.","lv":2},{"no":74,"k":"환영하다","e":"welcome","s":"새 학생을 환영해요.","lv":2},{"no":75,"k":"휴대전화","e":"cell phone, mobile phone","s":"휴대전화 번호를 알려주세요.","lv":3}]},{"id":2,"ko":"가족 & 친척","en":"Family & Relatives","color":"#70AD47","short":"Family","words":[{"no":1,"k":"가요","e":"song","s":"한국 가요를 즐겨 들어요.","lv":2},{"no":2,"k":"가족","e":"family","s":"주말에 가족과 함께 여행을 갔어요.","lv":2},{"no":3,"k":"결혼","e":"marriage","s":"결혼을 하고 싶어요.","lv":2},{"no":4,"k":"결혼식","e":"wedding ceremony","s":"친구 결혼식에 갔어요.","lv":3},{"no":5,"k":"결혼하다","e":"get married","s":"내년에 결혼할 거예요.","lv":2},{"no":6,"k":"고모","e":"paternal aunt","s":"고모가 서울에서 오셨어요.","lv":2},{"no":7,"k":"고모부","e":"paternal uncle","s":"고모부가 요리를 잘 해요.","lv":3},{"no":8,"k":"남녀","e":"men and women","s":"남녀 모두 참가할 수 있어요.","lv":2},{"no":9,"k":"남동생","e":"younger brother","s":"남동생이 올해 중학생이 됐어요.","lv":3},{"no":10,"k":"남편","e":"husband","s":"남편이 요리를 잘 해요.","lv":2},{"no":11,"k":"누나","e":"sister (as seen from the younger brother)","s":"누나가 대학교에 들어갔어요.","lv":2},{"no":12,"k":"닮다","e":"resemble","s":"엄마를 많이 닮았어요.","lv":1},{"no":13,"k":"데이트","e":"date, dating","s":"오늘 데이트가 있어요.","lv":3},{"no":14,"k":"동생","e":"brother, sister","s":"동생이 요즘 많이 컸어요.","lv":2},{"no":15,"k":"딸","e":"daughter","s":"딸이 이번에 초등학교에 들어갔어요.","lv":1},{"no":16,"k":"부모","e":"parents","s":"부모님께 전화를 자주 해요.","lv":2},{"no":17,"k":"부부","e":"couple, husband and wife, married couple","s":"그 부부는 정말 사이가 좋아요.","lv":2},{"no":18,"k":"부인","e":"wife, Mrs.","s":"그분 부인이세요?","lv":2},{"no":19,"k":"분","e":"~ person(s), ~ minute(s)","s":"잠깐, 5분만 기다려 주세요.","lv":1},{"no":20,"k":"사촌","e":"cousin","s":"사촌과 사이가 좋아요.","lv":2},{"no":21,"k":"삼촌","e":"paternal uncle","s":"삼촌이 선물을 사줬어요.","lv":2},{"no":22,"k":"아내","e":"wife","s":"아내와 함께 여행을 갔어요.","lv":2},{"no":23,"k":"아들","e":"son","s":"아들이 올해 초등학교에 들어갔어요.","lv":2},{"no":24,"k":"아버님","e":"father","s":"아버님, 안녕히 계세요.","lv":3},{"no":25,"k":"아버지","e":"father","s":"아버지가 회사에서 오셨어요.","lv":3},{"no":26,"k":"아빠","e":"dad","s":"아빠가 요리해 줬어요.","lv":2},{"no":27,"k":"약속","e":"appointment, promise","s":"친구와 약속이 있어요.","lv":2},{"no":28,"k":"어머니","e":"mother","s":"어머니가 선물을 보내셨어요.","lv":3},{"no":29,"k":"어머님","e":"mother","s":"어머님, 감사합니다.","lv":3},{"no":30,"k":"언니","e":"sister (as seen from the younger sister)","s":"언니가 취직을 했어요.","lv":2},{"no":31,"k":"엄마","e":"mom","s":"엄마, 배고파요.","lv":2},{"no":32,"k":"여동생","e":"younger sister","s":"여동생이 저보다 키가 커요.","lv":3},{"no":33,"k":"오빠","e":"brother (as seen from the younger sister)","s":"오빠가 선물을 줬어요.","lv":2},{"no":34,"k":"외삼촌","e":"maternal uncle","s":"외삼촌이 미국에 사세요.","lv":3},{"no":35,"k":"외숙모","e":"maternal aunt","s":"외숙모가 음식을 잘 해요.","lv":3},{"no":36,"k":"외할머니","e":"maternal grandmother","s":"외할머니 생신에 갔어요.","lv":3},{"no":37,"k":"외할아버지","e":"maternal grandfather","s":"외할아버지가 건강하세요.","lv":3},{"no":38,"k":"웬일","e":"for some reason, What was it?","s":"웬일로 전화했어요?","lv":2},{"no":39,"k":"이모","e":"maternal aunt","s":"이모가 케이크를 만들어줬어요.","lv":2},{"no":40,"k":"이모부","e":"maternal uncle","s":"이모부가 재미있는 이야기를 해줬어요.","lv":3},{"no":41,"k":"작은아버지","e":"uncle","s":"작은아버지가 집에 오셨어요.","lv":3},{"no":42,"k":"작은어머니","e":"aunt","s":"작은어머니가 음식을 만들어 주셨어요.","lv":3},{"no":43,"k":"조카","e":"nephew","s":"조카가 이번에 초등학교에 들어갔어요.","lv":2},{"no":44,"k":"철","e":"iron, season","s":"요즘 사과 철이에요.","lv":1},{"no":45,"k":"친척","e":"relative","s":"명절에 친척이 모여요.","lv":2},{"no":46,"k":"큰아버지","e":"uncle","s":"큰아버지가 부산에 사세요.","lv":3},{"no":47,"k":"큰어머니","e":"aunt","s":"큰어머니가 맛있는 음식을 해주셨어요.","lv":3},{"no":48,"k":"태어나다","e":"be born","s":"서울에서 태어났어요.","lv":3},{"no":49,"k":"할머니","e":"grandmother","s":"할머니가 맛있는 음식을 만들어 주셨어요.","lv":3},{"no":50,"k":"할아버지","e":"grandfather","s":"할아버지가 건강하세요.","lv":3},{"no":51,"k":"형","e":"brother (as seen from the younger brother)","s":"형이 취직을 했어요.","lv":1},{"no":52,"k":"형님","e":"big brother (honorific form)","s":"형님, 잘 지내세요?","lv":2},{"no":53,"k":"형제","e":"sibling","s":"형제가 있어요?","lv":2}]},{"id":3,"ko":"사람 & 직업","en":"People & Occupations","color":"#ED7D31","short":"People","words":[{"no":1,"k":"가수","e":"singer","s":"그 가수의 노래가 정말 좋아요.","lv":2},{"no":2,"k":"간호사","e":"nurse","s":"간호사가 친절하게 도와줬어요.","lv":3},{"no":3,"k":"개인","e":"individual","s":"개인 정보를 조심해야 해요.","lv":2},{"no":4,"k":"경찰","e":"police","s":"경찰이 빨리 왔어요.","lv":2},{"no":5,"k":"경찰관","e":"police officer","s":"경찰관이 길을 안내해 줬어요.","lv":3},{"no":6,"k":"경찰서","e":"police office","s":"지갑을 잃어버려서 경찰서에 갔어요.","lv":3},{"no":7,"k":"공무원","e":"public official","s":"형이 공무원이 됐어요.","lv":3},{"no":8,"k":"교수","e":"professor","s":"교수님이 내일 시험이라고 하셨어요.","lv":2},{"no":9,"k":"군인","e":"soldier, military personnel","s":"형이 군인이에요.","lv":2},{"no":10,"k":"기자","e":"reporter","s":"기자가 인터뷰를 했어요.","lv":2},{"no":11,"k":"남자","e":"man","s":"그 남자는 키가 커요.","lv":2},{"no":12,"k":"남학생","e":"male student","s":"남학생들이 축구를 해요.","lv":3},{"no":13,"k":"배우","e":"actor","s":"그 배우가 연기를 잘해요.","lv":2},{"no":14,"k":"변호사","e":"lawyer","s":"변호사가 되고 싶어요.","lv":3},{"no":15,"k":"부장","e":"director","s":"부장님이 오늘 야근하셨어요.","lv":2},{"no":16,"k":"사람","e":"person, man","s":"저 사람이 누구예요?","lv":2},{"no":17,"k":"사업가","e":"entrepreneur, businessman","s":"사업가가 되고 싶어요.","lv":3},{"no":18,"k":"사원","e":"temple, employee","s":"회사 사원이에요.","lv":2},{"no":19,"k":"선배","e":"elder, senior","s":"선배가 잘 도와줬어요.","lv":2},{"no":20,"k":"선생님","e":"teacher","s":"선생님이 친절하게 설명해 주셨어요.","lv":3},{"no":21,"k":"선수","e":"player","s":"그 선수가 금메달을 땄어요.","lv":2},{"no":22,"k":"소설가","e":"novelist","s":"유명한 소설가의 책을 읽었어요.","lv":3},{"no":23,"k":"손님","e":"customer","s":"손님이 오셨어요.","lv":2},{"no":24,"k":"스타","e":"star","s":"K-팝 스타를 좋아해요.","lv":2},{"no":25,"k":"시민","e":"citizen","s":"서울 시민으로서 자랑스러워요.","lv":2},{"no":26,"k":"아가씨","e":"Miss, daughter","s":"저 아가씨 목소리가 예쁘네요.","lv":3},{"no":27,"k":"아기","e":"baby, toddler","s":"아기가 잠을 자요.","lv":2},{"no":28,"k":"아이","e":"child","s":"아이들이 밖에서 놀고 있어요.","lv":2},{"no":29,"k":"아저씨","e":"uncle, mister","s":"아저씨, 이거 얼마예요?","lv":3},{"no":30,"k":"아주머니","e":"old lady, madame, aunt","s":"아주머니가 친절하게 안내해 줬어요.","lv":3},{"no":31,"k":"아줌마","e":"old lady, madame, aunt","s":"길에서 아줌마가 도와줬어요.","lv":3},{"no":32,"k":"약사","e":"pharmacist","s":"약사가 복용법을 알려줬어요.","lv":2},{"no":33,"k":"어른","e":"adult","s":"어른께는 존댓말을 써요.","lv":2},{"no":34,"k":"어린이","e":"child","s":"어린이 날에 아이들이 행복해요.","lv":3},{"no":35,"k":"여자","e":"woman","s":"그 여자가 제 친구예요.","lv":2},{"no":36,"k":"여학생","e":"female student","s":"여학생들이 교실에서 공부해요.","lv":3},{"no":37,"k":"연예인","e":"celebrity","s":"연예인이 나타났어요.","lv":3},{"no":38,"k":"유명하다","e":"famous","s":"이 식당이 유명해요.","lv":2},{"no":39,"k":"은행원","e":"bank clerk","s":"은행원이 친절하게 안내했어요.","lv":3},{"no":40,"k":"음악가","e":"musician","s":"음악가를 꿈꿔요.","lv":3},{"no":41,"k":"의사","e":"doctor","s":"아파서 의사를 만났어요.","lv":2},{"no":42,"k":"인구","e":"population","s":"서울 인구가 천만 명이 넘어요.","lv":2},{"no":43,"k":"인기","e":"popularity","s":"요즘 이 가수가 인기 있어요.","lv":2},{"no":44,"k":"인기스타","e":"popular star","s":"그 배우가 인기스타예요.","lv":3},{"no":45,"k":"인형","e":"doll","s":"아이들이 인형을 좋아해요.","lv":2},{"no":46,"k":"점원","e":"clerk","s":"점원이 친절하게 도와줬어요.","lv":2},{"no":47,"k":"종업원","e":"employee","s":"종업원이 메뉴를 가져왔어요.","lv":3},{"no":48,"k":"주부","e":"housewife","s":"주부로 살고 있어요.","lv":2},{"no":49,"k":"직원","e":"employee, staff","s":"이 매장 직원이 친절해요.","lv":2},{"no":50,"k":"탤런트","e":"entertainers","s":"그 탤런트가 연기를 잘해요.","lv":3},{"no":51,"k":"학생","e":"student","s":"저는 대학생이에요.","lv":2},{"no":52,"k":"화가","e":"artist, painter","s":"유명한 화가의 그림을 봤어요.","lv":2},{"no":53,"k":"후배","e":"Junior","s":"후배가 도움을 요청했어요.","lv":2}]},{"id":4,"ko":"음식 & 식재료","en":"Food & Ingredients","color":"#FFC000","short":"Food","words":[{"no":1,"k":"간식","e":"snack","s":"오후에 간식으로 과자를 먹어요.","lv":2},{"no":2,"k":"간장","e":"soy sauce","s":"비빔밥에 간장을 조금 넣어요.","lv":2},{"no":3,"k":"갈비","e":"Galvi, spareribs","s":"생일에 갈비를 먹었어요.","lv":2},{"no":4,"k":"갈비탕","e":"Galbitang, spareribs soup","s":"추운 날에는 갈비탕이 생각나요.","lv":3},{"no":5,"k":"감","e":"persimmon","s":"가을에 감이 맛있어요.","lv":1},{"no":6,"k":"감자","e":"potato","s":"감자볶음을 만들었어요.","lv":2},{"no":7,"k":"감자탕","e":"Gamjatang, potato soup","s":"감자탕은 뼈를 넣고 끓여요.","lv":3},{"no":8,"k":"고기","e":"meat","s":"저는 고기를 잘 먹어요.","lv":2},{"no":9,"k":"고추","e":"red pepper","s":"고추가 매워요.","lv":2},{"no":10,"k":"고추장","e":"Kochujang, red pepper paste","s":"비빔밥에 고추장을 넣어요.","lv":3},{"no":11,"k":"과일","e":"fruit","s":"아침마다 과일을 먹어요.","lv":2},{"no":12,"k":"과자","e":"snack","s":"배고파서 과자를 먹었어요.","lv":2},{"no":13,"k":"국","e":"soup","s":"밥에 국을 말아 먹었어요.","lv":1},{"no":14,"k":"국수","e":"noodle","s":"더운 날에 국수를 먹었어요.","lv":2},{"no":15,"k":"귤","e":"mandarin orange","s":"겨울에 귤을 많이 먹어요.","lv":1},{"no":16,"k":"기름","e":"oil, gasoline","s":"볶음밥에 기름을 넣어요.","lv":2},{"no":17,"k":"김","e":"seaweed","s":"김이 바삭해서 맛있어요.","lv":1},{"no":18,"k":"김밥","e":"Kimbab","s":"소풍에 김밥을 싸 갔어요.","lv":2},{"no":19,"k":"김치","e":"Kimchi","s":"한국 사람들은 김치를 자주 먹어요.","lv":2},{"no":20,"k":"김치찌개","e":"Kimchi stew","s":"오늘 점심에 김치찌개를 먹었어요.","lv":3},{"no":21,"k":"껌","e":"chewing gum","s":"껌을 씹으면 집중이 잘 돼요.","lv":1},{"no":22,"k":"냉면","e":"cold noodle","s":"여름에 냉면이 맛있어요.","lv":2},{"no":23,"k":"녹차","e":"green tea","s":"저녁에 녹차를 마셔요.","lv":2},{"no":24,"k":"달걀","e":"egg","s":"달걀 한 판을 샀어요.","lv":2},{"no":25,"k":"닭","e":"chicken, hen","s":"닭요리를 만들었어요.","lv":1},{"no":26,"k":"닭고기","e":"chicken","s":"닭고기 요리를 만들었어요.","lv":3},{"no":27,"k":"당근","e":"carrot","s":"당근을 잘게 썰었어요.","lv":2},{"no":28,"k":"돼지고기","e":"pork","s":"삼겹살은 돼지고기예요.","lv":3},{"no":29,"k":"된장","e":"fermented soybean paste","s":"된장은 콩으로 만들어요.","lv":2},{"no":30,"k":"된장국","e":"soybean paste soup","s":"아침에 된장국을 끓였어요.","lv":3},{"no":31,"k":"된장찌개","e":"soybean paste stew","s":"된장찌개에 두부를 넣어요.","lv":3},{"no":32,"k":"두부","e":"tofu","s":"두부가 부드러워요.","lv":2},{"no":33,"k":"두부찌개","e":"tofu soup","s":"두부찌개가 뜨겁고 맛있어요.","lv":3},{"no":34,"k":"딸기","e":"strawberry","s":"딸기가 달고 맛있어요.","lv":2},{"no":35,"k":"떡","e":"rice cake","s":"설날에 떡국을 먹어요.","lv":1},{"no":36,"k":"떡국","e":"rice cake soup","s":"설날에는 꼭 떡국을 먹어요.","lv":2},{"no":37,"k":"떡볶이","e":"Toppogi","s":"떡볶이가 매워요.","lv":3},{"no":38,"k":"라면","e":"ramen","s":"야식으로 라면을 끓여 먹었어요.","lv":2},{"no":39,"k":"마늘","e":"garlic","s":"한국 요리에 마늘이 많이 들어가요.","lv":2},{"no":40,"k":"만두","e":"dumpling","s":"만두를 쪄 먹었어요.","lv":2},{"no":41,"k":"맥주","e":"beer","s":"더운 날 맥주가 시원해요.","lv":2},{"no":42,"k":"무","e":"radish","s":"깍두기는 무로 만들어요.","lv":1},{"no":43,"k":"밀가루","e":"flour","s":"밀가루로 빵을 만들었어요.","lv":3},{"no":44,"k":"바나나","e":"banana","s":"아침에 바나나를 먹어요.","lv":3},{"no":45,"k":"반찬","e":"side dish","s":"반찬이 다양하게 나왔어요.","lv":2},{"no":46,"k":"밥","e":"rice, meal","s":"밥을 잘 먹어야 해요.","lv":1},{"no":47,"k":"복숭아","e":"peach","s":"복숭아가 달고 맛있어요.","lv":3},{"no":48,"k":"볶음밥","e":"fried rice","s":"남은 밥으로 볶음밥을 만들었어요.","lv":3},{"no":49,"k":"불고기","e":"Bulgogi, grilled meat","s":"불고기는 한국의 대표 음식이에요.","lv":3},{"no":50,"k":"비빔밥","e":"Bibimbap, mixed rice","s":"비빔밥을 비벼 먹었어요.","lv":3},{"no":51,"k":"빵","e":"bread","s":"아침에 빵을 먹어요.","lv":1},{"no":52,"k":"사과","e":"apple","s":"사과를 씻어서 먹었어요.","lv":2},{"no":53,"k":"사이다","e":"cider","s":"사이다가 시원해요.","lv":1},{"no":54,"k":"사탕","e":"candy","s":"아이들이 사탕을 좋아해요.","lv":2},{"no":55,"k":"삼계탕","e":"Samgyetang","s":"삼계탕은 여름에 먹어요.","lv":3},{"no":56,"k":"새우","e":"shrimp","s":"새우 요리가 맛있어요.","lv":2},{"no":57,"k":"샌드위치","e":"sandwich","s":"점심으로 샌드위치를 먹었어요.","lv":3},{"no":58,"k":"생선","e":"fish","s":"생선을 구워 먹었어요.","lv":2},{"no":59,"k":"설렁탕","e":"Seolleongtang","s":"설렁탕 한 그릇 주세요.","lv":3},{"no":60,"k":"설탕","e":"sugar","s":"커피에 설탕을 넣었어요.","lv":2},{"no":61,"k":"소고기","e":"beef","s":"소고기 스테이크를 먹었어요.","lv":3},{"no":62,"k":"소금","e":"salt","s":"요리에 소금을 넣어요.","lv":2},{"no":63,"k":"수돗물","e":"tap water","s":"수돗물은 마셔도 돼요.","lv":3},{"no":64,"k":"수박","e":"watermelon","s":"여름에 수박이 맛있어요.","lv":2},{"no":65,"k":"술","e":"alcohol, liquor","s":"친구들과 술을 마셨어요.","lv":1},{"no":66,"k":"쌀","e":"rice","s":"쌀로 밥을 지어요.","lv":1},{"no":67,"k":"쌀밥","e":"cooked rice","s":"뜨거운 쌀밥이 맛있어요.","lv":2},{"no":68,"k":"아이스크림","e":"ice cream","s":"더운 날 아이스크림을 먹었어요.","lv":3},{"no":69,"k":"야채","e":"vegetable","s":"야채를 많이 먹어요.","lv":2},{"no":70,"k":"양파","e":"onion","s":"요리에 양파를 넣었어요.","lv":2},{"no":71,"k":"오렌지","e":"orange","s":"오렌지 주스를 마셨어요.","lv":3},{"no":72,"k":"오이","e":"cucumber","s":"오이가 아삭아삭해요.","lv":2},{"no":73,"k":"오징어","e":"squid","s":"오징어볶음이 매워요.","lv":3},{"no":74,"k":"음료수","e":"drink, soft drink","s":"더운 날 음료수가 시원해요.","lv":3},{"no":75,"k":"음식","e":"food, cooking","s":"한국 음식이 맛있어요.","lv":2},{"no":76,"k":"인삼","e":"ginseng","s":"인삼이 건강에 좋아요.","lv":2},{"no":77,"k":"자장면","e":"Jajangmyeon","s":"자장면을 시켜 먹었어요.","lv":3},{"no":78,"k":"죽","e":"bamboo, porridge","s":"아침에 죽을 먹었어요.","lv":1},{"no":79,"k":"찌개","e":"stew, soup","s":"찌개가 뜨거워요.","lv":2},{"no":80,"k":"차","e":"car, tea","s":"차를 마셨어요.","lv":1},{"no":81,"k":"채소","e":"vegetable","s":"채소를 많이 먹어요.","lv":2},{"no":82,"k":"초콜릿","e":"chocolate","s":"발렌타인데이에 초콜릿을 선물했어요.","lv":3},{"no":83,"k":"카레","e":"curry","s":"카레를 만들어 먹었어요.","lv":2},{"no":84,"k":"커피","e":"coffee","s":"아침에 커피를 마셔요.","lv":2},{"no":85,"k":"케이크","e":"cake","s":"생일에 케이크를 먹었어요.","lv":3},{"no":86,"k":"콜라","e":"Coke","s":"콜라보다 물이 건강에 좋아요.","lv":2},{"no":87,"k":"콩","e":"bean, soy","s":"콩으로 두부를 만들어요.","lv":1},{"no":88,"k":"토마토","e":"tomato","s":"토마토가 빨개요.","lv":3},{"no":89,"k":"팀","e":"team","s":"우리 팀이 이겼어요.","lv":1},{"no":90,"k":"파","e":"wave, green onion","s":"파를 넣어서 끓였어요.","lv":1},{"no":91,"k":"포도","e":"grape","s":"포도가 달고 맛있어요.","lv":2},{"no":92,"k":"피자","e":"pizza","s":"피자를 시켜 먹었어요.","lv":2},{"no":93,"k":"햄버거","e":"hamburger","s":"빠른 점심으로 햄버거를 먹었어요.","lv":3},{"no":94,"k":"홍차","e":"black tea","s":"오후에 홍차를 마셔요.","lv":2}]},{"id":5,"ko":"식당 & 요리","en":"Restaurant & Cooking","color":"#C00000","short":"Dining","words":[{"no":1,"k":"건배","e":"cheers, toast","s":"다 같이 건배해요!","lv":2},{"no":2,"k":"계란","e":"egg","s":"계란 프라이를 해 먹었어요.","lv":2},{"no":3,"k":"굽다","e":"bake","s":"고기를 불에 구워요.","lv":1},{"no":4,"k":"그릇","e":"bowl, container, tableware","s":"큰 그릇에 담아 주세요.","lv":2},{"no":5,"k":"끓이다","e":"boil","s":"라면을 끓여 먹었어요.","lv":1},{"no":6,"k":"냄비","e":"pot","s":"냄비에 국을 끓여요.","lv":2},{"no":7,"k":"달다","e":"sweet","s":"이 케이크는 너무 달아요.","lv":1},{"no":8,"k":"담그다","e":"dip, pickle","s":"직접 김치를 담갔어요.","lv":2},{"no":9,"k":"더운물","e":"hot water","s":"따뜻한 더운물로 씻어요.","lv":3},{"no":10,"k":"드시다","e":"eat (honorific form)","s":"많이 드세요.","lv":1},{"no":11,"k":"뜨겁다","e":"hot","s":"국이 너무 뜨거워요.","lv":2},{"no":12,"k":"뜨다","e":"rise, open (the eyes)","s":"해가 뜨면 일어나요.","lv":1},{"no":13,"k":"마시다","e":"drink","s":"물을 많이 마시면 건강에 좋아요.","lv":1},{"no":14,"k":"맛","e":"flavor, taste","s":"이 음식은 맛이 특별해요.","lv":1},{"no":15,"k":"맛없다","e":"not delicious","s":"오늘 급식이 맛없었어요.","lv":1},{"no":16,"k":"맛있다","e":"delicious","s":"할머니 요리가 정말 맛있어요.","lv":1},{"no":17,"k":"맵다","e":"spicy","s":"한국 음식이 매워요.","lv":1},{"no":18,"k":"먹다","e":"eat","s":"밥을 다 먹었어요.","lv":1},{"no":19,"k":"메뉴","e":"menu","s":"메뉴를 골랐어요.","lv":2},{"no":20,"k":"물","e":"water","s":"물을 자주 마시면 건강에 좋아요.","lv":1},{"no":21,"k":"배달","e":"delivery","s":"음식을 배달 시켰어요.","lv":2},{"no":22,"k":"볶다","e":"fry","s":"야채를 볶아 먹었어요.","lv":1},{"no":23,"k":"부치다","e":"send, fry, transmit","s":"소포를 부쳤어요.","lv":2},{"no":24,"k":"붓다","e":"pour","s":"컵에 물을 부었어요.","lv":1},{"no":25,"k":"수저","e":"chopsticks and a spoon","s":"수저를 꺼내 주세요.","lv":2},{"no":26,"k":"숟가락","e":"spoon","s":"숟가락으로 국을 먹어요.","lv":3},{"no":27,"k":"시다","e":"sour","s":"이 음식이 너무 시어요.","lv":1},{"no":28,"k":"시키다","e":"make someone do, order","s":"커피를 시켰어요.","lv":2},{"no":29,"k":"식당","e":"restaurant, cafeteria","s":"이 식당 음식이 맛있어요.","lv":2},{"no":30,"k":"식사","e":"meal","s":"식사 맛있게 하세요.","lv":2},{"no":31,"k":"식탁","e":"table","s":"식탁에 음식을 차렸어요.","lv":2},{"no":32,"k":"싱겁다","e":"not salty","s":"국이 싱거워요.","lv":2},{"no":33,"k":"썰다","e":"chop, cut","s":"양파를 잘게 썰었어요.","lv":1},{"no":34,"k":"씹다","e":"chew, bite","s":"껌을 씹으며 걸었어요.","lv":1},{"no":35,"k":"아침","e":"morning, breakfast","s":"아침에 일찍 일어나요.","lv":2},{"no":36,"k":"아침밥","e":"breakfast","s":"아침밥을 꼭 먹어요.","lv":3},{"no":37,"k":"아침식사","e":"breakfast","s":"아침식사를 간단하게 했어요.","lv":3},{"no":38,"k":"요리","e":"cooking, cuisine","s":"한국 요리를 배우고 싶어요.","lv":2},{"no":39,"k":"우유","e":"milk","s":"아침에 우유를 마셔요.","lv":2},{"no":40,"k":"자리","e":"seat, location","s":"자리가 있어요?","lv":2},{"no":41,"k":"잔","e":"glass, ~ cup(s)","s":"물 한 잔 주세요.","lv":1},{"no":42,"k":"잡수시다","e":"eat (honorific form)","s":"할머니, 많이 잡수세요.","lv":2},{"no":43,"k":"저녁","e":"dinner, evening, night","s":"저녁에 가족과 식사했어요.","lv":2},{"no":44,"k":"저녁식사","e":"dinner","s":"저녁식사를 같이 해요.","lv":3},{"no":45,"k":"점심","e":"lunch","s":"점심 같이 먹을까요?","lv":2},{"no":46,"k":"점심시간","e":"lunchtime","s":"점심시간에 산책을 해요.","lv":3},{"no":47,"k":"점심식사","e":"lunch","s":"점심식사를 했어요.","lv":3},{"no":48,"k":"젓가락","e":"chopsticks","s":"젓가락으로 음식을 먹었어요.","lv":3},{"no":49,"k":"주문하다","e":"order","s":"음식을 주문했어요.","lv":2},{"no":50,"k":"주스","e":"juice","s":"오렌지 주스를 마셨어요.","lv":2},{"no":51,"k":"중국집","e":"Chinese restaurant","s":"중국집에서 짜장면을 먹었어요.","lv":3},{"no":52,"k":"중식","e":"Chinese cuisine","s":"오늘 중식을 먹었어요.","lv":2},{"no":53,"k":"짓다","e":"build, create","s":"집을 새로 지었어요.","lv":1},{"no":54,"k":"짜다","e":"salty, make (the plan)","s":"계획을 잘 짰어요.","lv":1},{"no":55,"k":"차갑다","e":"cold","s":"이 물이 차갑어요.","lv":2},{"no":56,"k":"카페","e":"cafe, coffee shop","s":"카페에서 공부했어요.","lv":2},{"no":57,"k":"칼","e":"knife, cutlery","s":"칼로 야채를 썰었어요.","lv":1},{"no":58,"k":"커피숍","e":"coffee shop","s":"커피숍에서 친구를 만났어요.","lv":3},{"no":59,"k":"컵","e":"cup","s":"컵에 물을 따랐어요.","lv":1},{"no":60,"k":"테이블","e":"table","s":"테이블 위에 커피가 있어요.","lv":3},{"no":61,"k":"포장","e":"packing","s":"선물을 예쁘게 포장했어요.","lv":2}]},{"id":6,"ko":"쇼핑 & 돈","en":"Shopping & Money","color":"#7030A0","short":"Shopping","words":[{"no":1,"k":"가게","e":"store, shop","s":"편의점은 24시간 열어요.","lv":2},{"no":2,"k":"가격","e":"price","s":"이 옷 가격이 얼마예요?","lv":2},{"no":3,"k":"값","e":"price","s":"시장에서 값을 깎았어요.","lv":1},{"no":4,"k":"계산하다","e":"calculate","s":"계산해 드릴게요.","lv":2},{"no":5,"k":"고르다","e":"choose","s":"마음에 드는 걸 고르세요.","lv":2},{"no":6,"k":"공중전화","e":"payphone, public phone","s":"핸드폰이 없을 때 공중전화를 써요.","lv":3},{"no":7,"k":"공짜","e":"free","s":"오늘은 공짜로 드려요.","lv":2},{"no":8,"k":"광고","e":"advertisement","s":"TV에서 재미있는 광고를 봤어요.","lv":2},{"no":9,"k":"교체","e":"substitute, change","s":"배터리를 교체해야 해요.","lv":2},{"no":10,"k":"꽃집","e":"florist","s":"꽃집에서 장미를 샀어요.","lv":2},{"no":11,"k":"내다","e":"pay, put out","s":"음식값을 제가 낼게요.","lv":1},{"no":12,"k":"달러","e":"dollar","s":"환전을 해서 달러를 받았어요.","lv":2},{"no":13,"k":"돈","e":"money","s":"돈을 모아서 여행 가요.","lv":1},{"no":14,"k":"동전","e":"coin","s":"동전이 없어서 지하철을 못 탔어요.","lv":2},{"no":15,"k":"무료","e":"free","s":"이 박물관은 무료예요.","lv":2},{"no":16,"k":"문구점","e":"stationery store","s":"문구점에서 연필을 샀어요.","lv":3},{"no":17,"k":"물건","e":"stuff, thing","s":"쇼핑할 때 물건을 잘 골라요.","lv":2},{"no":18,"k":"미용실","e":"beauty salon","s":"머리를 자르러 미용실에 갔어요.","lv":3},{"no":19,"k":"백화점","e":"department store","s":"백화점에서 옷을 샀어요.","lv":3},{"no":20,"k":"벌다","e":"earn, make money","s":"용돈을 벌기 위해 알바를 해요.","lv":1},{"no":21,"k":"부동산","e":"real estate","s":"부동산에 집을 알아봤어요.","lv":3},{"no":22,"k":"비싸다","e":"expensive","s":"이 식당은 음식이 비싸요.","lv":2},{"no":23,"k":"빌리다","e":"borrow, lend","s":"도서관에서 책을 빌렸어요.","lv":2},{"no":24,"k":"빵집","e":"bakery","s":"빵집에서 크로아상을 샀어요.","lv":2},{"no":25,"k":"사다","e":"buy","s":"마트에서 장을 봤어요.","lv":1},{"no":26,"k":"상자","e":"box","s":"상자에 넣어서 보냈어요.","lv":2},{"no":27,"k":"상품","e":"product","s":"이 상품이 요즘 인기예요.","lv":2},{"no":28,"k":"서비스","e":"service","s":"이 식당은 서비스가 좋아요.","lv":3},{"no":29,"k":"서점","e":"bookstore","s":"서점에서 새 책을 샀어요.","lv":2},{"no":30,"k":"선택하다","e":"choose, select","s":"원하는 것을 선택하세요.","lv":2},{"no":31,"k":"쇼핑","e":"shopping","s":"백화점에서 쇼핑했어요.","lv":2},{"no":32,"k":"슈퍼마켓","e":"supermarket","s":"슈퍼마켓에서 장을 봤어요.","lv":3},{"no":33,"k":"시장","e":"market","s":"재래시장에 갔어요.","lv":2},{"no":34,"k":"싸다","e":"cheap, wrap","s":"이 시장은 물건이 싸요.","lv":1},{"no":35,"k":"약국","e":"pharmacy","s":"약국에서 두통약을 샀어요.","lv":2},{"no":36,"k":"엔","e":"yen","s":"일본 돈은 엔이에요.","lv":1},{"no":37,"k":"옷가게","e":"clothing store","s":"옷가게에서 세일을 했어요.","lv":3},{"no":38,"k":"요금","e":"fee","s":"요금이 얼마예요?","lv":2},{"no":39,"k":"원","e":"won (currency units of Korea)","s":"이 커피는 5000원이에요.","lv":1},{"no":40,"k":"월급","e":"monthly salary","s":"이번 달 월급을 받았어요.","lv":2},{"no":41,"k":"은행","e":"bank","s":"은행에서 돈을 찾았어요.","lv":2},{"no":42,"k":"책방","e":"bookstore","s":"헌책방에서 책을 샀어요.","lv":2},{"no":43,"k":"카드","e":"card","s":"카드로 결제했어요.","lv":2},{"no":44,"k":"통장","e":"bank book, (deposit) passbook","s":"은행에서 통장을 만들었어요.","lv":2},{"no":45,"k":"팔다","e":"sell","s":"시장에서 야채를 팔아요.","lv":1},{"no":46,"k":"팔리다","e":"sell, be sold","s":"인기 있는 제품이 많이 팔려요.","lv":2},{"no":47,"k":"할인","e":"sale, discount","s":"오늘 할인 행사가 있어요.","lv":2},{"no":48,"k":"현금","e":"cash","s":"현금으로 계산했어요.","lv":2}]},{"id":7,"ko":"옷 & 패션","en":"Clothing & Fashion","color":"#00B0F0","short":"Clothing","words":[{"no":1,"k":"가방","e":"bag","s":"가방이 너무 무거워요.","lv":2},{"no":2,"k":"구두","e":"shoes","s":"새 구두가 발에 맞아요.","lv":2},{"no":3,"k":"그때","e":"then, at that time","s":"그때 사진을 찍었어요.","lv":2},{"no":4,"k":"넥타이","e":"necktie","s":"면접에 넥타이를 맸어요.","lv":3},{"no":5,"k":"등산복","e":"mountaineering clothing","s":"등산복을 입고 산에 갔어요.","lv":3},{"no":6,"k":"등산화","e":"hiking boots, climbing shoes","s":"등산화가 없어서 운동화를 신었어요.","lv":3},{"no":7,"k":"디자인","e":"design","s":"이 옷 디자인이 예뻐요.","lv":3},{"no":8,"k":"떠들다","e":"chatter, make a noise","s":"도서관에서 떠들면 안 돼요.","lv":2},{"no":9,"k":"모자","e":"hat","s":"햇볕이 강해서 모자를 썼어요.","lv":2},{"no":10,"k":"목걸이","e":"necklace","s":"예쁜 목걸이를 선물 받았어요.","lv":3},{"no":11,"k":"바지","e":"pants","s":"바지가 너무 작아요.","lv":2},{"no":12,"k":"반바지","e":"shorts","s":"여름에 반바지를 입어요.","lv":3},{"no":13,"k":"반지","e":"ring","s":"약혼 반지를 샀어요.","lv":2},{"no":14,"k":"벗다","e":"take off (clothes, shoes)","s":"신발을 벗고 들어오세요.","lv":1},{"no":15,"k":"봉지","e":"bag","s":"봉지에 넣어서 드릴게요.","lv":2},{"no":16,"k":"블라우스","e":"blouse","s":"흰 블라우스를 입었어요.","lv":3},{"no":17,"k":"빨다","e":"suck, do laundry","s":"세탁기로 옷을 빨았어요.","lv":1},{"no":18,"k":"빨래","e":"laundry, wash","s":"빨래를 널었어요.","lv":2},{"no":19,"k":"탁기","e":"washing machine","s":"세탁기로 빨래를 했어요.","lv":2},{"no":20,"k":"탁소","e":"dry cleaners, laundromat","s":"세탁소에 코트를 맡겼어요.","lv":2},{"no":21,"k":"손수건","e":"handkerchief","s":"손수건으로 땀을 닦았어요.","lv":3},{"no":22,"k":"수영복","e":"swimsuit","s":"수영복을 샀어요.","lv":3},{"no":23,"k":"스웨터","e":"sweater","s":"추워서 스웨터를 입었어요.","lv":3},{"no":24,"k":"스타킹","e":"stockings","s":"겨울에 스타킹을 신어요.","lv":3},{"no":25,"k":"신다","e":"put on, wear","s":"새 신발을 신었어요.","lv":1},{"no":26,"k":"신발","e":"shoes, footwear","s":"새 신발을 샀어요.","lv":2},{"no":27,"k":"안경","e":"glasses","s":"안경을 안 끼면 잘 안 보여요.","lv":2},{"no":28,"k":"액서리","e":"accessory","s":"예쁜 액세서리를 샀어요.","lv":3},{"no":29,"k":"양말","e":"socks","s":"양말이 젖어서 갈아 신었어요.","lv":2},{"no":30,"k":"양복","e":"suit","s":"면접에 양복을 입었어요.","lv":2},{"no":31,"k":"옷","e":"dress, clothes","s":"날씨에 맞는 옷을 입어요.","lv":1},{"no":32,"k":"옷장","e":"closet","s":"옷장을 새로 샀어요.","lv":2},{"no":33,"k":"와이셔츠","e":"shirt","s":"흰 와이셔츠를 입었어요.","lv":3},{"no":34,"k":"운동복","e":"sportswear, gym clothes","s":"운동할 때 운동복을 입어요.","lv":3},{"no":35,"k":"운동화","e":"sports shoes","s":"운동화를 신고 달려요.","lv":3},{"no":36,"k":"원피스","e":"one-piece dress","s":"원피스를 입고 파티에 갔어요.","lv":3},{"no":37,"k":"유행","e":"trend","s":"요즘 이런 스타일이 유행이에요.","lv":2},{"no":38,"k":"입다","e":"put on, wear","s":"오늘 무슨 옷을 입을까요?","lv":1},{"no":39,"k":"장갑","e":"gloves","s":"겨울에 장갑을 껴요.","lv":2},{"no":40,"k":"재킷","e":"jacket","s":"재킷을 입어서 따뜻해요.","lv":2},{"no":41,"k":"저렇게","e":"like that, in that way","s":"저렇게 하면 안 돼요.","lv":3},{"no":42,"k":"점퍼","e":"jacket","s":"가벼운 점퍼를 입었어요.","lv":2},{"no":43,"k":"주소","e":"address","s":"주소를 알려주세요.","lv":2},{"no":44,"k":"청바지","e":"blue jeans","s":"청바지를 입고 편하게 왔어요.","lv":3},{"no":45,"k":"치마","e":"skirt","s":"여름에 치마를 입어요.","lv":2},{"no":46,"k":"코트","e":"coat","s":"코트를 입고 나갔어요.","lv":2},{"no":47,"k":"티셔츠","e":"t-shirt","s":"흰 티셔츠를 입었어요.","lv":3},{"no":48,"k":"패션","e":"fashion","s":"요즘 패션 트렌드가 궁금해요.","lv":2},{"no":49,"k":"한복","e":"Hanbok, Korean traditional clothes","s":"설날에 한복을 입었어요.","lv":2}]},{"id":8,"ko":"집 & 생활","en":"Home & Daily Life","color":"#92D050","short":"Home Life","words":[{"no":1,"k":"가구","e":"furniture","s":"새 아파트에 가구를 샀어요.","lv":2},{"no":2,"k":"거실","e":"living room","s":"거실에서 TV를 봐요.","lv":2},{"no":3,"k":"거울","e":"mirror","s":"아침마다 거울을 봐요.","lv":2},{"no":4,"k":"계단","e":"stairs","s":"엘리베이터가 없어서 계단으로 올라가요.","lv":2},{"no":5,"k":"고장","e":"broken, malfunction","s":"에어컨이 고장났어요.","lv":2},{"no":6,"k":"고치다","e":"fix","s":"컴퓨터를 고쳐줄 수 있어요?","lv":2},{"no":7,"k":"기숙사","e":"dormitory","s":"기숙사에서 생활해요.","lv":3},{"no":8,"k":"깨끗하다","e":"clean","s":"방을 깨끗하게 청소했어요.","lv":2},{"no":9,"k":"끄다","e":"turn off, extinguish, stop","s":"나가기 전에 불을 꺼요.","lv":1},{"no":10,"k":"냉장고","e":"refrigerator","s":"냉장고에서 우유를 꺼냈어요.","lv":3},{"no":11,"k":"닦다","e":"wipe, polish","s":"양치질로 이를 닦아요.","lv":1},{"no":12,"k":"닫다","e":"close","s":"창문을 닫아 주세요.","lv":1},{"no":13,"k":"닫히다","e":"shut, close","s":"문이 저절로 닫혔어요.","lv":2},{"no":14,"k":"댁","e":"house","s":"선생님 댁이 어디세요?","lv":1},{"no":15,"k":"더럽다","e":"dirty","s":"신발이 더러워서 빨았어요.","lv":2},{"no":16,"k":"마르다","e":"dry","s":"빨래가 바람에 말랐어요.","lv":2},{"no":17,"k":"목욕","e":"bath, bathing","s":"매일 저녁 목욕해요.","lv":2},{"no":18,"k":"목욕하다","e":"take a bath","s":"뜨거운 물에 목욕했어요.","lv":2},{"no":19,"k":"문","e":"door, gate","s":"문을 닫아 주세요.","lv":1},{"no":20,"k":"방","e":"room","s":"방이 좁지만 깨끗해요.","lv":1},{"no":21,"k":"버리다","e":"abandon, throw away","s":"쓰레기를 버렸어요.","lv":2},{"no":22,"k":"벽","e":"wall","s":"벽에 그림을 걸었어요.","lv":1},{"no":23,"k":"부엌","e":"kitchen","s":"부엌에서 요리를 해요.","lv":2},{"no":24,"k":"불","e":"fire, electrical light","s":"촛불이 예뻐요.","lv":1},{"no":25,"k":"생활","e":"life","s":"서울 생활에 적응했어요.","lv":2},{"no":26,"k":"샤워하다","e":"take a shower","s":"아침에 샤워했어요.","lv":2},{"no":27,"k":"선풍기","e":"fan","s":"여름에 선풍기를 켜요.","lv":3},{"no":28,"k":"설거지","e":"washing dishes, dish-washing","s":"밥을 먹고 설거지를 했어요.","lv":3},{"no":29,"k":"계","e":"world","s":"세계 여러 나라를 여행했어요.","lv":1},{"no":30,"k":"수하다","e":"wash","s":"아침에 세수하고 나왔어요.","lv":1},{"no":31,"k":"우다","e":"set up, formulate","s":"목표를 세웠어요.","lv":1},{"no":32,"k":"일하다","e":"have a sale","s":"회사에서 열심히 일해요.","lv":1},{"no":33,"k":"소파","e":"sofa","s":"소파에 앉아서 TV를 봐요.","lv":2},{"no":34,"k":"수건","e":"towel, washcloth","s":"수건으로 몸을 닦았어요.","lv":2},{"no":35,"k":"쓰레기","e":"garbage","s":"쓰레기를 분리수거해요.","lv":3},{"no":36,"k":"씻다","e":"wash","s":"손을 깨끗이 씻어요.","lv":1},{"no":37,"k":"아파트","e":"apartment, mansion","s":"아파트에서 살아요.","lv":3},{"no":38,"k":"에어컨","e":"air conditioner","s":"더워서 에어컨을 켰어요.","lv":3},{"no":39,"k":"엘리베이터","e":"elevator","s":"엘리베이터를 타고 올라갔어요.","lv":3},{"no":40,"k":"열쇠","e":"key","s":"열쇠를 잃어버렸어요.","lv":2},{"no":41,"k":"의자","e":"chair","s":"의자가 편해요.","lv":2},{"no":42,"k":"이사","e":"move, moving","s":"새 아파트로 이사 갔어요.","lv":2},{"no":43,"k":"입구","e":"entrance","s":"입구가 어디예요?","lv":2},{"no":44,"k":"잠자다","e":"sleep, go to bed","s":"아기가 잠자고 있어요.","lv":2},{"no":45,"k":"정문","e":"front door, main gate","s":"정문 앞에서 기다려요.","lv":2},{"no":46,"k":"지갑","e":"wallet","s":"지갑을 잃어버렸어요.","lv":2},{"no":47,"k":"집","e":"house, shop","s":"집에 가고 싶어요.","lv":1},{"no":48,"k":"창문","e":"window","s":"창문을 열었어요.","lv":2},{"no":49,"k":"책상","e":"desk","s":"책상이 너무 좁아요.","lv":2},{"no":50,"k":"책장","e":"bookshelf","s":"책장에 책이 가득해요.","lv":2},{"no":51,"k":"청소기","e":"vacuum cleaner","s":"청소기로 방을 청소했어요.","lv":3},{"no":52,"k":"청소하다","e":"sweep, clean","s":"방을 깨끗이 청소했어요.","lv":2},{"no":53,"k":"출구","e":"exit","s":"출구가 어디예요?","lv":2},{"no":54,"k":"층","e":"layer, ~ floor","s":"몇 층에 사세요?","lv":1},{"no":55,"k":"침대","e":"bed","s":"침대가 편해요.","lv":2},{"no":56,"k":"켜다","e":"turn on (light, power, etc.)","s":"불을 켰어요.","lv":1},{"no":57,"k":"타월","e":"towel","s":"수영 후 타월로 닦았어요.","lv":2},{"no":58,"k":"텔레비전","e":"TV","s":"텔레비전에서 드라마를 봐요.","lv":3},{"no":59,"k":"틀다","e":"turn on (the switch)","s":"라디오를 틀었어요.","lv":1},{"no":60,"k":"하숙","e":"boarding house, lodging house","s":"하숙집에서 살았어요.","lv":2},{"no":61,"k":"하숙집","e":"boarding house, lodging house","s":"하숙집에서 한달 살았어요.","lv":3},{"no":62,"k":"화장실","e":"restroom, toilet, lavatory","s":"화장실이 어디예요?","lv":3},{"no":63,"k":"휴지","e":"toilet paper","s":"휴지를 주세요.","lv":2},{"no":64,"k":"휴지통","e":"trash can","s":"휴지통에 버렸어요.","lv":3}]},{"id":9,"ko":"학교 & 공부","en":"School & Education","color":"#0070C0","short":"School","words":[{"no":1,"k":"가르치다","e":"teach","s":"선생님이 한국어를 가르쳐요.","lv":3},{"no":2,"k":"강좌","e":"lecture","s":"온라인 한국어 강좌를 들어요.","lv":2},{"no":3,"k":"고등학교","e":"high school","s":"고등학교 때 공부를 열심히 했어요.","lv":3},{"no":4,"k":"고등학생","e":"high school student","s":"고등학생이 되면 더 바빠요.","lv":3},{"no":5,"k":"공부","e":"study","s":"공부를 더 열심히 해야 해요.","lv":2},{"no":6,"k":"공부하다","e":"study","s":"카페에서 공부했어요.","lv":2},{"no":7,"k":"공책","e":"notebook, note","s":"수업 시간에 공책에 필기해요.","lv":2},{"no":8,"k":"과학","e":"science","s":"과학 시간이 재미있어요.","lv":2},{"no":9,"k":"교과서","e":"textbook","s":"교과서를 펴세요.","lv":3},{"no":10,"k":"교실","e":"classroom","s":"교실에 학생이 많아요.","lv":2},{"no":11,"k":"국어","e":"Korean language","s":"국어 시험이 제일 어려웠어요.","lv":2},{"no":12,"k":"규칙","e":"rule","s":"규칙을 잘 지켜야 해요.","lv":2},{"no":13,"k":"글","e":"post, sentence, character","s":"블로그에 글을 써요.","lv":1},{"no":14,"k":"급","e":"class, grade","s":"저는 한국어 3급이에요.","lv":1},{"no":15,"k":"노트","e":"note","s":"수업 내용을 노트에 적었어요.","lv":2},{"no":16,"k":"단어","e":"word","s":"새 단어를 외웠어요.","lv":2},{"no":17,"k":"대학","e":"university, college","s":"대학에서 경제학을 공부해요.","lv":2},{"no":18,"k":"대학교","e":"university, college","s":"대학교 생활이 즐거워요.","lv":3},{"no":19,"k":"대학생","e":"college student","s":"대학생 때가 제일 자유로웠어요.","lv":3},{"no":20,"k":"대학원","e":"graduate school","s":"대학원에 진학하고 싶어요.","lv":3},{"no":21,"k":"대학원생","e":"postgraduate student, graduate student","s":"대학원생이 되어 연구를 해요.","lv":3},{"no":22,"k":"독서","e":"reading","s":"독서가 좋은 습관이에요.","lv":2},{"no":23,"k":"독서실","e":"reading room","s":"독서실에서 조용히 공부해요.","lv":3},{"no":24,"k":"독서하다","e":"read","s":"매일 30분씩 독서해요.","lv":2},{"no":25,"k":"듣기","e":"listening, hearing","s":"듣기 시험이 제일 어려웠어요.","lv":2},{"no":26,"k":"말하기","e":"speaking","s":"한국어 말하기 연습을 해요.","lv":3},{"no":27,"k":"문장","e":"sentence","s":"한국어 문장이 어려워요.","lv":2},{"no":28,"k":"발음","e":"pronunciation","s":"발음 연습을 열심히 해요.","lv":2},{"no":29,"k":"발표","e":"announcement, presentation","s":"수업에서 발표를 했어요.","lv":2},{"no":30,"k":"배우다","e":"learn","s":"요즘 기타를 배우고 있어요.","lv":2},{"no":31,"k":"볼펜","e":"ballpoint pen","s":"볼펜이 안 나와요.","lv":2},{"no":32,"k":"사례","e":"case, example","s":"좋은 사례를 들어 설명했어요.","lv":2},{"no":33,"k":"사전","e":"dictionary","s":"사전에서 단어를 찾았어요.","lv":2},{"no":34,"k":"설명","e":"explanation, description","s":"선생님의 설명이 이해됐어요.","lv":2},{"no":35,"k":"설명하다","e":"explain","s":"한번 설명해 드릴게요.","lv":2},{"no":36,"k":"수업","e":"class, lesson","s":"수업이 오전 9시에 시작해요.","lv":2},{"no":37,"k":"수첩","e":"note, notebook","s":"수첩에 메모했어요.","lv":2},{"no":38,"k":"수학","e":"mathematics","s":"수학이 어렵지만 재미있어요.","lv":2},{"no":39,"k":"숙제","e":"homework","s":"매일 숙제를 해요.","lv":2},{"no":40,"k":"스페인어","e":"Spanish","s":"스페인어도 배우고 싶어요.","lv":3},{"no":41,"k":"시험","e":"exam, test","s":"내일 시험이 있어요.","lv":2},{"no":42,"k":"쓰기","e":"writing, dictation","s":"쓰기 연습을 매일 해요.","lv":2},{"no":43,"k":"쓰다","e":"write, use, wear (glasses)","s":"편지를 써요.","lv":1},{"no":44,"k":"아랍어","e":"Arabic","s":"아랍어는 배우기 어렵다고 해요.","lv":3},{"no":45,"k":"연습","e":"practice","s":"말하기 연습을 열심히 해요.","lv":2},{"no":46,"k":"연습하다","e":"practice","s":"매일 피아노를 연습해요.","lv":2},{"no":47,"k":"연필","e":"pencil","s":"연필로 메모했어요.","lv":2},{"no":48,"k":"열다","e":"open","s":"문을 열어 주세요.","lv":1},{"no":49,"k":"열리다","e":"be opened","s":"창문이 열렸어요.","lv":2},{"no":50,"k":"영어","e":"English","s":"영어로 이메일을 썼어요.","lv":2},{"no":51,"k":"영어회화","e":"English conversation","s":"영어회화를 공부해요.","lv":3},{"no":52,"k":"예문","e":"example, model sentence","s":"예문을 보면 이해가 돼요.","lv":2},{"no":53,"k":"외국어","e":"foreign language","s":"외국어를 잘하고 싶어요.","lv":3},{"no":54,"k":"이해","e":"understanding","s":"이해가 됐어요.","lv":2},{"no":55,"k":"이해하다","e":"understand","s":"천천히 설명해서 이해했어요.","lv":2},{"no":56,"k":"인터넷","e":"internet","s":"인터넷으로 뉴스를 봐요.","lv":3},{"no":57,"k":"일기","e":"diary","s":"매일 일기를 써요.","lv":2},{"no":58,"k":"읽기","e":"reading","s":"읽기 연습을 해요.","lv":2},{"no":59,"k":"읽다","e":"read","s":"책을 읽었어요.","lv":1},{"no":60,"k":"입학","e":"admission","s":"대학교에 입학했어요.","lv":2},{"no":61,"k":"적다","e":"be few, write down","s":"글을 적었어요.","lv":1},{"no":62,"k":"전공","e":"major","s":"전공이 뭐예요?","lv":2},{"no":63,"k":"전자사전","e":"electronic dictionary","s":"전자사전을 사용해요.","lv":3},{"no":64,"k":"점수","e":"score, point","s":"시험 점수가 잘 나왔어요.","lv":2},{"no":65,"k":"졸업","e":"graduation","s":"대학교를 졸업했어요.","lv":2},{"no":66,"k":"졸업하다","e":"graduate","s":"내년에 졸업해요.","lv":2},{"no":67,"k":"중국어","e":"Chinese","s":"중국어 수업을 들어요.","lv":3},{"no":68,"k":"중학교","e":"middle school, Junior high school","s":"중학교 때 친구들을 만났어요.","lv":3},{"no":69,"k":"중학생","e":"middle school student","s":"중학생이 되어서 공부가 어려워요.","lv":3},{"no":70,"k":"지각","e":"tardy, being late","s":"오늘 지각을 해서 혼났어요.","lv":2},{"no":71,"k":"지내다","e":"stay, spend, live","s":"잘 지내고 있어요.","lv":2},{"no":72,"k":"지우개","e":"eraser","s":"지우개로 지웠어요.","lv":3},{"no":73,"k":"질문","e":"question","s":"질문이 있어요.","lv":2},{"no":74,"k":"질문하다","e":"ask a question","s":"선생님께 질문했어요.","lv":2},{"no":75,"k":"책","e":"book","s":"도서관에서 책을 빌렸어요.","lv":1},{"no":76,"k":"초등학교","e":"elementary school","s":"초등학교를 졸업했어요.","lv":3},{"no":77,"k":"초등학생","e":"elementary student","s":"초등학생이 되었어요.","lv":3},{"no":78,"k":"칠판","e":"blackboard","s":"칠판에 단어를 썼어요.","lv":2},{"no":79,"k":"컴퓨터","e":"computer, PC","s":"컴퓨터로 일을 해요.","lv":3},{"no":80,"k":"펜","e":"pen","s":"펜으로 서명했어요.","lv":1},{"no":81,"k":"펴다","e":"spread, stretch","s":"책을 펼쳤어요.","lv":1},{"no":82,"k":"프린트","e":"print","s":"자료를 프린트했어요.","lv":3},{"no":83,"k":"필통","e":"pencil case","s":"필통에 연필이 가득 있어요.","lv":2},{"no":84,"k":"학교","e":"school","s":"학교가 집에서 가까워요.","lv":2},{"no":85,"k":"학기","e":"semester","s":"새 학기가 시작됐어요.","lv":2},{"no":86,"k":"학년","e":"grade, school year","s":"몇 학년이에요?","lv":2},{"no":87,"k":"학생증","e":"student ID card","s":"학생증을 제시했어요.","lv":3},{"no":88,"k":"학원","e":"academy, school","s":"영어 학원에 다녀요.","lv":2},{"no":89,"k":"한국어","e":"Korean language","s":"한국어를 공부한 지 1년이 됐어요.","lv":3},{"no":90,"k":"한글","e":"Hangul","s":"한글을 읽을 수 있어요.","lv":2},{"no":91,"k":"합격","e":"pass","s":"시험에 합격했어요.","lv":2}]},{"id":10,"ko":"직장 & 일","en":"Work & Career","color":"#843C0C","short":"Work","words":[{"no":1,"k":"결과","e":"result","s":"시험 결과가 생각보다 좋았어요.","lv":2},{"no":2,"k":"결정","e":"decision","s":"빨리 결정해야 해요.","lv":2},{"no":3,"k":"결정하다","e":"decide","s":"어디 갈지 결정했어요?","lv":2},{"no":4,"k":"계획","e":"plan","s":"이번 주말 계획이 있어요?","lv":2},{"no":5,"k":"끝내다","e":"finish","s":"숙제를 다 끝냈어요.","lv":2},{"no":6,"k":"노력하다","e":"endeavor, strive","s":"매일 열심히 노력하고 있어요.","lv":2},{"no":7,"k":"마치다","e":"finish, end","s":"수업을 마치고 집에 갔어요.","lv":2},{"no":8,"k":"메모","e":"memo","s":"중요한 내용은 메모해요.","lv":2},{"no":9,"k":"모임","e":"meeting, gathering","s":"친구 모임이 있어요.","lv":2},{"no":10,"k":"발전","e":"development","s":"기술이 빠르게 발전해요.","lv":2},{"no":11,"k":"보도","e":"sidewalk, report","s":"뉴스 보도를 봤어요.","lv":2},{"no":12,"k":"부업","e":"sideline","s":"주말에 부업을 해요.","lv":2},{"no":13,"k":"사무실","e":"office","s":"사무실에서 일해요.","lv":3},{"no":14,"k":"사장","e":"CEO, the president","s":"사장님이 회의를 열었어요.","lv":2},{"no":15,"k":"서류","e":"document","s":"서류를 제출했어요.","lv":2},{"no":16,"k":"시작","e":"start","s":"새 학기 시작이에요.","lv":2},{"no":17,"k":"시작하다","e":"start, begin","s":"지금부터 시작할게요.","lv":2},{"no":18,"k":"신청서","e":"application forms","s":"신청서를 제출했어요.","lv":3},{"no":19,"k":"신청하다","e":"put in for, apply for","s":"수업을 신청했어요.","lv":2},{"no":20,"k":"인터뷰하다","e":"interview","s":"기자가 인터뷰를 했어요.","lv":3},{"no":21,"k":"일하다","e":"work","s":"회사에서 열심히 일해요.","lv":1},{"no":22,"k":"자동차회사","e":"car company","s":"자동차회사에 취직했어요.","lv":3},{"no":23,"k":"자료","e":"material, document","s":"자료를 정리했어요.","lv":2},{"no":24,"k":"정보","e":"information","s":"정보를 찾았어요.","lv":2},{"no":25,"k":"준비","e":"preparation","s":"발표 준비를 했어요.","lv":2},{"no":26,"k":"준비하다","e":"prepare","s":"여행 준비를 하고 있어요.","lv":2},{"no":27,"k":"직업","e":"job, profession","s":"직업이 뭐예요?","lv":2},{"no":28,"k":"직장","e":"workplace","s":"직장을 구했어요.","lv":2},{"no":29,"k":"출근하다","e":"go to work","s":"아침 9시에 출근해요.","lv":2},{"no":30,"k":"출장","e":"business trip","s":"출장을 다녀왔어요.","lv":2},{"no":31,"k":"취직하다","e":"get a job","s":"원하는 회사에 취직했어요.","lv":2},{"no":32,"k":"퇴근하다","e":"leave the office","s":"6시에 퇴근했어요.","lv":2},{"no":33,"k":"홈페이지","e":"home page","s":"회사 홈페이지를 봤어요.","lv":3},{"no":34,"k":"확인하다","e":"confirm, check","s":"예약을 확인했어요.","lv":2},{"no":35,"k":"회사","e":"company","s":"회사에서 야근했어요.","lv":2},{"no":36,"k":"회사원","e":"employee","s":"회사원으로 일하고 있어요.","lv":3},{"no":37,"k":"회의","e":"conference","s":"회의가 두 시간이나 걸렸어요.","lv":2}]},{"id":11,"ko":"교통 & 이동","en":"Getting Around","color":"#00B050","short":"Transport","words":[{"no":1,"k":"가다","e":"go","s":"주말에 친구 집에 가요.","lv":1},{"no":2,"k":"가져가다","e":"take away","s":"우산을 가져가세요. 비가 올 것 같아요.","lv":3},{"no":3,"k":"가져오다","e":"bring","s":"물 좀 가져와 주세요.","lv":3},{"no":4,"k":"갈아타다","e":"transfer","s":"2호선에서 3호선으로 갈아타요.","lv":3},{"no":5,"k":"건너가다","e":"cross (a road)","s":"횡단보도로 건너가요.","lv":3},{"no":6,"k":"건너다","e":"cross over","s":"다리를 건너면 공원이 나와요.","lv":2},{"no":7,"k":"건너편","e":"other side, opposite side","s":"건너편 건물이 병원이에요.","lv":3},{"no":8,"k":"걷다","e":"walk","s":"매일 아침 30분씩 걸어요.","lv":1},{"no":9,"k":"걸어가다","e":"walk (go)","s":"날씨가 좋아서 걸어갔어요.","lv":3},{"no":10,"k":"걸어오다","e":"walk (come)","s":"버스 대신 걸어왔어요.","lv":3},{"no":11,"k":"고속버스","e":"express bus","s":"고속버스로 부산에 갔어요.","lv":3},{"no":12,"k":"골목","e":"alley","s":"골목에 맛있는 가게가 있어요.","lv":2},{"no":13,"k":"교통","e":"traffic","s":"서울은 교통이 복잡해요.","lv":2},{"no":14,"k":"교통사고","e":"traffic accident","s":"교통사고가 나서 길이 막혔어요.","lv":3},{"no":15,"k":"기사","e":"article, driver, engineer","s":"신문 기사를 읽었어요.","lv":2},{"no":16,"k":"기차","e":"train","s":"기차로 부산에 갔어요.","lv":2},{"no":17,"k":"길","e":"way, road","s":"이 길이 맞아요?","lv":1},{"no":18,"k":"나가다","e":"go out, get out","s":"잠깐 밖에 나가요.","lv":2},{"no":19,"k":"나오다","e":"come out, appear","s":"새 앨범이 나왔어요.","lv":2},{"no":20,"k":"나타나다","e":"appear","s":"화면에 글자가 나타났어요.","lv":3},{"no":21,"k":"내려가다","e":"go down","s":"계단으로 내려가요.","lv":3},{"no":22,"k":"내려오다","e":"come down","s":"산에서 내려왔어요.","lv":3},{"no":23,"k":"내리다","e":"go down","s":"다음 역에서 내려요.","lv":2},{"no":24,"k":"다녀오다","e":"return, come back","s":"어서 다녀오세요.","lv":3},{"no":25,"k":"다니다","e":"go, commute","s":"회사에 다니고 있어요.","lv":2},{"no":26,"k":"다음해","e":"next year, following year","s":"다음해에 결혼할 거예요.","lv":3},{"no":27,"k":"달리다","e":"run","s":"매일 아침 공원을 달려요.","lv":2},{"no":28,"k":"데리다","e":"bring, take along","s":"아이를 학교에 데려왔어요.","lv":2},{"no":29,"k":"도로","e":"road","s":"이 도로는 항상 막혀요.","lv":2},{"no":30,"k":"도착","e":"arrival","s":"도착하면 연락 주세요.","lv":2},{"no":31,"k":"도착하다","e":"arrive","s":"기차가 제시간에 도착했어요.","lv":2},{"no":32,"k":"돌아가다","e":"return, go back","s":"집으로 돌아가요.","lv":3},{"no":33,"k":"돌아오다","e":"come back, come home","s":"여행에서 돌아왔어요.","lv":3},{"no":34,"k":"들어가다","e":"go in, enter","s":"수업이 시작되어서 교실에 들어갔어요.","lv":3},{"no":35,"k":"들어오다","e":"come in, enter","s":"어서 들어오세요.","lv":3},{"no":36,"k":"따라가다","e":"follow","s":"안내원을 따라갔어요.","lv":3},{"no":37,"k":"따라오다","e":"come with, follow","s":"저를 따라오세요.","lv":3},{"no":38,"k":"따르다","e":"follow","s":"선생님 말씀을 따랐어요.","lv":2},{"no":39,"k":"떠나다","e":"leave","s":"고향을 떠나서 서울에 왔어요.","lv":2},{"no":40,"k":"뛰다","e":"run","s":"늦어서 뛰었어요.","lv":1},{"no":41,"k":"맞은편","e":"across, the other side, opposite","s":"맞은편에 카페가 있어요.","lv":3},{"no":42,"k":"메다","e":"shoulder, carry","s":"가방을 어깨에 메고 갔어요.","lv":1},{"no":43,"k":"바쁘다","e":"busy","s":"요즘 일이 많아서 바빠요.","lv":2},{"no":44,"k":"방송","e":"broadcast","s":"방송 시간이 바뀌었어요.","lv":2},{"no":45,"k":"방송국","e":"broadcast stations","s":"방송국에서 일해요.","lv":3},{"no":46,"k":"버스","e":"bus","s":"버스를 타고 학교에 가요.","lv":2},{"no":47,"k":"비행기","e":"airplane","s":"비행기를 타고 해외에 갔어요.","lv":3},{"no":48,"k":"비행장","e":"airfield, airport","s":"비행장 근처에 호텔이 있어요.","lv":3},{"no":49,"k":"사거리","e":"intersection, four corners","s":"사거리에서 오른쪽으로 가세요.","lv":3},{"no":50,"k":"사고","e":"accident","s":"교통사고가 났어요.","lv":2},{"no":51,"k":"삼거리","e":"intersection, three-way intersection","s":"삼거리에서 왼쪽으로 꺾어요.","lv":3},{"no":52,"k":"역","e":"station","s":"이번 역에서 내려요.","lv":1},{"no":53,"k":"열차","e":"train","s":"열차가 떠났어요.","lv":2},{"no":54,"k":"엽서","e":"postcard","s":"여행지에서 엽서를 보냈어요.","lv":2},{"no":55,"k":"오다","e":"come","s":"어서 오세요.","lv":1},{"no":56,"k":"올라가다","e":"go up","s":"에스컬레이터로 올라가요.","lv":3},{"no":57,"k":"올라오다","e":"come up","s":"산을 올라왔어요.","lv":3},{"no":58,"k":"올려놓다","e":"put on, place","s":"책을 책상에 올려놓았어요.","lv":3},{"no":59,"k":"옮기다","e":"move, transfer, translate","s":"짐을 새 집으로 옮겼어요.","lv":2},{"no":60,"k":"운전하다","e":"drive","s":"면허를 따서 운전해요.","lv":2},{"no":61,"k":"자동차","e":"car, automobile","s":"자동차로 여행을 갔어요.","lv":3},{"no":62,"k":"자전거","e":"bicycle","s":"자전거를 타고 공원에 갔어요.","lv":3},{"no":63,"k":"전기자동차","e":"electric car","s":"전기자동차가 환경에 좋아요.","lv":3},{"no":64,"k":"정거장","e":"station, depot","s":"정거장에서 내렸어요.","lv":3},{"no":65,"k":"정류장","e":"station, bus stop","s":"버스 정류장이 어디예요?","lv":3},{"no":66,"k":"조심하다","e":"be careful, warn","s":"운전할 때 조심해야 해요.","lv":2},{"no":67,"k":"지하","e":"underground","s":"지하에 주차장이 있어요.","lv":2},{"no":68,"k":"지하도","e":"underpass","s":"지하도로 건너가요.","lv":3},{"no":69,"k":"지하철","e":"subway","s":"지하철로 출근해요.","lv":3},{"no":70,"k":"지하철역","e":"subway station","s":"지하철역 근처에 살아요.","lv":3},{"no":71,"k":"출발","e":"start, departure","s":"내일 아침 출발해요.","lv":2},{"no":72,"k":"출발하다","e":"depart","s":"9시에 출발해요.","lv":2},{"no":73,"k":"타다","e":"ride, get on","s":"버스를 타고 왔어요.","lv":1},{"no":74,"k":"택시","e":"taxi","s":"택시를 타고 공항에 갔어요.","lv":2},{"no":75,"k":"터미널","e":"terminal","s":"터미널에서 버스를 탔어요.","lv":3},{"no":76,"k":"횡단보도","e":"crosswalk","s":"횡단보도를 건너요.","lv":3}]},{"id":12,"ko":"여행 & 장소","en":"Travel & Places","color":"#FF7F50","short":"Travel","words":[{"no":1,"k":"건물","e":"building","s":"저 건물 몇 층이에요?","lv":2},{"no":2,"k":"경기장","e":"stadium, arena","s":"경기장에 사람이 많아요.","lv":3},{"no":3,"k":"경복궁","e":"Gyeongbokgung","s":"경복궁은 조선 시대 왕궁이에요.","lv":3},{"no":4,"k":"경주","e":"Gyeongju","s":"경주에 역사 유적이 많아요.","lv":2},{"no":5,"k":"경치","e":"view, landscape","s":"산 위에서 보는 경치가 아름다워요.","lv":2},{"no":6,"k":"고향","e":"hometown","s":"고향이 어디예요?","lv":2},{"no":7,"k":"곳","e":"place","s":"서울에 가볼 만한 곳이 많아요.","lv":1},{"no":8,"k":"공간","e":"space","s":"이 방은 공간이 넓어요.","lv":2},{"no":9,"k":"공원","e":"park","s":"공원에서 산책했어요.","lv":2},{"no":10,"k":"공항","e":"airport","s":"공항에 마중 나왔어요.","lv":2},{"no":11,"k":"관광하다","e":"travel, sightsee","s":"서울을 관광했어요.","lv":2},{"no":12,"k":"교회","e":"church","s":"일요일에 교회에 가요.","lv":2},{"no":13,"k":"구경하다","e":"take a look","s":"인사동에서 구경했어요.","lv":2},{"no":14,"k":"국내","e":"domestic","s":"이번 여행은 국내로 가요.","lv":2},{"no":15,"k":"국립","e":"nationalestablished, state","s":"국립 박물관에 갔어요.","lv":2},{"no":16,"k":"국적","e":"nationality, country of citizenship","s":"국적이 어디예요?","lv":2},{"no":17,"k":"국제","e":"international","s":"국제 행사에 참가했어요.","lv":2},{"no":18,"k":"극장","e":"theater, cinema","s":"극장에서 뮤지컬을 봤어요.","lv":2},{"no":19,"k":"김포공항","e":"Gimpo International Airport","s":"김포공항에서 비행기를 탔어요.","lv":3},{"no":20,"k":"나라","e":"country","s":"한국은 어떤 나라예요?","lv":2},{"no":21,"k":"남대문시장","e":"Namdaemun market","s":"남대문시장에서 옷을 샀어요.","lv":3},{"no":22,"k":"남미","e":"South America","s":"남미를 여행하고 싶어요.","lv":2},{"no":23,"k":"뉴욕","e":"New York","s":"뉴욕에 가보고 싶어요.","lv":2},{"no":24,"k":"대사관","e":"embassy","s":"비자를 받으러 대사관에 갔어요.","lv":3},{"no":25,"k":"대한민국","e":"Republic of Korea, South Korea","s":"대한민국은 동아시아에 있어요.","lv":3},{"no":26,"k":"도서관","e":"library","s":"도서관에서 시험 공부를 해요.","lv":3},{"no":27,"k":"도시","e":"city","s":"서울은 큰 도시예요.","lv":2},{"no":28,"k":"도쿄","e":"Tokyo","s":"도쿄에 여행을 갔어요.","lv":2},{"no":29,"k":"독일","e":"Germany","s":"독일 맥주가 유명해요.","lv":2},{"no":30,"k":"동네","e":"town, neighborhood","s":"동네 친구들과 놀았어요.","lv":2},{"no":31,"k":"동대문시장","e":"Dongdaemun market","s":"동대문시장에서 옷을 샀어요.","lv":3},{"no":32,"k":"동양","e":"eastern, orient","s":"동양 문화가 독특해요.","lv":2},{"no":33,"k":"러시아","e":"Russia","s":"러시아는 매우 추운 나라예요.","lv":3},{"no":34,"k":"멕시코","e":"Mexico","s":"멕시코 음식이 매워요.","lv":3},{"no":35,"k":"몽골","e":"Mongolia","s":"몽골 초원을 여행했어요.","lv":2},{"no":36,"k":"문화","e":"culture","s":"다양한 문화를 경험했어요.","lv":2},{"no":37,"k":"미국","e":"The United States","s":"미국 영화를 자주 봐요.","lv":2},{"no":38,"k":"미술관","e":"art gallery, art museum","s":"주말에 미술관에 갔어요.","lv":3},{"no":39,"k":"민속촌","e":"folk village","s":"민속촌에서 전통 음식을 먹었어요.","lv":3},{"no":40,"k":"박물관","e":"museum","s":"역사 박물관에서 관람했어요.","lv":3},{"no":41,"k":"베이징","e":"Beijing","s":"베이징에서 올림픽이 열렸어요.","lv":3},{"no":42,"k":"베트남","e":"Vietnam","s":"베트남 음식이 맛있어요.","lv":3},{"no":43,"k":"부산","e":"Busan","s":"부산에서 해수욕을 했어요.","lv":2},{"no":44,"k":"브라질","e":"Brazil","s":"브라질 커피가 맛있어요.","lv":3},{"no":45,"k":"빌딩","e":"building","s":"빌딩 높이가 엄청나요.","lv":2},{"no":46,"k":"서양","e":"western, west","s":"서양 문화를 공부해요.","lv":2},{"no":47,"k":"서울","e":"Seoul","s":"서울은 한국의 수도예요.","lv":2},{"no":48,"k":"서울역","e":"Seoul station","s":"서울역에서 KTX를 탔어요.","lv":3},{"no":49,"k":"설악산","e":"Mt. Seorak","s":"설악산 단풍이 아름다워요.","lv":3},{"no":50,"k":"섬","e":"island","s":"제주도는 섬이에요.","lv":1},{"no":51,"k":"센터","e":"center","s":"문화 센터에서 요가를 배워요.","lv":2},{"no":52,"k":"소풍","e":"picnic, trip","s":"소풍에 김밥을 가져갔어요.","lv":2},{"no":53,"k":"수도","e":"capital, water supply","s":"서울은 한국의 수도예요.","lv":2},{"no":54,"k":"시골","e":"countryside","s":"방학에 시골에 다녀왔어요.","lv":2},{"no":55,"k":"시내","e":"downtown, city, stream","s":"시내에 쇼핑하러 갔어요.","lv":2},{"no":56,"k":"시설","e":"facility","s":"이 헬스장 시설이 좋아요.","lv":2},{"no":57,"k":"시외","e":"suburbs","s":"시외 버스를 탔어요.","lv":2},{"no":58,"k":"시청","e":"city hall","s":"시청 앞에 행사가 있어요.","lv":2},{"no":59,"k":"아시아","e":"Asia","s":"아시아에는 다양한 문화가 있어요.","lv":3},{"no":60,"k":"아프리카","e":"Africa","s":"아프리카는 더운 나라예요.","lv":3},{"no":61,"k":"안내하다","e":"guide, invite","s":"손님을 안내했어요.","lv":2},{"no":62,"k":"여권","e":"passport","s":"여권이 필요해요.","lv":2},{"no":63,"k":"여행","e":"travel","s":"제주도로 여행을 갔어요.","lv":2},{"no":64,"k":"여행사","e":"travel agency, travel firm","s":"여행사에서 패키지를 예약했어요.","lv":3},{"no":65,"k":"영국","e":"The United Kingdom","s":"영국에서 유학했어요.","lv":2},{"no":66,"k":"예약","e":"reservation","s":"미리 예약했어요.","lv":2},{"no":67,"k":"외국","e":"foreign country","s":"외국에서 공부하고 싶어요.","lv":2},{"no":68,"k":"요르단","e":"Jordan","s":"요르단은 아랍 나라예요.","lv":3},{"no":69,"k":"우리나라","e":"our country, South Korea","s":"우리나라 음식이 맛있어요.","lv":3},{"no":70,"k":"우체국","e":"post office","s":"우체국에서 소포를 보냈어요.","lv":3},{"no":71,"k":"유럽","e":"Europe","s":"유럽 여행을 하고 싶어요.","lv":2},{"no":72,"k":"유학","e":"study abroad","s":"한국으로 유학을 왔어요.","lv":2},{"no":73,"k":"유학생","e":"foreign student, international student","s":"이 학교에 유학생이 많아요.","lv":3},{"no":74,"k":"이집트","e":"Egypt","s":"이집트에 피라미드가 있어요.","lv":3},{"no":75,"k":"인도","e":"India","s":"인도 음식이 향기로워요.","lv":2},{"no":76,"k":"인천","e":"Incheon","s":"인천공항은 한국에서 제일 큰 공항이에요.","lv":2},{"no":77,"k":"일본","e":"Japan","s":"일본 음식도 맛있어요.","lv":2},{"no":78,"k":"일본드라마","e":"Japanese drama","s":"일본드라마도 재미있어요.","lv":3},{"no":79,"k":"일본말","e":"Japanese language","s":"일본말도 조금 해요.","lv":3},{"no":80,"k":"일본사람","e":"Japanese people","s":"일본사람 친구가 생겼어요.","lv":3},{"no":81,"k":"일본어","e":"Japanese language","s":"일본어를 공부하고 있어요.","lv":3},{"no":82,"k":"일본요리","e":"Japanese food","s":"일본요리 중에 초밥이 맛있어요.","lv":3},{"no":83,"k":"일식","e":"Japanese style, Japanese food","s":"일식 레스토랑에 갔어요.","lv":2},{"no":84,"k":"장소","e":"place","s":"만날 장소를 정했어요.","lv":2},{"no":85,"k":"절","e":"~ section(s), temple","s":"사찰에서 절을 했어요.","lv":1},{"no":86,"k":"제주도","e":"Jeju Island","s":"제주도에 여행을 갔어요.","lv":3},{"no":87,"k":"조선","e":"shipbuilding, Korea","s":"조선시대 역사가 흥미로워요.","lv":2},{"no":88,"k":"조선말","e":"Korean language","s":"조선말은 한국어예요.","lv":3},{"no":89,"k":"조선어","e":"Korean language","s":"조선어와 한국어는 같은 언어예요.","lv":3},{"no":90,"k":"종로","e":"Jong-ro","s":"종로에 맛있는 음식점이 많아요.","lv":2},{"no":91,"k":"주차장","e":"parking lot","s":"주차장에 차를 세웠어요.","lv":3},{"no":92,"k":"주차하다","e":"park","s":"잠깐 주차했어요.","lv":2},{"no":93,"k":"중국","e":"China","s":"중국은 인구가 많아요.","lv":2},{"no":94,"k":"중심","e":"center","s":"서울 중심에 살아요.","lv":2},{"no":95,"k":"지도","e":"map","s":"서울 지도를 찾았어요.","lv":2},{"no":96,"k":"지방","e":"fat, region","s":"서울 외 지방에서 왔어요.","lv":2},{"no":97,"k":"짐","e":"load, baggage","s":"짐이 많아서 힘들어요.","lv":1},{"no":98,"k":"찾아가다","e":"go to visit","s":"친구 집을 찾아갔어요.","lv":3},{"no":99,"k":"찾아오다","e":"come to visit","s":"멀리서 찾아와 줘서 고마워요.","lv":3},{"no":100,"k":"추석","e":"Chusoku (Korean Thanksgiving Day)","s":"추석에 고향에 갔어요.","lv":2},{"no":101,"k":"캐나다","e":"Canada","s":"캐나다는 자연이 아름다워요.","lv":2},{"no":102,"k":"태국","e":"Thailand","s":"태국 음식이 맛있어요.","lv":2},{"no":103,"k":"평양","e":"Pyongyang","s":"평양은 북한의 수도예요.","lv":2},{"no":104,"k":"프랑스","e":"France","s":"프랑스에 가고 싶어요.","lv":3},{"no":105,"k":"한강","e":"Han River, Hangang","s":"한강에서 야경을 봤어요.","lv":2},{"no":106,"k":"한국","e":"Korea","s":"한국에서 1년째 살고 있어요.","lv":2},{"no":107,"k":"한국드라마","e":"Korean drama","s":"한국드라마가 세계적으로 인기예요.","lv":3},{"no":108,"k":"한국말","e":"Korean language","s":"한국말이 어려워요.","lv":3},{"no":109,"k":"한국사람","e":"Korean people","s":"한국사람은 정이 많아요.","lv":3},{"no":110,"k":"한국요리","e":"Korean cuisine","s":"한국요리를 배우고 있어요.","lv":3},{"no":111,"k":"한식","e":"Korean cuisine","s":"한식이 맛있어요.","lv":2},{"no":112,"k":"해외","e":"overseas","s":"해외여행을 하고 싶어요.","lv":2},{"no":113,"k":"해외여행","e":"overseas trip","s":"처음으로 해외여행을 갔어요.","lv":3},{"no":114,"k":"호주","e":"Australia","s":"호주에서 여름은 12월이에요.","lv":2},{"no":115,"k":"호텔","e":"hotel","s":"호텔에서 묵었어요.","lv":2}]},{"id":13,"ko":"건강 & 병원","en":"Health & Medical","color":"#FF69B4","short":"Health","words":[{"no":1,"k":"감기","e":"cold","s":"날씨가 추워서 감기에 걸렸어요.","lv":2},{"no":2,"k":"감기약","e":"cold medicine","s":"약국에서 감기약을 샀어요.","lv":3},{"no":3,"k":"건강","e":"health","s":"건강이 최고예요.","lv":2},{"no":4,"k":"건강하다","e":"be healthy","s":"할머니는 아직도 건강하세요.","lv":2},{"no":5,"k":"고프다","e":"hungry","s":"점심을 안 먹어서 배가 고파요.","lv":2},{"no":6,"k":"금연","e":"no smoking","s":"여기는 금연 구역이에요.","lv":2},{"no":7,"k":"금주","e":"abstinence, temperance","s":"건강을 위해 금주 중이에요.","lv":2},{"no":8,"k":"기침","e":"cough","s":"감기에 걸려서 기침이 나요.","lv":2},{"no":9,"k":"내과","e":"internal medicine","s":"배가 아파서 내과에 갔어요.","lv":2},{"no":10,"k":"다이어트","e":"diet","s":"요즘 다이어트 중이에요.","lv":3},{"no":11,"k":"다치다","e":"hurt","s":"운동하다가 발을 다쳤어요.","lv":2},{"no":12,"k":"담배","e":"tobacco","s":"건강을 위해 담배를 끊었어요.","lv":2},{"no":13,"k":"몸살","e":"sickness, disease that comes from fatigue","s":"무리해서 몸살이 났어요.","lv":2},{"no":14,"k":"배부르다","e":"be full (I am full.)","s":"너무 많이 먹어서 배불러요.","lv":3},{"no":15,"k":"배탈","e":"stomachache","s":"맵게 먹고 배탈이 났어요.","lv":2},{"no":16,"k":"병원","e":"hospital","s":"아파서 병원에 갔어요.","lv":2},{"no":17,"k":"상처","e":"wound, scratch","s":"상처가 낫고 있어요.","lv":2},{"no":18,"k":"소화제","e":"peptic, digestive","s":"밥을 많이 먹어서 소화제를 먹었어요.","lv":3},{"no":19,"k":"수술하다","e":"operate on for","s":"무릎을 수술했어요.","lv":2},{"no":20,"k":"스트레스","e":"stress","s":"요즘 스트레스가 많아요.","lv":3},{"no":21,"k":"아프다","e":"painful, sick","s":"머리가 아파요.","lv":2},{"no":22,"k":"안전하다","e":"safe","s":"이 도로는 안전해요.","lv":2},{"no":23,"k":"약","e":"about, medicine","s":"약을 먹고 빨리 나았어요.","lv":1},{"no":24,"k":"위험하다","e":"dangerous","s":"저 곳은 위험해요.","lv":2},{"no":25,"k":"입원하다","e":"hospitalize","s":"수술 때문에 입원했어요.","lv":2},{"no":26,"k":"주사","e":"injection","s":"주사를 맞았어요.","lv":2},{"no":27,"k":"죽다","e":"die","s":"걱정돼서 죽겠어요.","lv":1},{"no":28,"k":"증","e":"symptom, medical condition","s":"감기 증상이 심해요.","lv":1},{"no":29,"k":"치과","e":"dentist, dentistry","s":"치아가 아파서 치과에 갔어요.","lv":2},{"no":30,"k":"치료하다","e":"treat","s":"의사가 치료해 줬어요.","lv":2},{"no":31,"k":"치약","e":"toothpaste","s":"치약으로 이를 닦아요.","lv":2},{"no":32,"k":"칫솔","e":"toothbrush","s":"칫솔을 새로 샀어요.","lv":2},{"no":33,"k":"코피","e":"nosebleed","s":"코피가 났어요.","lv":2},{"no":34,"k":"콧물","e":"snot, nasal discharge","s":"감기에 걸려서 콧물이 나요.","lv":2},{"no":35,"k":"피","e":"blood","s":"코에서 피가 났어요.","lv":1},{"no":36,"k":"피곤하다","e":"tired","s":"오늘 너무 피곤해요.","lv":2},{"no":37,"k":"환자","e":"patient","s":"환자가 많아서 오래 기다렸어요.","lv":2}]},{"id":14,"ko":"날씨 & 계절","en":"Weather & Seasons","color":"#1F78B4","short":"Weather","words":[{"no":1,"k":"가을","e":"autumn, fall","s":"가을에 단풍이 정말 예뻐요.","lv":2},{"no":2,"k":"겨울","e":"winter","s":"겨울에 눈이 많이 와요.","lv":2},{"no":3,"k":"겨울방학","e":"winter vacation","s":"겨울방학에 스키를 배웠어요.","lv":3},{"no":4,"k":"계절","e":"season","s":"어느 계절을 좋아해요?","lv":2},{"no":5,"k":"구름","e":"cloud","s":"구름이 많이 끼었어요.","lv":2},{"no":6,"k":"기온","e":"temperature","s":"오늘 기온이 많이 내려갔어요.","lv":2},{"no":7,"k":"끼다","e":"put on, plug, (fog) rolls in","s":"안경을 끼고 책을 읽어요.","lv":1},{"no":8,"k":"날씨","e":"weather","s":"오늘 날씨가 정말 맑아요.","lv":2},{"no":9,"k":"눈사람","e":"snowman","s":"아이들이 눈사람을 만들었어요.","lv":3},{"no":10,"k":"눈싸움","e":"staring contest, snowball fight","s":"눈이 와서 눈싸움을 했어요.","lv":3},{"no":11,"k":"덥다","e":"hot","s":"여름에는 너무 더워요.","lv":1},{"no":12,"k":"따뜻하다","e":"warm","s":"봄이 되어서 날씨가 따뜻해요.","lv":2},{"no":13,"k":"맑다","e":"clear, clean","s":"오늘 날씨가 맑아요.","lv":1},{"no":14,"k":"바람","e":"wind","s":"바람이 많이 불어요.","lv":2},{"no":15,"k":"방학","e":"vacation","s":"여름방학이 빨리 왔으면 좋겠어요.","lv":2},{"no":16,"k":"벚꽃","e":"cherry blossom","s":"봄에 벚꽃이 예뻐요.","lv":2},{"no":17,"k":"봄","e":"spring","s":"봄이 되면 꽃이 피어요.","lv":1},{"no":18,"k":"불다","e":"blow (wind or whistle, musical instruments, etc.)","s":"바람이 세게 불어요.","lv":1},{"no":19,"k":"비","e":"rain","s":"비가 오면 우산을 써요.","lv":1},{"no":20,"k":"사계절","e":"four seasons","s":"한국은 사계절이 뚜렷해요.","lv":3},{"no":21,"k":"시원하다","e":"cool, refresh","s":"에어컨을 켜니 시원해요.","lv":2},{"no":22,"k":"여름","e":"summer","s":"여름 방학에 바다에 갔어요.","lv":2},{"no":23,"k":"영하","e":"minus, below zero","s":"영하 10도예요.","lv":2},{"no":24,"k":"우산","e":"umbrella","s":"비가 와서 우산을 썼어요.","lv":2},{"no":25,"k":"일기예보","e":"weather forecast","s":"일기예보를 보고 우산을 가져갔어요.","lv":3},{"no":26,"k":"장마","e":"rainy season","s":"장마철에는 비가 많이 와요.","lv":2},{"no":27,"k":"장마철","e":"rainy season","s":"장마철이 시작됐어요.","lv":3},{"no":28,"k":"찍다","e":"pierce, take (a photo), press","s":"사진을 찍었어요.","lv":1},{"no":29,"k":"춥다","e":"cold","s":"겨울에 너무 추워요.","lv":1},{"no":30,"k":"태풍","e":"typhoon","s":"태풍이 와서 집에 있었어요.","lv":2},{"no":31,"k":"햇빛","e":"sunshine, sunlight","s":"햇빛이 따뜻해요.","lv":2},{"no":32,"k":"흐리다","e":"cloudy","s":"오늘 날씨가 흐려요.","lv":2}]},{"id":15,"ko":"자연 & 환경","en":"Nature & Environment","color":"#33A02C","short":"Nature","words":[{"no":1,"k":"가지","e":"branch","s":"두 가지 색 중에 뭐가 더 좋아요?","lv":2},{"no":2,"k":"강","e":"river","s":"한강에서 자전거를 탔어요.","lv":1},{"no":3,"k":"강아지","e":"puppy","s":"강아지가 꼬리를 흔들어요.","lv":3},{"no":4,"k":"개나리","e":"forsythia","s":"봄에 개나리가 먼저 피어요.","lv":3},{"no":5,"k":"거리","e":"street","s":"주말에 홍대 거리를 걸었어요.","lv":2},{"no":6,"k":"고양이","e":"cat","s":"우리 집 고양이가 귀여워요.","lv":3},{"no":7,"k":"공기","e":"air","s":"산에서 공기가 맑아요.","lv":2},{"no":8,"k":"기르다","e":"cultivate, grow","s":"강아지를 기르고 있어요.","lv":2},{"no":9,"k":"깜짝","e":"startled, surprised","s":"깜짝 파티를 준비했어요.","lv":2},{"no":10,"k":"꽃","e":"flower","s":"봄에 꽃이 예쁘게 피어요.","lv":1},{"no":11,"k":"나무","e":"tree","s":"공원에 나무가 많아요.","lv":2},{"no":12,"k":"동물","e":"animal","s":"동물원에서 여러 동물을 봤어요.","lv":2},{"no":13,"k":"돼지","e":"pig","s":"돼지고기를 좋아해요.","lv":2},{"no":14,"k":"들","e":"field, ~s,","s":"친구들이 모두 왔어요.","lv":1},{"no":15,"k":"무궁화","e":"rose of sharon","s":"무궁화는 한국의 국화예요.","lv":3},{"no":16,"k":"바다","e":"sea","s":"여름에 바다에 갔어요.","lv":1},{"no":17,"k":"바닷가","e":"beach","s":"바닷가에서 수영했어요.","lv":3},{"no":18,"k":"별","e":"star","s":"밤하늘에 별이 빛나요.","lv":1},{"no":19,"k":"산","e":"mountain","s":"산에 올라가서 기분이 상쾌해요.","lv":1},{"no":20,"k":"소","e":"small, cow","s":"제주도에서 소를 봤어요.","lv":1},{"no":21,"k":"송이","e":"bunch, flower, cluster","s":"꽃 한 송이를 선물 받았어요.","lv":2},{"no":22,"k":"오르다","e":"climb","s":"계단을 올라갔어요.","lv":2},{"no":23,"k":"오리","e":"duck","s":"호수에 오리가 있어요.","lv":2},{"no":24,"k":"자연","e":"nature","s":"자연이 아름다워요.","lv":2},{"no":25,"k":"장미","e":"rose","s":"빨간 장미를 선물 받았어요.","lv":2},{"no":26,"k":"진달래","e":"azalea","s":"봄에 진달래가 피어요.","lv":3},{"no":27,"k":"풀","e":"pool, grass","s":"수학 문제를 풀었어요.","lv":1},{"no":28,"k":"피다","e":"bloom","s":"봄에 꽃이 피어요.","lv":1},{"no":29,"k":"하늘","e":"sky","s":"오늘 하늘이 맑아요.","lv":2},{"no":30,"k":"해","e":"year, sun","s":"새해 복 많이 받으세요.","lv":1},{"no":31,"k":"호랑이","e":"tiger","s":"호랑이는 강한 동물이에요.","lv":3}]},{"id":16,"ko":"시간 & 날짜","en":"Time & Dates","color":"#6A3D9A","short":"Time","words":[{"no":1,"k":"가끔","e":"sometimes","s":"가끔 혼자 영화를 봐요.","lv":2},{"no":2,"k":"간","e":"while","s":"기다리는 동안 커피를 마셨어요.","lv":1},{"no":3,"k":"걸리다","e":"get caught, take (time)","s":"여기서 학교까지 10분 걸려요.","lv":2},{"no":4,"k":"계속","e":"continue","s":"비가 계속 와요.","lv":2},{"no":5,"k":"곧","e":"soon","s":"곧 여름방학이 시작돼요.","lv":1},{"no":6,"k":"공휴일","e":"public holiday","s":"내일은 공휴일이라 쉬어요.","lv":3},{"no":7,"k":"과거","e":"past","s":"과거를 잊고 앞으로 가요.","lv":2},{"no":8,"k":"구월","e":"September","s":"구월에 날씨가 시원해요.","lv":2},{"no":9,"k":"그날","e":"that day","s":"그날 정말 즐거웠어요.","lv":2},{"no":10,"k":"그동안","e":"meantime, meanwhile, up to now","s":"그동안 잘 지냈어요?","lv":3},{"no":11,"k":"그저께","e":"day before yesterday","s":"그저께 친구를 만났어요.","lv":3},{"no":12,"k":"금방","e":"soon, a little while ago","s":"금방 올게요.","lv":2},{"no":13,"k":"금요일","e":"Friday","s":"금요일 저녁에 친구들과 만나요.","lv":3},{"no":14,"k":"나중","e":"later, after","s":"나중에 연락할게요.","lv":2},{"no":15,"k":"나흘","e":"four days","s":"감기가 나흘째 계속돼요.","lv":2},{"no":16,"k":"날","e":"day","s":"좋은 날 다시 만나요.","lv":1},{"no":17,"k":"날짜","e":"date","s":"약속 날짜를 정해요.","lv":2},{"no":18,"k":"낮","e":"day, noon, during the day","s":"낮에는 덥지만 밤에는 시원해요.","lv":1},{"no":19,"k":"내년","e":"next year","s":"내년에 대학교에 들어가요.","lv":2},{"no":20,"k":"내일","e":"tomorrow","s":"내일 뭐 해요?","lv":2},{"no":21,"k":"년","e":"year","s":"한국에 온 지 3년이 됐어요.","lv":1},{"no":22,"k":"다음달","e":"next month","s":"다음달에 이사 갈 예정이에요.","lv":3},{"no":23,"k":"다음주","e":"next week","s":"다음주 월요일에 시험이 있어요.","lv":3},{"no":24,"k":"달","e":"month, moon","s":"오늘 밤 달이 밝아요.","lv":1},{"no":25,"k":"달력","e":"calendar","s":"벽에 달력을 걸었어요.","lv":2},{"no":26,"k":"동안","e":"during, between","s":"방학 동안 여행을 다녀왔어요.","lv":2},{"no":27,"k":"때","e":"time","s":"밥 먹을 때 TV를 보지 마세요.","lv":1},{"no":28,"k":"마지막","e":"last","s":"마지막으로 확인했어요.","lv":3},{"no":29,"k":"매일","e":"everyday","s":"매일 운동을 해요.","lv":2},{"no":30,"k":"매주","e":"every week","s":"매주 화요일에 한국어 수업이 있어요.","lv":2},{"no":31,"k":"먼저","e":"first, first of all, before","s":"먼저 손을 씻어요.","lv":2},{"no":32,"k":"며칠","e":"a few days, what date","s":"오늘이 며칠이에요?","lv":2},{"no":33,"k":"명절","e":"holidays, annual events","s":"명절에 가족이 모여요.","lv":2},{"no":34,"k":"모레","e":"the day after tomorrow","s":"모레까지 보고서를 내야 해요.","lv":2},{"no":35,"k":"목요일","e":"Thursday","s":"목요일에 회의가 있어요.","lv":3},{"no":36,"k":"미래","e":"future","s":"미래를 위해 저금해요.","lv":2},{"no":37,"k":"반년","e":"half a year","s":"한국에 온 지 반년이 됐어요.","lv":2},{"no":38,"k":"반달","e":"half-moon","s":"오늘 밤 반달이 예뻐요.","lv":2},{"no":39,"k":"밤","e":"night","s":"밤에 별이 많이 보여요.","lv":1},{"no":40,"k":"벌써","e":"already","s":"벌써 시간이 이렇게 됐어요.","lv":2},{"no":41,"k":"사월","e":"April","s":"사월에 꽃이 많이 피어요.","lv":2},{"no":42,"k":"사흘","e":"3 days","s":"사흘 후에 출발해요.","lv":2},{"no":43,"k":"삼월","e":"March","s":"삼월에 학교가 시작돼요.","lv":2},{"no":44,"k":"새벽","e":"dawn, late at night, early morning","s":"새벽에 일어나서 공부했어요.","lv":2},{"no":45,"k":"생신","e":"birthday (honorific form)","s":"할머니 생신을 축하해요.","lv":2},{"no":46,"k":"생일","e":"birthday","s":"내일이 제 생일이에요.","lv":2},{"no":47,"k":"설날","e":"Lunar New Year","s":"설날에 떡국을 먹어요.","lv":2},{"no":48,"k":"수요일","e":"Wednesday","s":"수요일에 약속이 있어요.","lv":3},{"no":49,"k":"시","e":"city, time","s":"지금 몇 시예요?","lv":1},{"no":50,"k":"시간","e":"time","s":"시간이 빨리 가요.","lv":2},{"no":51,"k":"시간표","e":"schedule, timetable","s":"수업 시간표를 확인했어요.","lv":3},{"no":52,"k":"시계","e":"clock","s":"시계를 잃어버렸어요.","lv":2},{"no":53,"k":"시월","e":"October","s":"시월에 단풍 구경을 해요.","lv":2},{"no":54,"k":"십이월","e":"December","s":"십이월은 일 년의 마지막 달이에요.","lv":3},{"no":55,"k":"십일월","e":"November","s":"십일월에 날씨가 쌀쌀해요.","lv":3},{"no":56,"k":"아까","e":"earlier, while ago","s":"아까 전화했는데 안 받았어요.","lv":2},{"no":57,"k":"아직","e":"yet, still","s":"아직 밥을 못 먹었어요.","lv":2},{"no":58,"k":"어저께","e":"yesterday","s":"어저께 친구를 만났어요.","lv":3},{"no":59,"k":"어제","e":"yesterday","s":"어제 뭐 했어요?","lv":2},{"no":60,"k":"어젯밤","e":"last night","s":"어젯밤에 늦게 잤어요.","lv":3},{"no":61,"k":"언제나","e":"always, anytime","s":"언제나 행복하세요.","lv":3},{"no":62,"k":"연휴","e":"consecutive holidays","s":"연휴에 가족과 여행을 갔어요.","lv":2},{"no":63,"k":"옛날","e":"a long ago, olden days","s":"옛날에는 생활이 달랐어요.","lv":2},{"no":64,"k":"오늘","e":"today","s":"오늘 날씨가 좋아요.","lv":2},{"no":65,"k":"오래","e":"long, much","s":"오래 기다렸어요.","lv":2},{"no":66,"k":"오랫동안","e":"for a long time","s":"오랫동안 공부했어요.","lv":3},{"no":67,"k":"오월","e":"May","s":"오월 오일은 어린이 날이에요.","lv":2},{"no":68,"k":"오전","e":"morning, a.m.","s":"오전에 수업이 있어요.","lv":2},{"no":69,"k":"오후","e":"afternoon","s":"오후에 친구를 만나요.","lv":2},{"no":70,"k":"올해","e":"this year","s":"올해 목표가 있어요.","lv":2},{"no":71,"k":"요일","e":"day of the week","s":"오늘이 무슨 요일이에요?","lv":2},{"no":72,"k":"요즘","e":"nowadays, around this time, lately","s":"요즘 한국어 공부가 재미있어요.","lv":2},{"no":73,"k":"월","e":"month","s":"한 달은 30일이에요.","lv":1},{"no":74,"k":"월","e":"monthly rent","s":"한 달은 30일이에요.","lv":1},{"no":75,"k":"월요일","e":"Monday","s":"월요일 아침은 항상 바빠요.","lv":3},{"no":76,"k":"유월","e":"June","s":"유월에는 비가 많이 와요.","lv":2},{"no":77,"k":"이따가","e":"later","s":"이따가 봐요.","lv":3},{"no":78,"k":"이번","e":"this time","s":"이번 시험에서 좋은 점수를 받았어요.","lv":2},{"no":79,"k":"이월","e":"February","s":"이월은 날이 짧아요.","lv":2},{"no":80,"k":"이제","e":"now","s":"이제 시작할게요.","lv":2},{"no":81,"k":"이틀","e":"two days","s":"이틀 후에 돌아와요.","lv":2},{"no":82,"k":"일","e":"work, 1, day","s":"오늘 할 일이 많아요.","lv":1},{"no":83,"k":"일상생활","e":"everyday life","s":"일상생활에서 한국어를 써요.","lv":3},{"no":84,"k":"일요일","e":"Sunday","s":"일요일에 교회에 가요.","lv":3},{"no":85,"k":"일월","e":"January","s":"일월 일 일은 새해예요.","lv":2},{"no":86,"k":"일주일","e":"one week","s":"일주일에 한번 운동해요.","lv":3},{"no":87,"k":"일찍","e":"early","s":"일찍 일어나는 게 좋아요.","lv":2},{"no":88,"k":"작년","e":"last year","s":"작년에 여행을 다녀왔어요.","lv":2},{"no":89,"k":"종일","e":"all day","s":"종일 공부했어요.","lv":2},{"no":90,"k":"주","e":"week","s":"이번 주에 여행을 가요.","lv":1},{"no":91,"k":"주말","e":"weekend","s":"주말에 쉬었어요.","lv":2},{"no":92,"k":"지금","e":"now","s":"지금 바빠요?","lv":2},{"no":93,"k":"지난달","e":"last month","s":"지난달에 여행을 갔어요.","lv":3},{"no":94,"k":"지난번","e":"last time","s":"지난번에 못 와서 미안해요.","lv":3},{"no":95,"k":"지난주","e":"last week","s":"지난주에 비가 많이 왔어요.","lv":3},{"no":96,"k":"칠월","e":"July","s":"칠월은 여름이에요.","lv":2},{"no":97,"k":"크리스마스","e":"Christmas","s":"크리스마스에 선물을 받았어요.","lv":3},{"no":98,"k":"토요일","e":"Saturday","s":"토요일에 친구들과 만나요.","lv":3},{"no":99,"k":"팔월","e":"August","s":"팔월에 가장 더워요.","lv":2},{"no":100,"k":"평일","e":"weekday","s":"평일에는 출근해요.","lv":2},{"no":101,"k":"하루","e":"one day","s":"하루가 빠르게 지나가요.","lv":2},{"no":102,"k":"현재","e":"now, current","s":"현재 한국에 살고 있어요.","lv":2},{"no":103,"k":"화요일","e":"Tuesday","s":"화요일에 병원에 가요.","lv":3},{"no":104,"k":"후","e":"after","s":"식사 후에 커피를 마셔요.","lv":1},{"no":105,"k":"휴가","e":"vacation, holiday","s":"다음 주에 휴가예요.","lv":2},{"no":106,"k":"휴일","e":"holiday","s":"오늘 휴일이에요.","lv":2}]},{"id":17,"ko":"신체 & 외모","en":"Body & Appearance","color":"#E31A1C","short":"Body","words":[{"no":1,"k":"가슴","e":"chest, breast","s":"가슴이 두근두근해요.","lv":2},{"no":2,"k":"감다","e":"close ~ (eyes)","s":"눈을 감고 음악을 들었어요.","lv":1},{"no":3,"k":"곱다","e":"beautiful","s":"봄꽃이 곱게 피었어요.","lv":1},{"no":4,"k":"귀","e":"ear","s":"귀가 아파서 이비인후과에 갔어요.","lv":1},{"no":5,"k":"귀엽다","e":"cute","s":"그 아기가 정말 귀여워요.","lv":2},{"no":6,"k":"깨지다","e":"chip, crack, break","s":"컵이 바닥에 떨어져서 깨졌어요.","lv":1},{"no":7,"k":"눈","e":"eye, snow","s":"눈이 많이 와서 길이 미끄러워요.","lv":1},{"no":8,"k":"눈물","e":"tear","s":"슬픈 영화를 보고 눈물이 났어요.","lv":2},{"no":9,"k":"다리","e":"bridge, leg, foot","s":"다리가 아파요.","lv":2},{"no":10,"k":"땀","e":"sweat","s":"운동하고 나서 땀이 많이 났어요.","lv":1},{"no":11,"k":"로션","e":"skin lotion","s":"세수하고 로션을 발라요.","lv":2},{"no":12,"k":"머리","e":"head, hair","s":"머리가 아파요.","lv":2},{"no":13,"k":"멋있다","e":"cool, nice","s":"저 남자 정말 멋있어요.","lv":1},{"no":14,"k":"면도","e":"razor, shaving","s":"아침마다 면도를 해요.","lv":2},{"no":15,"k":"목","e":"neck, throat","s":"목이 아파서 말하기 힘들어요.","lv":1},{"no":16,"k":"몸","e":"body","s":"몸이 안 좋아요.","lv":1},{"no":17,"k":"무릎","e":"knee","s":"무릎이 아파서 계단을 못 올라가요.","lv":2},{"no":18,"k":"미리","e":"in advance, beforehand","s":"미리 예약했어요.","lv":2},{"no":19,"k":"발","e":"foot, leg","s":"발이 아파서 쉬었어요.","lv":1},{"no":20,"k":"발가락","e":"toe(s)","s":"발가락 사이가 가려워요.","lv":3},{"no":21,"k":"배","e":"ship, stomach, pear","s":"배가 고파요.","lv":1},{"no":22,"k":"비누","e":"soap","s":"비누로 손을 씻어요.","lv":2},{"no":23,"k":"살","e":"flesh, ~ year(s) old","s":"서울에 산 지 3년이 됐어요.","lv":1},{"no":24,"k":"샴푸","e":"shampoo","s":"샴푸로 머리를 감았어요.","lv":2},{"no":25,"k":"손","e":"hand","s":"손이 차가워요.","lv":1},{"no":26,"k":"손가락","e":"finger","s":"손가락에 반지를 끼었어요.","lv":3},{"no":27,"k":"아름답다","e":"beautiful","s":"이 경치가 정말 아름다워요.","lv":3},{"no":28,"k":"어깨","e":"shoulder","s":"어깨가 아파요.","lv":2},{"no":29,"k":"얼굴","e":"face","s":"얼굴색이 좋아 보여요.","lv":2},{"no":30,"k":"예쁘다","e":"pretty, beautiful","s":"저 꽃이 정말 예뻐요.","lv":2},{"no":31,"k":"입","e":"mouth","s":"입이 작아요.","lv":1},{"no":32,"k":"잘생기다","e":"handsome","s":"그 배우가 잘생겼어요.","lv":3},{"no":33,"k":"코","e":"nose","s":"코가 막혀요.","lv":1},{"no":34,"k":"키","e":"key, height","s":"키가 몇이에요?","lv":1},{"no":35,"k":"허리","e":"waist, hip","s":"허리가 아파서 병원에 갔어요.","lv":2},{"no":36,"k":"화장품","e":"cosmetics","s":"화장품을 새로 샀어요.","lv":3},{"no":37,"k":"화장하다","e":"makeup","s":"외출할 때 화장을 해요.","lv":2}]},{"id":18,"ko":"취미 & 스포츠","en":"Hobbies & Sports","color":"#FF7F00","short":"Hobbies","words":[{"no":1,"k":"게임","e":"game","s":"밤새 게임을 했어요.","lv":2},{"no":2,"k":"경기","e":"competition, game","s":"어제 축구 경기를 봤어요.","lv":2},{"no":3,"k":"골프","e":"golf","s":"아버지가 주말에 골프를 치세요.","lv":2},{"no":4,"k":"공","e":"ball","s":"공을 세게 찼어요.","lv":1},{"no":5,"k":"공연","e":"show, public performance","s":"내일 콘서트 공연이 있어요.","lv":2},{"no":6,"k":"그리다","e":"draw","s":"취미로 그림을 그려요.","lv":2},{"no":7,"k":"그림","e":"drawing, picture","s":"벽에 예쁜 그림을 걸었어요.","lv":2},{"no":8,"k":"낚시","e":"fishing","s":"주말에 낚시를 하러 강에 갔어요.","lv":2},{"no":9,"k":"노래","e":"song","s":"좋아하는 노래를 불렀어요.","lv":2},{"no":10,"k":"노래방","e":"Karaoke shop","s":"친구들과 노래방에 갔어요.","lv":3},{"no":11,"k":"노래하다","e":"sing","s":"무대에서 노래했어요.","lv":2},{"no":12,"k":"놀다","e":"play","s":"아이들이 놀이터에서 놀아요.","lv":1},{"no":13,"k":"농구","e":"basketball","s":"친구들과 농구를 했어요.","lv":2},{"no":14,"k":"뉴스","e":"news","s":"저녁에 뉴스를 봐요.","lv":2},{"no":15,"k":"대회","e":"competition, tournament","s":"요리 대회에 나갔어요.","lv":2},{"no":16,"k":"동아리","e":"club, group","s":"대학교 동아리에 들었어요.","lv":3},{"no":17,"k":"드라마","e":"drama","s":"요즘 한국 드라마가 인기예요.","lv":3},{"no":18,"k":"등산","e":"hiking, mountain-climbing","s":"주말에 등산을 해요.","lv":2},{"no":19,"k":"디브이디","e":"DVD","s":"DVD로 영화를 봤어요.","lv":3},{"no":20,"k":"라디오","e":"radio","s":"라디오에서 좋아하는 노래가 나왔어요.","lv":3},{"no":21,"k":"만화","e":"comic book, cartoon","s":"아이들이 만화를 즐겨 봐요.","lv":2},{"no":22,"k":"모이다","e":"gather, get together","s":"가족이 모였어요.","lv":1},{"no":23,"k":"무용","e":"dance","s":"한국 전통 무용을 배웠어요.","lv":2},{"no":24,"k":"미술","e":"art","s":"미술 시간이 즐거워요.","lv":2},{"no":25,"k":"바이올린","e":"violin","s":"바이올린을 배우고 있어요.","lv":3},{"no":26,"k":"배구","e":"volleyball","s":"친구들과 배구를 했어요.","lv":2},{"no":27,"k":"부르다","e":"call, sing","s":"친구를 이름으로 불렀어요.","lv":2},{"no":28,"k":"비디오","e":"video","s":"옛날 비디오를 빌렸어요.","lv":3},{"no":29,"k":"사진","e":"picture, photo","s":"여행 사진을 찍었어요.","lv":2},{"no":30,"k":"사진기","e":"camera","s":"사진기로 사진을 찍었어요.","lv":3},{"no":31,"k":"산책","e":"walk","s":"저녁에 산책을 해요.","lv":2},{"no":32,"k":"소설","e":"novel","s":"이 소설이 재미있어요.","lv":2},{"no":33,"k":"소식","e":"news","s":"좋은 소식이 있어요.","lv":2},{"no":34,"k":"수영","e":"swimming","s":"수영을 배우고 싶어요.","lv":2},{"no":35,"k":"수영장","e":"swimming pool","s":"수영장에서 수영을 했어요.","lv":3},{"no":36,"k":"스케이트","e":"skate","s":"겨울에 스케이트를 탔어요.","lv":3},{"no":37,"k":"스키","e":"ski, skiing","s":"겨울방학에 스키를 탔어요.","lv":2},{"no":38,"k":"스키장","e":"ski resort","s":"주말에 스키장에 갔어요.","lv":3},{"no":39,"k":"스포츠","e":"sport","s":"스포츠를 즐겨요.","lv":3},{"no":40,"k":"시디","e":"CD","s":"음악 CD를 들었어요.","lv":2},{"no":41,"k":"신문","e":"newspaper","s":"아침마다 신문을 읽어요.","lv":2},{"no":42,"k":"악기","e":"musical instrument","s":"악기를 하나 배우고 싶어요.","lv":2},{"no":43,"k":"야구","e":"baseball","s":"야구 경기를 봐요.","lv":2},{"no":44,"k":"영화","e":"movie","s":"주말에 영화를 봤어요.","lv":2},{"no":45,"k":"영화관","e":"movie theater","s":"영화관에서 팝콘을 먹었어요.","lv":3},{"no":46,"k":"영화배우","e":"movie star","s":"그 영화배우가 멋있어요.","lv":3},{"no":47,"k":"영화표","e":"movie ticket","s":"영화표를 미리 샀어요.","lv":3},{"no":48,"k":"올림픽","e":"olympic","s":"올림픽 경기를 봤어요.","lv":3},{"no":49,"k":"운동","e":"exercise","s":"건강을 위해 운동해요.","lv":2},{"no":50,"k":"운동선수","e":"athlete","s":"운동선수가 되고 싶어요.","lv":3},{"no":51,"k":"운동장","e":"playground, athletic field","s":"학생들이 운동장에서 뛰어요.","lv":3},{"no":52,"k":"운동하다","e":"exercise","s":"매일 아침 30분씩 운동해요.","lv":2},{"no":53,"k":"월드컵","e":"world cup","s":"월드컵을 보러 경기장에 갔어요.","lv":3},{"no":54,"k":"음반","e":"record","s":"새 음반이 나왔어요.","lv":2},{"no":55,"k":"음악","e":"music","s":"음악을 들으면 행복해요.","lv":2},{"no":56,"k":"잡지","e":"magazine","s":"패션 잡지를 읽었어요.","lv":2},{"no":57,"k":"촬영하다","e":"take a picture","s":"풍경을 촬영했어요.","lv":2},{"no":58,"k":"추다","e":"dance","s":"파티에서 춤을 췄어요.","lv":1},{"no":59,"k":"축구","e":"football, soccer","s":"주말마다 축구를 해요.","lv":2},{"no":60,"k":"축제","e":"festival","s":"봄 축제에 갔어요.","lv":2},{"no":61,"k":"춤","e":"dance","s":"한국 전통춤을 배웠어요.","lv":1},{"no":62,"k":"춤추다","e":"dance","s":"무대에서 춤을 췄어요.","lv":2},{"no":63,"k":"취미","e":"hobby","s":"취미가 뭐예요?","lv":2},{"no":64,"k":"카메라","e":"camera","s":"여행에 카메라를 가져갔어요.","lv":3},{"no":65,"k":"콧노래","e":"humming","s":"콧노래를 흥얼거렸어요.","lv":3},{"no":66,"k":"탁구","e":"table tennis","s":"탁구를 치러 갔어요.","lv":2},{"no":67,"k":"태권도","e":"Taekwondo","s":"아이들이 태권도를 배워요.","lv":3},{"no":68,"k":"테니스","e":"tennis","s":"주말에 테니스를 쳐요.","lv":3},{"no":69,"k":"프로그램","e":"program","s":"이 TV 프로그램이 재미있어요.","lv":3},{"no":70,"k":"피아노","e":"piano","s":"피아노를 치고 싶어요.","lv":3},{"no":71,"k":"필름","e":"film","s":"카메라 필름이 없어요.","lv":2}]},{"id":19,"ko":"감정 & 성격","en":"Emotions & Personality","color":"#FB9A99","short":"Emotions","words":[{"no":1,"k":"감동","e":"sensation","s":"그 영화는 정말 감동이었어요.","lv":2},{"no":2,"k":"감동하다","e":"be impressed","s":"그 이야기를 듣고 많이 감동했어요.","lv":2},{"no":3,"k":"거짓말","e":"lie","s":"거짓말하면 안 돼요.","lv":3},{"no":4,"k":"걱정","e":"anxiety, concern","s":"시험이 걱정이에요.","lv":2},{"no":5,"k":"걱정하다","e":"worry","s":"너무 걱정하지 마세요.","lv":2},{"no":6,"k":"경험","e":"experience","s":"외국에서 사는 경험이 있어요?","lv":2},{"no":7,"k":"관심","e":"attention, interest","s":"K-팝에 관심이 있어요?","lv":2},{"no":8,"k":"기분","e":"feeling","s":"오늘 기분이 정말 좋아요.","lv":2},{"no":9,"k":"기뻐하다","e":"glad, delight","s":"선물을 받고 기뻐했어요.","lv":2},{"no":10,"k":"기쁘다","e":"happy","s":"합격해서 너무 기뻐요.","lv":2},{"no":11,"k":"기억하다","e":"remember","s":"어릴 때 일을 기억해요?","lv":2},{"no":12,"k":"긴장되다","e":"be nervous","s":"발표 전에 너무 긴장됐어요.","lv":2},{"no":13,"k":"꾸다","e":"dream","s":"이상한 꿈을 꿨어요.","lv":1},{"no":14,"k":"꿈","e":"dream","s":"의사가 되는 게 꿈이에요.","lv":1},{"no":15,"k":"나빠지다","e":"spoil, deteriorate","s":"건강이 나빠지지 않도록 조심해요.","lv":2},{"no":16,"k":"나쁘다","e":"bad","s":"공기가 나빠요.","lv":2},{"no":17,"k":"놀라다","e":"be surprised","s":"생일 파티에 깜짝 놀랐어요.","lv":2},{"no":18,"k":"느끼다","e":"feel","s":"행복을 느껴요.","lv":2},{"no":19,"k":"느낌","e":"feeling","s":"이 음악은 좋은 느낌이에요.","lv":2},{"no":20,"k":"단점","e":"disadvantage, shortcoming, drawback","s":"그 계획의 단점이 뭐예요?","lv":2},{"no":21,"k":"마음","e":"mind, feeling","s":"마음이 편안해요.","lv":2},{"no":22,"k":"무섭다","e":"scary","s":"귀신이 나오는 영화가 무서워요.","lv":2},{"no":23,"k":"바라다","e":"hope","s":"빨리 낫기를 바라요.","lv":2},{"no":24,"k":"부드럽다","e":"soft, friendly","s":"이 케이크가 부드러워요.","lv":3},{"no":25,"k":"부지런하다","e":"diligent","s":"그 학생은 부지런해요.","lv":3},{"no":26,"k":"비밀","e":"secret","s":"이건 비밀이에요.","lv":2},{"no":27,"k":"사랑","e":"love","s":"사랑하는 사람이 생겼어요.","lv":2},{"no":28,"k":"사랑하다","e":"love","s":"가족을 사랑해요.","lv":2},{"no":29,"k":"성격","e":"personality","s":"성격이 밝아요.","lv":2},{"no":30,"k":"슬퍼하다","e":"sorrow, mourn","s":"이별에 많이 슬퍼했어요.","lv":2},{"no":31,"k":"슬프다","e":"sad","s":"그 소식을 듣고 슬펐어요.","lv":2},{"no":32,"k":"싫다","e":"hate","s":"거짓말하는 게 싫어요.","lv":1},{"no":33,"k":"싫어하다","e":"dislike, hate","s":"매운 음식을 싫어해요.","lv":2},{"no":34,"k":"심하다","e":"severe, terrible","s":"감기가 심해서 병원에 갔어요.","lv":1},{"no":35,"k":"싸우다","e":"fight","s":"친구와 싸웠어요.","lv":2},{"no":36,"k":"외롭다","e":"lonely","s":"혼자 있어서 외로워요.","lv":1},{"no":37,"k":"울다","e":"cry","s":"기쁨의 눈물을 흘렸어요.","lv":1},{"no":38,"k":"울리다","e":"make cry, chime","s":"전화가 울렸어요.","lv":2},{"no":39,"k":"웃기다","e":"funny, make someone laugh","s":"그 개그가 웃겨요.","lv":2},{"no":40,"k":"웃다","e":"laugh","s":"재미있는 이야기를 듣고 웃었어요.","lv":1},{"no":41,"k":"원하다","e":"want, wish, desire","s":"무엇을 원하세요?","lv":1},{"no":42,"k":"인상","e":"impression","s":"첫인상이 좋았어요.","lv":2},{"no":43,"k":"자","e":"character, Here we go.","s":"자, 시작해 볼까요?","lv":1},{"no":44,"k":"장점","e":"advantage","s":"이 방법의 장점이 뭐예요?","lv":2},{"no":45,"k":"재미없다","e":"not funny, uninteresting","s":"이 영화는 재미없어요.","lv":2},{"no":46,"k":"좋다","e":"good","s":"이 날씨가 정말 좋아요.","lv":1},{"no":47,"k":"좋아하다","e":"like","s":"한국 음식을 좋아해요.","lv":2},{"no":48,"k":"즐거워하다","e":"have fun","s":"아이들이 놀이공원에서 즐거워했어요.","lv":3},{"no":49,"k":"즐겁다","e":"fun, be pleasant","s":"여행이 정말 즐거웠어요.","lv":2},{"no":50,"k":"즐기다","e":"enjoy, have fun","s":"취미 활동을 즐겨요.","lv":2},{"no":51,"k":"착하다","e":"be good, friendly","s":"그 아이는 착해요.","lv":1},{"no":52,"k":"최고","e":"best, the highest","s":"이 식당이 최고예요.","lv":2},{"no":53,"k":"추억","e":"memory","s":"좋은 추억을 만들었어요.","lv":2},{"no":54,"k":"친절하다","e":"be kind","s":"이 식당 직원이 친절해요.","lv":2},{"no":55,"k":"친하다","e":"close, familiar","s":"그 친구와 아주 친해요.","lv":1},{"no":56,"k":"한자","e":"Chinese character","s":"한자는 어려워요.","lv":2},{"no":57,"k":"행복","e":"happiness","s":"행복한 하루 보내세요.","lv":2},{"no":58,"k":"행복하다","e":"happy","s":"지금 정말 행복해요.","lv":2},{"no":59,"k":"화","e":"anger","s":"화가 나지만 참아요.","lv":1},{"no":60,"k":"화나다","e":"angry","s":"친구가 화났어요.","lv":2},{"no":61,"k":"화내다","e":"get angry","s":"화내지 마세요.","lv":2},{"no":62,"k":"힘","e":"power","s":"힘내세요!","lv":1}]},{"id":20,"ko":"기본 표현 & 수","en":"Basic Expressions & Numbers","color":"#A6A6A6","short":"Basics","words":[{"no":1,"k":"가깝다","e":"close","s":"집에서 학교까지 가까워요.","lv":2},{"no":2,"k":"가볍다","e":"light","s":"이 가방은 가볍고 예뻐요.","lv":2},{"no":3,"k":"가운데","e":"middle","s":"테이블 가운데에 꽃을 놨어요.","lv":3},{"no":4,"k":"가위","e":"scissors","s":"가위로 종이를 잘랐어요.","lv":2},{"no":5,"k":"가장","e":"most","s":"가족 중에 아버지가 가장 바빠요.","lv":2},{"no":6,"k":"가지다","e":"have","s":"저는 꿈을 가지고 있어요.","lv":1},{"no":7,"k":"각","e":"each","s":"각 나라마다 문화가 달라요.","lv":1},{"no":8,"k":"간단하다","e":"simple, easy","s":"이 요리는 만들기 간단해요.","lv":2},{"no":9,"k":"간단히","e":"simply","s":"간단히 설명해 줄 수 있어요?","lv":3},{"no":10,"k":"갈색","e":"brown","s":"갈색 구두를 새로 샀어요.","lv":2},{"no":11,"k":"감사","e":"thank","s":"도움에 감사를 전해요.","lv":2},{"no":12,"k":"갑자기","e":"suddenly","s":"갑자기 비가 내리기 시작했어요.","lv":3},{"no":13,"k":"갖다","e":"have","s":"필요한 거 있으면 갖다 드릴게요.","lv":1},{"no":14,"k":"같다","e":"same","s":"우리는 나이가 같아요.","lv":1},{"no":15,"k":"같이","e":"together","s":"같이 점심 먹을까요?","lv":2},{"no":16,"k":"개","e":"dog, ~ piece(s)","s":"사과 세 개만 주세요.","lv":1},{"no":17,"k":"거기","e":"there","s":"거기서 잠깐 기다려 주세요.","lv":2},{"no":18,"k":"거의","e":"almost, nearly","s":"숙제를 거의 다 했어요.","lv":2},{"no":19,"k":"걸다","e":"bet, call","s":"전화를 걸었는데 안 받아요.","lv":1},{"no":20,"k":"검은색","e":"black","s":"검은색 옷이 날씬해 보여요.","lv":3},{"no":21,"k":"것","e":"that, thing, it","s":"맛있는 것은 다 먹었어요.","lv":1},{"no":22,"k":"과","e":"division","s":"저는 경영학과 학생이에요.","lv":1},{"no":23,"k":"관계","e":"relation","s":"좋은 관계를 유지해요.","lv":2},{"no":24,"k":"구","e":"9","s":"구 더하기 일은 십이에요.","lv":1},{"no":25,"k":"구십","e":"90","s":"할아버지가 구십 살이세요.","lv":2},{"no":26,"k":"구하다","e":"save, seek, get","s":"일자리를 구하고 있어요.","lv":1},{"no":27,"k":"권","e":"~ book(s)","s":"책 두 권을 빌렸어요.","lv":1},{"no":28,"k":"그","e":"it","s":"그 영화 정말 재미있었어요.","lv":1},{"no":29,"k":"그거","e":"it","s":"그거 제 거예요.","lv":2},{"no":30,"k":"그것","e":"it","s":"그것은 제 가방이에요.","lv":2},{"no":31,"k":"그곳","e":"there","s":"그곳에 한번 가보고 싶어요.","lv":2},{"no":32,"k":"그냥","e":"just, as it is","s":"그냥 집에 있을 거예요.","lv":2},{"no":33,"k":"그들","e":"them, they","s":"그들은 오늘 안 와요.","lv":2},{"no":34,"k":"그래서","e":"so, thus","s":"비가 와서 우산을 가져갔어요.","lv":3},{"no":35,"k":"그램","e":"gram","s":"소고기 200그램을 샀어요.","lv":2},{"no":36,"k":"그러나","e":"but, however","s":"열심히 했어요. 그러나 결과가 안 좋았어요.","lv":3},{"no":37,"k":"그러니까","e":"so, because","s":"그러니까 일찍 자야 해요.","lv":3},{"no":38,"k":"그러면","e":"then, if so","s":"내일 시간 있어요? 그러면 같이 가요.","lv":3},{"no":39,"k":"그런","e":"then, such","s":"그런 경우는 드물어요.","lv":2},{"no":40,"k":"그런데","e":"by the way, however","s":"날씨가 맑아요. 그런데 춥네요.","lv":3},{"no":41,"k":"그럼","e":"then","s":"그럼 내일 봐요.","lv":2},{"no":42,"k":"그렇게","e":"like that, so","s":"그렇게 빨리 먹으면 안 돼요.","lv":3},{"no":43,"k":"그렇지만","e":"nevertheless, but","s":"피곤해요. 그렇지만 공부해야 해요.","lv":3},{"no":44,"k":"그리고","e":"and","s":"밥을 먹었어요. 그리고 커피를 마셨어요.","lv":3},{"no":45,"k":"그만","e":"stop, finish","s":"이제 그만해요.","lv":2},{"no":46,"k":"그분","e":"his, the person","s":"그분이 우리 선생님이세요.","lv":2},{"no":47,"k":"그중","e":"among them","s":"여러 책 중에 그중 이게 제일 좋아요.","lv":2},{"no":48,"k":"그쪽","e":"there, the person","s":"그쪽으로 가세요.","lv":2},{"no":49,"k":"그치다","e":"stop, end, cease","s":"비가 그쳤어요.","lv":2},{"no":50,"k":"근처","e":"nearby, neighborhood","s":"학교 근처에 살아요.","lv":2},{"no":51,"k":"급하다","e":"hurry, urgent","s":"급한 일이 생겼어요.","lv":1},{"no":52,"k":"기간","e":"term, period","s":"수업 기간이 한 달이에요.","lv":2},{"no":53,"k":"기다리다","e":"wait","s":"버스를 기다리고 있어요.","lv":3},{"no":54,"k":"기타","e":"other","s":"기타 문의는 이메일로 해주세요.","lv":2},{"no":55,"k":"길다","e":"long","s":"머리카락이 많이 길었어요.","lv":1},{"no":56,"k":"까만색","e":"black color","s":"까만색 고양이가 귀여워요.","lv":3},{"no":57,"k":"까맣다","e":"black","s":"밤하늘이 까매요.","lv":2},{"no":58,"k":"깎다","e":"cut, shave","s":"사과 껍질을 깎아 먹었어요.","lv":1},{"no":59,"k":"깨다","e":"wake up, crack, break","s":"아침 7시에 깼어요.","lv":1},{"no":60,"k":"꺼내다","e":"take out","s":"가방에서 지갑을 꺼냈어요.","lv":2},{"no":61,"k":"꼭","e":"exactly, absolutely","s":"내일 꼭 오세요.","lv":1},{"no":62,"k":"끝","e":"end","s":"영화가 끝났어요.","lv":1},{"no":63,"k":"끝나다","e":"finish, end","s":"수업이 끝나면 같이 가요.","lv":2},{"no":64,"k":"나","e":"I","s":"나는 학생이에요.","lv":1},{"no":65,"k":"나누다","e":"share, divide","s":"음식을 나눠 먹었어요.","lv":2},{"no":66,"k":"나다","e":"occur, come out","s":"상처에서 피가 났어요.","lv":1},{"no":67,"k":"나이","e":"age, old","s":"나이가 어떻게 되세요?","lv":2},{"no":68,"k":"남","e":"south, man","s":"모르는 사람 것을 가져가면 안 돼요.","lv":1},{"no":69,"k":"남기다","e":"leave","s":"음식을 남기지 마세요.","lv":2},{"no":70,"k":"남북","e":"north and south","s":"남북 문제는 복잡해요.","lv":2},{"no":71,"k":"남쪽","e":"south","s":"제주도는 한국 남쪽에 있어요.","lv":2},{"no":72,"k":"낮다","e":"low","s":"이 책상은 너무 낮아요.","lv":1},{"no":73,"k":"내","e":"of mine, my","s":"내 가방 못 봤어요?","lv":1},{"no":74,"k":"내가","e":"I","s":"내가 할게요.","lv":2},{"no":75,"k":"내용","e":"content","s":"수업 내용을 이해했어요.","lv":2},{"no":76,"k":"냄새","e":"smell","s":"꽃 냄새가 좋아요.","lv":2},{"no":77,"k":"너","e":"you","s":"너 오늘 예쁘다.","lv":1},{"no":78,"k":"너무","e":"too, very","s":"너무 피곤해서 일찍 잤어요.","lv":2},{"no":79,"k":"넓다","e":"wide","s":"새로 이사한 집이 넓어요.","lv":1},{"no":80,"k":"넘다","e":"exceed, more than","s":"시간이 10분을 넘었어요.","lv":1},{"no":81,"k":"넘어지다","e":"fall down, fall","s":"계단에서 넘어졌어요.","lv":2},{"no":82,"k":"넣다","e":"put in","s":"스마트폰을 주머니에 넣었어요.","lv":1},{"no":83,"k":"넷","e":"4","s":"사과 넷을 주세요.","lv":1},{"no":84,"k":"넷째","e":"fourth","s":"넷째 날에 제주도에 갔어요.","lv":2},{"no":85,"k":"노란색","e":"yellow color","s":"노란색 꽃이 예뻐요.","lv":3},{"no":86,"k":"노랗다","e":"yellow","s":"은행잎이 노래요.","lv":2},{"no":87,"k":"녹색","e":"green","s":"신호등이 녹색으로 바뀌었어요.","lv":2},{"no":88,"k":"높다","e":"high","s":"에베레스트산이 세상에서 가장 높아요.","lv":1},{"no":89,"k":"놓다","e":"put","s":"여기에 책을 놓으세요.","lv":1},{"no":90,"k":"누가","e":"who","s":"누가 이 일을 했어요?","lv":2},{"no":91,"k":"누구","e":"who","s":"누구를 기다려요?","lv":2},{"no":92,"k":"누르다","e":"press down, push","s":"버튼을 누르세요.","lv":2},{"no":93,"k":"눕다","e":"lie down, sleep","s":"피곤해서 소파에 누웠어요.","lv":1},{"no":94,"k":"느리다","e":"slow","s":"거북이는 느려요.","lv":2},{"no":95,"k":"늘","e":"always","s":"늘 건강하세요.","lv":1},{"no":96,"k":"늘다","e":"gain, increase","s":"한국어 실력이 늘었어요.","lv":1},{"no":97,"k":"능력","e":"ability","s":"능력 있는 사람이에요.","lv":2},{"no":98,"k":"늦다","e":"late, delay","s":"약속에 늦었어요.","lv":1},{"no":99,"k":"늦잠","e":"overslept, sleeping in late","s":"오늘 늦잠을 자서 지각했어요.","lv":2},{"no":100,"k":"님","e":"Sir","s":"선생님, 안녕하세요.","lv":1},{"no":101,"k":"다","e":"all, whole","s":"숙제를 다 했어요.","lv":1},{"no":102,"k":"다르다","e":"different","s":"두 사람의 성격이 많이 달라요.","lv":2},{"no":103,"k":"다른","e":"other ~, another ~, different ~","s":"다른 색은 없어요?","lv":2},{"no":104,"k":"다섯","e":"5","s":"다섯 명이서 밥을 먹었어요.","lv":2},{"no":105,"k":"다시","e":"again","s":"다시 한번 말해 주세요.","lv":2},{"no":106,"k":"다음","e":"next, after","s":"다음에 또 만나요.","lv":2},{"no":107,"k":"당신","e":"you","s":"당신을 사랑해요.","lv":2},{"no":108,"k":"대","e":"versus, large","s":"한국 대 일본 경기예요.","lv":1},{"no":109,"k":"대답","e":"answer","s":"선생님 질문에 대답했어요.","lv":2},{"no":110,"k":"대답하다","e":"answer, reply","s":"자신 있게 대답했어요.","lv":2},{"no":111,"k":"대부분","e":"mostly, almost","s":"수업 대부분이 한국어로 진행돼요.","lv":3},{"no":112,"k":"대화","e":"conversation, dialogue","s":"선생님과 한국어로 대화했어요.","lv":2},{"no":113,"k":"더","e":"more","s":"커피 한 잔 더 주세요.","lv":1},{"no":114,"k":"덮다","e":"cover","s":"이불을 덮고 잤어요.","lv":1},{"no":115,"k":"도와주다","e":"help","s":"이사할 때 친구가 도와줬어요.","lv":3},{"no":116,"k":"도움","e":"help, assistance","s":"도움이 필요하면 말해요.","lv":2},{"no":117,"k":"돕다","e":"help","s":"친구가 이사할 때 도왔어요.","lv":1},{"no":118,"k":"동쪽","e":"east","s":"해는 동쪽에서 떠요.","lv":2},{"no":119,"k":"되다","e":"become","s":"선생님이 되고 싶어요.","lv":1},{"no":120,"k":"두","e":"two","s":"두 명이서 왔어요.","lv":1},{"no":121,"k":"두껍다","e":"thick","s":"겨울옷이 두껍고 따뜻해요.","lv":2},{"no":122,"k":"두다","e":"put","s":"여기에 두면 돼요.","lv":1},{"no":123,"k":"둘","e":"2","s":"사과 둘을 먹었어요.","lv":1},{"no":124,"k":"둘째","e":"second, the second of~","s":"둘째 날에 박물관에 갔어요.","lv":2},{"no":125,"k":"뒤","e":"rear, back","s":"뒤에 앉아 주세요.","lv":1},{"no":126,"k":"뒤쪽","e":"behind, back, towards the rear","s":"뒤쪽에 자리가 있어요.","lv":2},{"no":127,"k":"드리다","e":"give","s":"선물을 드렸어요.","lv":2},{"no":128,"k":"듣다","e":"listen","s":"음악을 들으면서 공부해요.","lv":1},{"no":129,"k":"들다","e":"hold, enter","s":"가방이 무거워서 들기 힘들어요.","lv":1},{"no":130,"k":"등","e":"etc, back","s":"배도 고프고 피곤하기도 해요.","lv":1},{"no":131,"k":"따로","e":"separately","s":"따로 연락할게요.","lv":2},{"no":132,"k":"때문","e":"because, for ~, so~","s":"감기 때문에 학교에 못 갔어요.","lv":2},{"no":133,"k":"떨어지다","e":"drop","s":"지갑이 가방에서 떨어졌어요.","lv":2},{"no":134,"k":"또","e":"in addition, again","s":"또 만나요.","lv":1},{"no":135,"k":"또는","e":"or","s":"커피 또는 차를 마셔요.","lv":2},{"no":136,"k":"똑같다","e":"same","s":"쌍둥이는 얼굴이 똑같아요.","lv":2},{"no":137,"k":"똑바로","e":"upright, straight","s":"허리를 똑바로 세우세요.","lv":3},{"no":138,"k":"뜻","e":"meaning","s":"이 단어의 뜻이 뭐예요?","lv":1},{"no":139,"k":"마리","e":"~ animal(s), ~ head(s)","s":"고양이 두 마리를 키워요.","lv":2},{"no":140,"k":"마흔","e":"40","s":"마흔 살이 되었어요.","lv":2},{"no":141,"k":"막히다","e":"be blocked, be clogged","s":"퇴근 시간에 길이 막혀요.","lv":2},{"no":142,"k":"만","e":"only, ten thousand","s":"이 책은 만 원이에요.","lv":1},{"no":143,"k":"만들다","e":"make, create","s":"집에서 케이크를 만들었어요.","lv":2},{"no":144,"k":"만일","e":"if, should","s":"만일 비가 오면 집에 있을 거예요.","lv":2},{"no":145,"k":"만지다","e":"touch","s":"전시품을 만지지 마세요.","lv":1},{"no":146,"k":"많다","e":"many","s":"할 일이 많아요.","lv":1},{"no":147,"k":"많이","e":"a lot of, many","s":"많이 드세요.","lv":2},{"no":148,"k":"말","e":"word, talk","s":"말을 조심하는 게 좋아요.","lv":1},{"no":149,"k":"말하다","e":"say, talk","s":"한국어로 말해 봐요.","lv":1},{"no":150,"k":"맞다","e":"right, fit, correct","s":"이 답이 맞아요?","lv":1},{"no":151,"k":"매다","e":"tie","s":"넥타이를 맸어요.","lv":1},{"no":152,"k":"매우","e":"extremely, very","s":"이 문제는 매우 어려워요.","lv":2},{"no":153,"k":"멀다","e":"far, distant, long","s":"집에서 회사까지 멀어요.","lv":1},{"no":154,"k":"명","e":"~ person(s)","s":"우리 반에 학생이 20명이에요.","lv":1},{"no":155,"k":"몇","e":"a few, a number of","s":"형제가 몇 명이에요?","lv":1},{"no":156,"k":"모두","e":"all, everyone","s":"모두 자리에 앉아 주세요.","lv":2},{"no":157,"k":"모르다","e":"do not know","s":"아직 잘 몰라요.","lv":2},{"no":158,"k":"모양","e":"shape, form, style","s":"저 건물 모양이 독특해요.","lv":2},{"no":159,"k":"모으다","e":"collect, gather","s":"우표를 모으는 취미가 있어요.","lv":2},{"no":160,"k":"목소리","e":"voice","s":"선생님 목소리가 크게 들려요.","lv":3},{"no":161,"k":"목적","e":"purpose","s":"한국어 공부 목적이 뭐예요?","lv":2},{"no":162,"k":"못하다","e":"~ can not do","s":"아직 잘 못해요.","lv":1},{"no":163,"k":"무겁다","e":"heavy","s":"이 짐이 너무 무거워요.","lv":2},{"no":164,"k":"무리","e":"swarm, unreasonable","s":"무리하지 말고 쉬어요.","lv":2},{"no":165,"k":"무슨","e":"what","s":"무슨 음악을 좋아해요?","lv":2},{"no":166,"k":"무엇","e":"what","s":"무엇을 도와드릴까요?","lv":2},{"no":167,"k":"무엇이","e":"what","s":"무엇이 문제예요?","lv":3},{"no":168,"k":"무역","e":"trade","s":"한국은 무역이 발달했어요.","lv":2},{"no":169,"k":"무척","e":"very","s":"오늘 무척 피곤해요.","lv":2},{"no":170,"k":"문제","e":"problem","s":"이 문제를 어떻게 풀어요?","lv":2},{"no":171,"k":"묻다","e":"ask","s":"길을 물었어요.","lv":1},{"no":172,"k":"물론","e":"sure, of course","s":"물론이죠.","lv":2},{"no":173,"k":"물어보다","e":"ask","s":"모르면 선생님께 물어봐요.","lv":3},{"no":174,"k":"뭐","e":"what","s":"오늘 뭐 먹었어요?","lv":1},{"no":175,"k":"미터","e":"meter","s":"100미터 달리기를 했어요.","lv":2},{"no":176,"k":"밀리다","e":"be shaved, be pushed","s":"할 일이 밀렸어요.","lv":2},{"no":177,"k":"밑","e":"bottom, below","s":"테이블 밑에 강아지가 있어요.","lv":1},{"no":178,"k":"바꾸다","e":"change","s":"비밀번호를 바꿨어요.","lv":2},{"no":179,"k":"바뀌다","e":"be changed","s":"계획이 바뀌었어요.","lv":2},{"no":180,"k":"바로","e":"immediately, soon, just","s":"여기서 바로 왼쪽이에요.","lv":2},{"no":181,"k":"바르다","e":"right, paint, wear","s":"선크림을 발랐어요.","lv":2},{"no":182,"k":"박수","e":"clap, applause","s":"공연이 끝나고 박수를 쳤어요.","lv":2},{"no":183,"k":"밖","e":"out, outside","s":"밖에 날씨가 어때요?","lv":1},{"no":184,"k":"반","e":"half, group","s":"우리 반에 외국 학생이 많아요.","lv":1},{"no":185,"k":"받다","e":"receive","s":"생일 선물을 받았어요.","lv":1},{"no":186,"k":"밝다","e":"bright","s":"방 안이 밝아요.","lv":1},{"no":187,"k":"방법","e":"way, method","s":"쉬운 방법을 알아요.","lv":2},{"no":188,"k":"배고프다","e":"hungry","s":"아침을 안 먹어서 배고파요.","lv":3},{"no":189,"k":"백","e":"100","s":"우리 반에 학생이 백 명이 넘어요.","lv":1},{"no":190,"k":"번","e":"~ time(s)","s":"전화번호 좀 알려 주세요.","lv":1},{"no":191,"k":"번호","e":"number","s":"번호표를 뽑으세요.","lv":2},{"no":192,"k":"별로","e":"not really","s":"이 영화는 별로예요.","lv":2},{"no":193,"k":"병","e":"illness, ~ bottle(s)","s":"약 한 병을 샀어요.","lv":1},{"no":194,"k":"보내다","e":"send, spend","s":"친구에게 편지를 보냈어요.","lv":2},{"no":195,"k":"보다","e":"see","s":"영화를 봤어요.","lv":1},{"no":196,"k":"보이다","e":"show, look","s":"멀리서도 잘 보여요.","lv":1},{"no":197,"k":"보통","e":"usually, normally, in general","s":"보통 7시에 일어나요.","lv":2},{"no":198,"k":"복잡하다","e":"complicated, crowded","s":"지하철 환승이 복잡해요.","lv":2},{"no":199,"k":"부탁","e":"request, please","s":"하나만 부탁이 있어요.","lv":2},{"no":200,"k":"부탁하다","e":"beg, ask","s":"도움을 부탁해도 될까요?","lv":2},{"no":201,"k":"북쪽","e":"North","s":"공항은 북쪽에 있어요.","lv":2},{"no":202,"k":"분위기","e":"","s":"이 카페 분위기가 좋아요.","lv":3},{"no":203,"k":"불편하다","e":"uncomfortable, inconvenient","s":"이 의자가 너무 불편해요.","lv":2},{"no":204,"k":"붙다","e":"stick, pass a test","s":"합격자 명단에 이름이 붙었어요.","lv":1},{"no":205,"k":"붙이다","e":"attach, stick","s":"사진을 벽에 붙였어요.","lv":1},{"no":206,"k":"비슷하다","e":"similar, like","s":"이 두 단어가 비슷해요.","lv":2},{"no":207,"k":"빠르다","e":"fast","s":"KTX가 빠른 기차예요.","lv":2},{"no":208,"k":"빨간색","e":"red color","s":"빨간색 장미를 샀어요.","lv":3},{"no":209,"k":"빨갛다","e":"red","s":"얼굴이 빨개요.","lv":2},{"no":210,"k":"빨리","e":"quickly","s":"빨리 와 주세요.","lv":2},{"no":211,"k":"빼다","e":"remove, pull, pull out","s":"살을 빼려고 운동해요.","lv":1},{"no":212,"k":"뿐","e":"only","s":"이것뿐이에요.","lv":1},{"no":213,"k":"사","e":"4","s":"사 더하기 사는 팔이에요.","lv":1},{"no":214,"k":"사물","e":"object, thing","s":"사물을 소중히 다뤄요.","lv":2},{"no":215,"k":"사십","e":"40","s":"사십 대 사람이에요.","lv":2},{"no":216,"k":"사용하다","e":"use","s":"스마트폰을 자주 사용해요.","lv":2},{"no":217,"k":"사이","e":"between, while","s":"학교와 집 사이에 카페가 있어요.","lv":2},{"no":218,"k":"사이즈","e":"size","s":"이 옷 사이즈가 어떻게 돼요?","lv":3},{"no":219,"k":"사인하다","e":"sign","s":"계약서에 사인했어요.","lv":2},{"no":220,"k":"살다","e":"live","s":"한국에서 살고 싶어요.","lv":1},{"no":221,"k":"삼","e":"3","s":"삼 더하기 칠은 십이에요.","lv":1},{"no":222,"k":"삼십","e":"30","s":"삼십 분을 기다렸어요.","lv":2},{"no":223,"k":"상관","e":"relation","s":"상관없어요.","lv":2},{"no":224,"k":"새","e":"bird, new","s":"새가 나무 위에 앉아 있어요.","lv":1},{"no":225,"k":"새로","e":"newly","s":"새로 이사한 집이 마음에 들어요.","lv":2},{"no":226,"k":"색","e":"color","s":"어떤 색을 좋아해요?","lv":1},{"no":227,"k":"색깔","e":"color","s":"색깔이 예뻐요.","lv":2},{"no":228,"k":"생각","e":"thinking, thought","s":"좋은 생각이 났어요.","lv":2},{"no":229,"k":"생각되다","e":"be considered, it seems~","s":"좋은 방법인 것 같아요.","lv":2},{"no":230,"k":"생각하다","e":"think","s":"어떻게 생각해요?","lv":2},{"no":231,"k":"생기다","e":"form, arise","s":"좋은 기회가 생겼어요.","lv":2},{"no":232,"k":"서다","e":"stand","s":"버스 앞에 서 주세요.","lv":1},{"no":233,"k":"서로","e":"each other, both","s":"서로 도와가며 살아요.","lv":2},{"no":234,"k":"서른","e":"30","s":"서른 살 생일 파티를 했어요.","lv":2},{"no":235,"k":"서쪽","e":"west, western","s":"해가 서쪽으로 져요.","lv":2},{"no":236,"k":"선물","e":"gift, present","s":"친구에게 선물을 줬어요.","lv":2},{"no":237,"k":"성","e":"castle, last name","s":"성이 어떻게 되세요?","lv":1},{"no":238,"k":"센티미터","e":"centimeter","s":"키가 170센티미터예요.","lv":3},{"no":239,"k":"셋","e":"3","s":"음료 셋 주세요.","lv":1},{"no":240,"k":"셋째","e":"third","s":"셋째 날에 경주에 갔어요.","lv":2},{"no":241,"k":"소리","e":"sound, voice","s":"큰 소리가 들렸어요.","lv":2},{"no":242,"k":"속","e":"inside","s":"가방 속에 우산이 있어요.","lv":1},{"no":243,"k":"순서","e":"order, turn","s":"순서를 기다려요.","lv":2},{"no":244,"k":"쉬다","e":"rest","s":"피곤해서 좀 쉬었어요.","lv":1},{"no":245,"k":"쉰","e":"50","s":"쉰 살이 되셨어요.","lv":1},{"no":246,"k":"쉽다","e":"easy","s":"이 문제는 쉬워요.","lv":1},{"no":247,"k":"스물","e":"20","s":"스물 살 때 여행을 많이 했어요.","lv":2},{"no":248,"k":"습관","e":"habit","s":"좋은 습관을 들이세요.","lv":2},{"no":249,"k":"시끄럽다","e":"noisy","s":"옆집이 너무 시끄러워요.","lv":3},{"no":250,"k":"시작되다","e":"begin","s":"회의가 시작됐어요.","lv":2},{"no":251,"k":"신","e":"god, new","s":"신이시여.","lv":1},{"no":252,"k":"실수","e":"mistake, failure","s":"실수를 했어요.","lv":2},{"no":253,"k":"십","e":"10","s":"십 분 후에 출발해요.","lv":1},{"no":254,"k":"싶다","e":"want","s":"여행을 가고 싶어요.","lv":1},{"no":255,"k":"쌓이다","e":"stack up, pile up","s":"할 일이 쌓였어요.","lv":1},{"no":256,"k":"쓰이다","e":"be written, be used","s":"이 단어가 어떻게 쓰여요?","lv":1},{"no":257,"k":"씨","e":"seed, Mr. ~","s":"김민수 씨, 연락드립니다.","lv":1},{"no":258,"k":"씩","e":"each, every, per","s":"한 사람당 두 개씩 드려요.","lv":1},{"no":259,"k":"아래","e":"bottom, under","s":"테이블 아래에 가방이 있어요.","lv":2},{"no":260,"k":"아마","e":"maybe, perhaps","s":"아마 내일 올 거예요.","lv":2},{"no":261,"k":"아무","e":"any","s":"아무 문제 없어요.","lv":2},{"no":262,"k":"아주","e":"very, completely","s":"아주 오래된 친구예요.","lv":2},{"no":263,"k":"아홉","e":"9","s":"아홉 시에 시작해요.","lv":2},{"no":264,"k":"아흔","e":"90","s":"할아버지가 아흔 살이 되셨어요.","lv":2},{"no":265,"k":"안","e":"within, not ~","s":"상자 안에 선물이 있어요.","lv":1},{"no":266,"k":"안다","e":"embrace, cradle","s":"아이를 안아줬어요.","lv":1},{"no":267,"k":"앉다","e":"sit","s":"의자에 앉으세요.","lv":1},{"no":268,"k":"알다","e":"know","s":"한국 문화를 잘 알아요.","lv":1},{"no":269,"k":"알리다","e":"inform","s":"일정을 미리 알려줘요.","lv":2},{"no":270,"k":"알맞다","e":"fit, appropriate","s":"이 옷이 딱 알맞아요.","lv":2},{"no":271,"k":"앞","e":"front, previous","s":"줄 앞에 서 주세요.","lv":1},{"no":272,"k":"애","e":"child","s":"우리 애가 올해 초등학생이에요.","lv":1},{"no":273,"k":"약간","e":"slightly, a little","s":"약간 피곤해요.","lv":2},{"no":274,"k":"얇다","e":"thin","s":"봄에는 얇은 옷을 입어요.","lv":1},{"no":275,"k":"양","e":"amount, sheep","s":"음식 양이 많아요.","lv":1},{"no":276,"k":"양식","e":"form, western style","s":"양식 레스토랑에서 식사했어요.","lv":2},{"no":277,"k":"어느","e":"which, how","s":"어느 나라 음식을 좋아해요?","lv":2},{"no":278,"k":"어둡다","e":"dark","s":"밤에는 어두워요.","lv":2},{"no":279,"k":"어디","e":"where","s":"어디 가세요?","lv":2},{"no":280,"k":"어떤","e":"which, what","s":"어떤 음악을 좋아해요?","lv":2},{"no":281,"k":"어떻게","e":"how","s":"한국어를 어떻게 공부했어요?","lv":3},{"no":282,"k":"어떻다","e":"how","s":"오늘 기분이 어때요?","lv":2},{"no":283,"k":"어떻습니까?","e":"How is it?","s":"오늘 기분이 어떻습니까?","lv":3},{"no":284,"k":"어렵다","e":"difficult","s":"이 시험이 어려워요.","lv":2},{"no":285,"k":"어리다","e":"young","s":"그 아이가 아직 어려요.","lv":2},{"no":286,"k":"어서","e":"hurry, quickly","s":"어서 오세요.","lv":2},{"no":287,"k":"어울리다","e":"look good on, befit","s":"그 옷이 너무 잘 어울려요.","lv":3},{"no":288,"k":"언제","e":"when","s":"언제 한국에 왔어요?","lv":2},{"no":289,"k":"얼마나","e":"how much","s":"여기서 얼마나 걸려요?","lv":3},{"no":290,"k":"얼음","e":"ice","s":"음료에 얼음을 넣어요.","lv":2},{"no":291,"k":"없다","e":"none, no, not","s":"지금 시간이 없어요.","lv":1},{"no":292,"k":"없이","e":"without","s":"혼자서 도움 없이 했어요.","lv":2},{"no":293,"k":"여기","e":"here","s":"여기 앉아도 돼요?","lv":2},{"no":294,"k":"여기저기","e":"here and there","s":"여기저기 돌아다녔어요.","lv":3},{"no":295,"k":"여덟","e":"8","s":"여덟 시에 출발해요.","lv":2},{"no":296,"k":"여든","e":"80","s":"여든 살이 되셨어요.","lv":2},{"no":297,"k":"여러","e":"various, many","s":"여러 나라를 여행했어요.","lv":2},{"no":298,"k":"여러가지","e":"several, various","s":"여러가지 음식을 먹었어요.","lv":3},{"no":299,"k":"여러분","e":"everyone, ladies and gentlemen","s":"여러분, 안녕하세요.","lv":3},{"no":300,"k":"여보요","e":"hello","s":"여보세요, 거기 김민수 씨 계세요?","lv":3},{"no":301,"k":"여섯","e":"6","s":"여섯 시에 퇴근해요.","lv":2},{"no":302,"k":"역사","e":"history","s":"한국 역사가 궁금해요.","lv":2},{"no":303,"k":"연","e":"age (honorific form)","s":"연세가 어떻게 되세요?","lv":1},{"no":304,"k":"열","e":"10","s":"열 명이 함께 밥을 먹었어요.","lv":1},{"no":305,"k":"열심히","e":"hard, enthusiastic","s":"열심히 공부했어요.","lv":3},{"no":306,"k":"영","e":"spirit, zero","s":"영에서 시작해요.","lv":1},{"no":307,"k":"영상","e":"video","s":"영상을 찍었어요.","lv":2},{"no":308,"k":"옆","e":"side","s":"옆에 앉아도 될까요?","lv":1},{"no":309,"k":"예순","e":"60","s":"예순 살이 되셨어요.","lv":2},{"no":310,"k":"오","e":"5","s":"오 분 후에 출발해요.","lv":1},{"no":311,"k":"오른쪽","e":"right side, right","s":"오른쪽으로 돌아가세요.","lv":3},{"no":312,"k":"오십","e":"50","s":"오십 원짜리 동전이에요.","lv":2},{"no":313,"k":"왜","e":"why","s":"왜 늦었어요?","lv":1},{"no":314,"k":"왜냐하면","e":"because","s":"왜냐하면 길이 막혔어요.","lv":3},{"no":315,"k":"외국인","e":"foreigner","s":"이 동네에 외국인이 많아요.","lv":3},{"no":316,"k":"외출하다","e":"go out","s":"오후에 잠깐 외출했어요.","lv":2},{"no":317,"k":"왼쪽","e":"left","s":"왼쪽 문으로 들어가세요.","lv":2},{"no":318,"k":"우리","e":"we, us","s":"우리 같이 가요.","lv":2},{"no":319,"k":"우선","e":"first","s":"우선 밥부터 먹어요.","lv":2},{"no":320,"k":"움직이다","e":"move","s":"의자를 움직였어요.","lv":2},{"no":321,"k":"위","e":"top, up","s":"선반 위에 책이 있어요.","lv":1},{"no":322,"k":"위치","e":"location, position","s":"이 건물 위치가 좋아요.","lv":2},{"no":323,"k":"위하다","e":"for, in favor of, for the sake of","s":"가족을 위해 열심히 일해요.","lv":1},{"no":324,"k":"유리","e":"glass","s":"유리컵이 깨졌어요.","lv":2},{"no":325,"k":"육","e":"6","s":"육 더하기 사는 십이에요.","lv":1},{"no":326,"k":"육십","e":"60","s":"육십 분이 한 시간이에요.","lv":2},{"no":327,"k":"의미","e":"meaning","s":"이 단어의 의미가 뭐예요?","lv":2},{"no":328,"k":"이","e":"this, tooth, 2","s":"이 책이 재미있어요.","lv":1},{"no":329,"k":"이거","e":"this","s":"이거 얼마예요?","lv":2},{"no":330,"k":"이것","e":"this","s":"이것이 무엇이에요?","lv":2},{"no":331,"k":"이곳","e":"this place, here","s":"이곳이 제가 사는 동네예요.","lv":2},{"no":332,"k":"이런","e":"this, such ~","s":"이런 일이 생길 줄 몰랐어요.","lv":2},{"no":333,"k":"이렇게","e":"like this, so, in this way","s":"이렇게 하면 돼요.","lv":3},{"no":334,"k":"이렇다","e":"like this","s":"이렇게 하면 돼요.","lv":2},{"no":335,"k":"이분","e":"this person","s":"이분이 제 선생님이세요.","lv":2},{"no":336,"k":"이상","e":"more than, strange","s":"조금 이상한 것 같아요.","lv":2},{"no":337,"k":"이상하다","e":"strange, funny, weird","s":"이 음식 맛이 이상해요.","lv":2},{"no":338,"k":"이십","e":"20","s":"이십 대에 여행을 많이 해야 해요.","lv":2},{"no":339,"k":"이야기","e":"story","s":"재미있는 이야기를 들었어요.","lv":3},{"no":340,"k":"이용","e":"usage","s":"이용해 주셔서 감사해요.","lv":2},{"no":341,"k":"이용하다","e":"use","s":"지하철을 이용해요.","lv":2},{"no":342,"k":"이유","e":"reason","s":"늦은 이유가 있어요?","lv":2},{"no":343,"k":"이쪽","e":"this way, here, this person","s":"이쪽으로 오세요.","lv":2},{"no":344,"k":"인","e":"sign, ~ person(s)","s":"인이 찍혔어요.","lv":1},{"no":345,"k":"일곱","e":"7","s":"일곱 시에 일어나요.","lv":2},{"no":346,"k":"일어나다","e":"rise, stand, occur","s":"아침 7시에 일어나요.","lv":3},{"no":347,"k":"일어서다","e":"get up, stand up","s":"선생님이 오시면 일어서요.","lv":3},{"no":348,"k":"일흔","e":"70","s":"일흔 살이 되셨어요.","lv":2},{"no":349,"k":"잃다","e":"lose","s":"지갑을 잃었어요.","lv":1},{"no":350,"k":"잃어버리다","e":"lose","s":"열쇠를 잃어버렸어요.","lv":3},{"no":351,"k":"있다","e":"have, there","s":"가방 안에 지갑이 있어요.","lv":1},{"no":352,"k":"잊다","e":"forget","s":"생일을 잊었어요.","lv":1},{"no":353,"k":"잊어버리다","e":"forget","s":"약속을 잊어버렸어요.","lv":3},{"no":354,"k":"자기","e":"myself, own","s":"자기 일은 자기가 해요.","lv":2},{"no":355,"k":"자다","e":"sleep","s":"일찍 자야 해요.","lv":1},{"no":356,"k":"자르다","e":"cut","s":"머리를 잘랐어요.","lv":2},{"no":357,"k":"자신","e":"myself, own","s":"자신감을 가지세요.","lv":2},{"no":358,"k":"자유","e":"freedom","s":"여행하는 게 자유롭게 느껴져요.","lv":2},{"no":359,"k":"자주","e":"often","s":"한국 드라마를 자주 봐요.","lv":2},{"no":360,"k":"작다","e":"small","s":"이 신발이 너무 작아요.","lv":1},{"no":361,"k":"잘","e":"well","s":"한국어를 잘 해요.","lv":1},{"no":362,"k":"잘못","e":"mistake","s":"제 잘못이에요.","lv":2},{"no":363,"k":"잘하다","e":"do well, good at","s":"수영을 잘해요.","lv":1},{"no":364,"k":"잠","e":"slumbers, sleep","s":"잠이 와요.","lv":1},{"no":365,"k":"잠깐","e":"for a while, a little","s":"잠깐 기다려 주세요.","lv":2},{"no":366,"k":"잠시","e":"for a bit, for a while, a little","s":"잠시 자리를 비웠어요.","lv":2},{"no":367,"k":"잡다","e":"catch, grab, hold","s":"손을 잡았어요.","lv":1},{"no":368,"k":"장","e":"~ chapter(s), ~ sheet(s)","s":"편지지 한 장 주세요.","lv":1},{"no":369,"k":"재료","e":"material","s":"요리 재료를 샀어요.","lv":2},{"no":370,"k":"재미있다","e":"interesting","s":"한국어 공부가 재미있어요.","lv":2},{"no":371,"k":"저","e":"that","s":"저는 학생이에요.","lv":1},{"no":372,"k":"저거","e":"that","s":"저거 뭐예요?","lv":2},{"no":373,"k":"저것","e":"that","s":"저것이 제 가방이에요.","lv":2},{"no":374,"k":"저곳","e":"over there","s":"저곳에 카페가 있어요.","lv":2},{"no":375,"k":"저기","e":"there, over there","s":"저기가 공원이에요.","lv":2},{"no":376,"k":"저분","e":"that person","s":"저분이 우리 교수님이세요.","lv":2},{"no":377,"k":"저쪽","e":"there, over there","s":"저쪽으로 가세요.","lv":2},{"no":378,"k":"저희","e":"we","s":"저희 가족은 넷이에요.","lv":2},{"no":379,"k":"적","e":"enemy","s":"그건 예전 적의 얘기예요.","lv":1},{"no":380,"k":"전","e":"all, before","s":"밥 먹기 전에 손을 씻어요.","lv":1},{"no":381,"k":"전하다","e":"tell","s":"안부를 전해요.","lv":1},{"no":382,"k":"전혀","e":"not at all","s":"전혀 몰랐어요.","lv":2},{"no":383,"k":"절대","e":"never, absolutely","s":"절대 거짓말하면 안 돼요.","lv":2},{"no":384,"k":"젊다","e":"young","s":"그분이 아직 젊어요.","lv":1},{"no":385,"k":"점","e":"point","s":"이 점이 중요해요.","lv":1},{"no":386,"k":"정도","e":"degree","s":"두 시간 정도 걸려요.","lv":2},{"no":387,"k":"정리하다","e":"straighten out, organize","s":"방을 정리했어요.","lv":2},{"no":388,"k":"정말","e":"really, truly","s":"정말 감사해요.","lv":2},{"no":389,"k":"정하다","e":"choose, establish","s":"날짜를 정했어요.","lv":1},{"no":390,"k":"제가","e":"I","s":"제가 할게요.","lv":2},{"no":391,"k":"제목","e":"title","s":"이 책의 제목이 뭐예요?","lv":2},{"no":392,"k":"제일","e":"most","s":"이게 제일 마음에 들어요.","lv":2},{"no":393,"k":"조금","e":"a little","s":"조금 기다려 주세요.","lv":2},{"no":394,"k":"조사하다","e":"investigate","s":"자료를 조사했어요.","lv":2},{"no":395,"k":"조용하다","e":"silent, quiet","s":"도서관은 조용해요.","lv":2},{"no":396,"k":"조용히","e":"quietly","s":"조용히 해주세요.","lv":3},{"no":397,"k":"좀","e":"a little","s":"좀 도와주세요.","lv":1},{"no":398,"k":"좀더","e":"a little more","s":"좀더 천천히 말해 주세요.","lv":2},{"no":399,"k":"좁다","e":"narrow","s":"방이 좁아요.","lv":1},{"no":400,"k":"종류","e":"kind, type","s":"어떤 종류의 음식을 좋아해요?","lv":2},{"no":401,"k":"종이","e":"paper","s":"종이에 적었어요.","lv":2},{"no":402,"k":"주다","e":"give","s":"선물을 줬어요.","lv":1},{"no":403,"k":"주로","e":"mainly","s":"주로 집에서 요리해요.","lv":2},{"no":404,"k":"주머니","e":"pocket, pouch","s":"주머니에 손을 넣었어요.","lv":3},{"no":405,"k":"주무시다","e":"sleep, rest","s":"일찍 주무세요.","lv":2},{"no":406,"k":"주변","e":"around","s":"집 주변이 조용해요.","lv":2},{"no":407,"k":"주위","e":"around","s":"주위가 조용해요.","lv":2},{"no":408,"k":"주인","e":"owner","s":"이 식당 주인이 친절해요.","lv":2},{"no":409,"k":"주황색","e":"orange color","s":"주황색 가방을 샀어요.","lv":3},{"no":410,"k":"줄","e":"line, column, string","s":"줄을 서서 기다렸어요.","lv":1},{"no":411,"k":"줄다","e":"shrink, decrease","s":"살이 줄었어요.","lv":1},{"no":412,"k":"중","e":"medium, during","s":"일 중이에요.","lv":1},{"no":413,"k":"중요","e":"importance","s":"건강이 가장 중요해요.","lv":2},{"no":414,"k":"중요하다","e":"important","s":"이 내용이 중요해요.","lv":2},{"no":415,"k":"지나다","e":"pass by","s":"시간이 빨리 지나요.","lv":2},{"no":416,"k":"지다","e":"lose","s":"팀이 경기에서 졌어요.","lv":1},{"no":417,"k":"지키다","e":"protect","s":"약속을 지켜요.","lv":2},{"no":418,"k":"직접","e":"directly, direct","s":"직접 만들었어요.","lv":2},{"no":419,"k":"질","e":"quality","s":"이 제품은 질이 좋아요.","lv":1},{"no":420,"k":"짜리","e":"a value (won coin)","s":"천 원짜리 동전이에요.","lv":2},{"no":421,"k":"짧다","e":"short","s":"이 치마가 너무 짧아요.","lv":1},{"no":422,"k":"쪽","e":"side, page","s":"왼쪽으로 가세요.","lv":1},{"no":423,"k":"쯤","e":"about, around ~","s":"열 시쯤 왔어요.","lv":1},{"no":424,"k":"차다","e":"kick","s":"공을 찼어요.","lv":1},{"no":425,"k":"차리다","e":"prepare, arrange","s":"식사를 차렸어요.","lv":2},{"no":426,"k":"참","e":"really, very","s":"참 예쁘네요.","lv":1},{"no":427,"k":"찾다","e":"find, visit","s":"잃어버린 지갑을 찾았어요.","lv":1},{"no":428,"k":"책임","e":"responsibility","s":"자기 책임이에요.","lv":2},{"no":429,"k":"천","e":"1000","s":"천 원이에요.","lv":1},{"no":430,"k":"천천히","e":"slowly","s":"천천히 말해 주세요.","lv":3},{"no":431,"k":"첫","e":"first","s":"첫 수업이 좋았어요.","lv":1},{"no":432,"k":"첫째","e":"first","s":"첫째 날에 서울을 구경했어요.","lv":2},{"no":433,"k":"초","e":"~second(s)","s":"10초 만에 달렸어요.","lv":1},{"no":434,"k":"초대하다","e":"invite","s":"파티에 친구들을 초대했어요.","lv":2},{"no":435,"k":"초록색","e":"green color","s":"초록색 잎이 예뻐요.","lv":3},{"no":436,"k":"취소하다","e":"cancel","s":"예약을 취소했어요.","lv":2},{"no":437,"k":"친구","e":"friend","s":"친구와 점심을 먹었어요.","lv":2},{"no":438,"k":"칠","e":"7","s":"칠월에 바다에 가요.","lv":1},{"no":439,"k":"칠십","e":"70","s":"칠십 대에도 건강하게 살아요.","lv":2},{"no":440,"k":"크기","e":"size","s":"이 방 크기가 어떻게 돼요?","lv":2},{"no":441,"k":"크다","e":"big, large","s":"서울은 큰 도시예요.","lv":1},{"no":442,"k":"킬로그램","e":"kilogram","s":"몸무게가 60킬로그램이에요.","lv":3},{"no":443,"k":"킬로미터","e":"kilometer","s":"10킬로미터를 달렸어요.","lv":3},{"no":444,"k":"통","e":"barrel, ~ package(s)","s":"세제 한 통을 샀어요.","lv":1},{"no":445,"k":"통하다","e":"pass, lead","s":"한국어로 통했어요.","lv":1},{"no":446,"k":"특별히","e":"especially","s":"특별히 준비했어요.","lv":3},{"no":447,"k":"특징","e":"characteristic, feature","s":"이 음식의 특징이 뭐예요?","lv":2},{"no":448,"k":"특히","e":"especially, in particular","s":"특히 여름을 좋아해요.","lv":2},{"no":449,"k":"틀리다","e":"wrong","s":"답이 틀렸어요.","lv":2},{"no":450,"k":"파란색","e":"blue color","s":"파란색 하늘이 맑아요.","lv":3},{"no":451,"k":"파랗다","e":"blue","s":"하늘이 파래요.","lv":2},{"no":452,"k":"팔","e":"8","s":"팔이 아파요.","lv":1},{"no":453,"k":"팔십","e":"80","s":"팔십 년대 음악을 좋아해요.","lv":2},{"no":454,"k":"퍼센트","e":"percent","s":"50퍼센트 할인해요.","lv":3},{"no":455,"k":"페이지","e":"page","s":"열 페이지까지 읽었어요.","lv":3},{"no":456,"k":"편","e":"side, episode","s":"이번 편이 재미있었어요.","lv":1},{"no":457,"k":"편하다","e":"comfortable, easy, convenient","s":"이 신발이 편해요.","lv":1},{"no":458,"k":"표","e":"table, ticket","s":"기차표를 미리 샀어요.","lv":1},{"no":459,"k":"표현","e":"expression","s":"감사 표현을 배웠어요.","lv":2},{"no":460,"k":"푹","e":"deeply","s":"오늘 푹 쉬었어요.","lv":1},{"no":461,"k":"풀다","e":"solve","s":"어려운 문제를 풀었어요.","lv":1},{"no":462,"k":"피우다","e":"smoke, bloom","s":"공원에서 담배를 피우면 안 돼요.","lv":2},{"no":463,"k":"필요","e":"necessity","s":"도움이 필요해요.","lv":2},{"no":464,"k":"필요하다","e":"need","s":"우산이 필요해요.","lv":2},{"no":465,"k":"하나","e":"1","s":"하나씩 가져가세요.","lv":2},{"no":466,"k":"하늘색","e":"sky blue, light blue","s":"하늘색 드레스가 예뻐요.","lv":3},{"no":467,"k":"하다","e":"do, say","s":"운동을 열심히 해요.","lv":1},{"no":468,"k":"하얀색","e":"white color","s":"하얀색 눈이 예뻐요.","lv":3},{"no":469,"k":"하얗다","e":"white","s":"이불이 하얗어요.","lv":2},{"no":470,"k":"하지만","e":"but, however","s":"비가 왔어요. 하지만 나갔어요.","lv":3},{"no":471,"k":"학","e":"crane","s":"두루미라고도 하는 학이 날아요.","lv":1},{"no":472,"k":"한","e":"one, one of the ~","s":"한 번만 더 기회를 주세요.","lv":1},{"no":473,"k":"한번","e":"once","s":"한번 해보세요.","lv":2},{"no":474,"k":"함께","e":"together","s":"함께하면 더 즐거워요.","lv":2},{"no":475,"k":"항상","e":"always","s":"항상 건강하세요.","lv":2},{"no":476,"k":"호","e":"No. ~","s":"3호선을 타세요.","lv":1},{"no":477,"k":"혼자","e":"alone","s":"혼자 여행하는 게 좋아요.","lv":2},{"no":478,"k":"회색","e":"grey","s":"회색 바지를 입었어요.","lv":2},{"no":479,"k":"흰색","e":"white color","s":"흰색이 깔끔해 보여요.","lv":2}]}];
+
+// ── Firebase Config ──────────────────────────────────────────────────────────
+
+ const FB_CONFIG = {
+  apiKey:            "AIzaSyDiObB5cblNG6kdA7L9oPxCrSXP4zCOFU0",
+  authDomain:        "korean-vocab-topik1.firebaseapp.com",
+  projectId:         "korean-vocab-topik1",
+  storageBucket:     "korean-vocab-topik1.firebasestorage.app",
+  messagingSenderId: "641897257725",
+  appId:             "1:641897257725:web:604e6b524bc3a64bfb7c94",
+  measurementId:     "G-7Q7ZHKNPZ6"
+};
+// TODO: 관리자(선생님) 이메일로 바꾸세요
+const ADMIN_EMAIL = "bluewhalekorean@gmail.com";
+
+firebase.initializeApp(FB_CONFIG);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ── App State ─────────────────────────────────────────────────────────────────
+let currentUser = null;
+let PROG = {};          // { "cid_si": { score, pct, attempts, lastAt } }
+let TIME_START = {};    // { cid: epochMs }
+let CC = null;          // current category
+let CM = 'list';        // current mode
+let LF = 0;             // level filter (0=all, 1/2/3)
+// Card view
+let CW=[], CI=0, CDir='koen', CSF=-1;
+// Quiz
+let QW=[], QI=0, QS=0, QA=null, QSF=-1, QDir='koen';
+// Flashcard
+let FCW=[], FCI=0, FCFlipped=false;
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('uname').textContent = user.displayName || user.email.split('@')[0];
+    document.getElementById('mypage-btn').style.display = '';
+    document.getElementById('logout-btn').style.display = '';
+    if (user.email === ADMIN_EMAIL) document.getElementById('admin-btn').style.display = '';
+    await loadProgress();
+    updateLastSeen();
+    renderSidebar();
+  } else {
+    currentUser = null; PROG = {};
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('uname').textContent = '';
+    ['mypage-btn','logout-btn','admin-btn'].forEach(id=>document.getElementById(id).style.display='none');
+  }
+});
+
+let IS_REGISTER = false;
+function switchAuthTab(tab) {
+  IS_REGISTER = (tab === 'register');
+  document.getElementById('tab-login').classList.toggle('active', !IS_REGISTER);
+  document.getElementById('tab-register').classList.toggle('active', IS_REGISTER);
+  document.getElementById('ain-name').style.display = IS_REGISTER ? '' : 'none';
+  document.getElementById('auth-submit-btn').textContent = IS_REGISTER ? '회원가입 · Sign Up' : '로그인 · Login';
+  document.getElementById('auth-err').textContent = '';
+}
+async function submitAuth() {
+  const email = document.getElementById('ain-email').value.trim();
+  const pw    = document.getElementById('ain-pw').value;
+  const errEl = document.getElementById('auth-err');
+  errEl.textContent = '';
+  if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력하세요 · Please enter email and password.'; return; }
+  try {
+    if (IS_REGISTER) {
+      const name = document.getElementById('ain-name').value.trim();
+      const cred = await auth.createUserWithEmailAndPassword(email, pw);
+      if (name) await cred.user.updateProfile({ displayName: name });
+      await db.collection('users').doc(cred.user.uid).set({
+        email, displayName: name, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        streak:0, lastStudyDate:''
+      });
+    } else {
+      await auth.signInWithEmailAndPassword(email, pw);
+    }
+  } catch(e) {
+    const msgs = {
+      'auth/user-not-found':'이메일을 찾을 수 없습니다 · Email not found.',
+      'auth/wrong-password':'비밀번호가 틀렸습니다 · Wrong password.',
+      'auth/email-already-in-use':'이미 사용 중인 이메일 · Email already in use.',
+      'auth/weak-password':'비밀번호는 6자 이상 · Password must be at least 6 characters.',
+      'auth/invalid-email':'올바른 이메일 형식이 아닙니다 · Invalid email format.',
+      'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않습니다 · Incorrect email or password.'
+    };
+    errEl.textContent = msgs[e.code] || e.message;
+  }
+}
+async function doLogout() {
+  if (CC) await stopTimer(CC.id);
+  await auth.signOut();
+}
+async function sendReset() {
+  const email = document.getElementById('ain-email').value.trim();
+  const errEl = document.getElementById('auth-err');
+  if (!email) { errEl.textContent = '이메일을 먼저 입력하세요 · Please enter your email first.'; return; }
+  try {
+    await auth.sendPasswordResetEmail(email);
+    errEl.style.color = '#16a34a';
+    errEl.textContent = '비밀번호 재설정 이메일을 보냈습니다 · Password reset email sent ✓';
+  } catch(e) { errEl.textContent = e.message; }
+}
+
+// ── Firestore Progress ────────────────────────────────────────────────────────
+async function loadProgress() {
+  try {
+    const doc = await db.collection('progress').doc(currentUser.uid).get();
+    PROG = doc.exists ? (doc.data().sets || {}) : {};
+  } catch(e) { console.warn('loadProgress', e); PROG = {}; }
+}
+
+async function saveProgress(cid, si, score) {
+  if (!currentUser) return;
+  const key = String(cid) + '_' + si;
+  const parts = score.split('/');
+  const pct = parts.length===2 ? Math.round(parseInt(parts[0])/parseInt(parts[1])*100) : 0;
+  PROG[key] = { score, pct, attempts: (PROG[key]?.attempts||0)+1,
+    lastAt: new Date().toISOString() };
+  try {
+    await db.collection('progress').doc(currentUser.uid).set({
+      ['sets.'+key+'.score']:    score,
+      ['sets.'+key+'.pct']:      pct,
+      ['sets.'+key+'.attempts']: firebase.firestore.FieldValue.increment(1),
+      ['sets.'+key+'.lastAt']:   firebase.firestore.FieldValue.serverTimestamp(),
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+      email: currentUser.email,
+      displayName: currentUser.displayName||''
+    }, { merge: true });
+    updateStreak();
+  } catch(e) { console.warn('saveProgress', e); }
+}
+
+async function logQuizAttempt(cid, si, score, pct) {
+  if (!currentUser) return;
+  try {
+    await db.collection('progress').doc(currentUser.uid).collection('quizLog').add({
+      cid: String(cid), setIndex: si, score, pct,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch(e) {}
+}
+
+async function updateLastSeen() {
+  if (!currentUser) return;
+  try {
+    await db.collection('progress').doc(currentUser.uid).set(
+      { lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        email: currentUser.email, displayName: currentUser.displayName||'' },
+      { merge: true }
+    );
+  } catch(e) {}
+}
+
+async function updateStreak() {
+  if (!currentUser) return;
+  try {
+    const today = new Date().toISOString().slice(0,10);
+    const usnap = await db.collection('users').doc(currentUser.uid).get();
+    if (!usnap.exists) return;
+    const ud = usnap.data();
+    const last = ud.lastStudyDate || '';
+    const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+    let streak = ud.streak || 0;
+    if (last === today) return;
+    streak = (last === yesterday) ? streak + 1 : 1;
+    await db.collection('users').doc(currentUser.uid).update(
+      { streak, lastStudyDate: today });
+  } catch(e) {}
+}
+
+// ── Time Tracking ─────────────────────────────────────────────────────────────
+function startTimer(cid) { TIME_START[cid] = Date.now(); }
+async function stopTimer(cid) {
+  if (!currentUser || !TIME_START[cid]) return;
+  const secs = Math.round((Date.now()-TIME_START[cid])/1000);
+  delete TIME_START[cid];
+  if (secs < 3 || secs > 7200) return;
+  try {
+    await db.collection('progress').doc(currentUser.uid).set({
+      ['timeSpent.'+cid]: firebase.firestore.FieldValue.increment(secs),
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch(e) {}
+}
+window.addEventListener('beforeunload', ()=>{ if(CC) stopTimer(CC.id); });
+
+// ── Progress helpers ──────────────────────────────────────────────────────────
+function getProg(cid, si) { return PROG[String(cid)+'_'+si] || null; }
+function catDone(c) {
+  const sets = Math.ceil(c.words.length/10);
+  let done = 0;
+  for (let i=0;i<sets;i++) if (getProg(c.id,i)) done++;
+  return { done, sets };
+}
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+function renderSidebar() {
+  document.getElementById('clist').innerHTML = DATA.map(c => {
+    const {done,sets} = catDone(c);
+    const pct = sets ? Math.round(done/sets*100) : 0;
+    const badge = done===sets&&sets>0
+      ? '<span style="font-size:.65rem;color:#16a34a;font-weight:700">✓완료</span>'
+      : done>0 ? `<span style="font-size:.65rem;color:var(--a);font-weight:700">${done}/${sets}</span>` : '';
+    const prog = done>0
+      ? `<div class="cprog"><div class="cprogf" style="width:${pct}%;background:${c.color}"></div></div>` : '';
+    return `<div class="ci" id="ci${c.id}" style="--cc:${c.color}" onclick="showCat(${c.id})">
+      <div class="cn">${c.id}</div>
+      <div class="cl">
+        <div class="cko">${c.ko}</div>
+        <div class="cen">${c.en}</div>
+        ${prog}
+      </div>
+      <div class="cnt">${badge||c.words.length+'단어'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Category View ─────────────────────────────────────────────────────────────
+function showCat(id) {
+  document.querySelectorAll('.ci').forEach(e=>e.classList.remove('active'));
+  const ci = document.getElementById('ci'+id);
+  if (ci) ci.classList.add('active');
+  document.getElementById('wel').style.display = 'none';
+  document.getElementById('sv').style.display = 'none';
+  document.getElementById('cv').style.display = '';
+  document.getElementById('srch').value = '';
+  if (CC) stopTimer(CC.id);
+  CC = DATA.find(x=>x.id===id);
+  startTimer(CC.id);
+  const ch = document.getElementById('cat-hdr');
+  ch.style.background = CC.color;
+  const sets = Math.ceil(CC.words.length/10);
+  const {done} = catDone(CC);
+  ch.innerHTML = `<div><div class="tko">${CC.ko}</div><div class="ten">${CC.en}</div></div>
+    <div class="wc">${CC.words.length}단어 · ${sets} Sets<br>진도 ${done}/${sets}</div>`;
+  LF = 0;
+  setMode('list');
+}
+
+function setMode(m) {
+  CM = m;
+  ['list','card','quiz'].forEach(x=>{
+    document.getElementById(x==='list'?'lv':x==='card'?'kv':'qv').style.display = x===m?'':'none';
+    const btn = document.getElementById('mb-'+x);
+    btn.classList.toggle('active', x===m);
+    btn.style.background = x===m&&CC ? CC.color : '';
+  });
+  if (m==='list') renderList();
+  else if (m==='card') initCard();
+  else if (m==='quiz') initQuiz();
+}
+function setModeQuizSet(sf){ setMode('quiz'); setTimeout(()=>initQuiz(sf),0); }
+
+// ── Level helpers ─────────────────────────────────────────────────────────────
+function gramLabel(k) {
+  const PAST=['았어요','었어요','했어요','았습니다','었습니다','했습니다','았다','었다','했다','았어','었어'];
+  const HON =['하십시오','합니다','드립니다','겠습니다','겠어요','하세요','이세요','세요','해요','이에요','예요','아요','어요','습니다'];
+  for(const e of PAST) if(k.endsWith(e)) return '<span class="grambadge gram-past">과거 · past</span>';
+  for(const e of HON)  if(k.endsWith(e)) return '<span class="grambadge gram-hon">존댓말 · honorific</span>';
+  return '';
+}
+
+// ── LIST VIEW ─────────────────────────────────────────────────────────────────
+function renderList() {
+  const c = CC; let html = '';
+  for (let s=0; s<c.words.length; s+=10) {
+    const sw = c.words.slice(s,s+10);
+    const filtered = sw;
+    const sn = Math.floor(s/10)+1;
+    const s1=s+1, s2=Math.min(s+10,c.words.length);
+    const setDone = getProg(c.id, sn-1);
+    html += `<div class="blk">
+      <div class="bh" style="background:${c.color}">
+        <div class="bh-left">
+          <span>Set ${sn} · ${s1}~${s2}번${setDone?' <span style="opacity:.8">('+setDone+')</span>':''}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="fbt" onclick="setModeQuizSet(${sn-1})">❓ 퀴즈 · Quiz</button>
+          <button class="fbt" onclick="openFC(${c.id},${sn-1})">🎴 플래시카드 · Flashcard</button>
+        </div>
+      </div>
+      <table class="wt">
+        <thead><tr><th>#</th><th>한국어</th><th>영어</th><th>예문</th><th></th></tr></thead>
+        <tbody>`;
+    (LF===0?sw:filtered).forEach(w=>{
+      html += `<tr>
+        <td><span style="font-size:.75rem;color:var(--tx3)">${w.no}</span></td>
+        <td><div class="kc">${w.k} ${gramLabel(w.k)}</div></td>
+        <td><div class="ec">${w.e}</div></td>
+        <td><div class="sc">${w.s||''}</div></td>
+        <td><button class="tb" onclick="speak('${w.k.replace(/'/g,"\\'")}','ko')">🔊</button></td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+  document.getElementById('lv').innerHTML = html;
+}
+function setLF(lv) { LF=lv; renderList(); }
+
+// ── CARD VIEW ─────────────────────────────────────────────────────────────────
+function initCard(sf) {
+  CSF = sf!==undefined ? sf : -1;
+  const pool = CSF<0 ? [...CC.words] : CC.words.slice(CSF*10,(CSF+1)*10);
+  CW=shuffle([...pool]);
+  CI=0; CDir='koen';
+  renderCardUI();
+}
+function renderCardUI() {
+  const c=CC, sets=Math.ceil(c.words.length/10);
+  let sfHtml=`<button class="sfbtn${CSF<0?' active':''}"
+    style="${CSF<0?'background:'+c.color+';color:#fff':''}"
+    onclick="initCard(-1)">전체 · All (${c.words.length})</button>`;
+  for(let s=0;s<sets;s++){
+    const isA=CSF===s, done=getProg(c.id,s);
+    sfHtml+=`<button class="sfbtn${isA?' active':''}"
+      style="${isA?'background:'+c.color+';color:#fff':''}"
+      onclick="initCard(${s})">Set ${s+1}${done?' ✓':''}</button>`;
+  }
+  document.getElementById('kv').innerHTML = `
+    <div class="sf-bar">${sfHtml}</div>
+    <div class="dir-bar">
+      <button class="dbtn${CDir==='koen'?' active':''}" onclick="setCDir('koen')">🇰🇷 KO→EN 🇬🇧</button>
+      <button class="dbtn${CDir==='enko'?' active':''}" onclick="setCDir('enko')">🇬🇧 EN→KO 🇰🇷</button>
+    </div>
+    <div class="pgbar">
+      <div class="pgtrack"><div class="pgfill" id="cpg" style="width:${CW.length?Math.round(CI/CW.length*100):0}%;background:${c.color}"></div></div>
+      <div class="pgnum" id="cpgn">${CI+1} / ${CW.length}</div>
+    </div>
+    <div class="card-wrap">
+      <div class="card" id="crd" onclick="cardFlip()">
+        <div class="card-front" id="cf"></div>
+        <div class="card-back" id="cb" style="display:none"></div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="cnav" onclick="cardNav(-1)">◀ Prev</button>
+      <button class="cflipbtn" id="cflip" onclick="cardFlip()" style="background:${c.color}">뒤집기 · Flip</button>
+      <button class="cnav" onclick="cardNav(1)">Next ▶</button>
+    </div>`;
+  renderCard();
+}
+function setCDir(d){ CDir=d; renderCardUI(); }
+function renderCard(){
+  if(!CW.length){document.getElementById('kv').innerHTML='<p style="color:var(--tx3);padding:20px">단어가 없습니다.</p>';return;}
+  const w=CW[CI];
+  const front=document.getElementById('cf'), back=document.getElementById('cb');
+  front.style.display=''; back.style.display='none';
+  if(CDir==='koen'){
+    front.innerHTML=`<div class="cf-ko">${w.k} ${gramLabel(w.k)}</div>
+      <div class="card-tts-row"><button class="ctts" onclick="speak('${w.k.replace(/'/g,"\\'")}','ko');event.stopPropagation()">🔊 한국어</button></div>
+      <div class="cf-hint">탭해서 영어 보기 · Tap for English</div>`;
+    back.innerHTML=`<div class="cb-en">${w.e}</div><div class="cb-sen">${w.s||''}</div>
+      <div class="card-tts-row"><button class="ctts" onclick="speak('${w.e.replace(/'/g,"\\'")}','en');event.stopPropagation()">🔊 English</button></div>`;
+  } else {
+    front.innerHTML=`<div class="cf-ko" style="font-size:1.4rem">${w.e}</div>
+      <div class="card-tts-row"><button class="ctts" onclick="speak('${w.e.replace(/'/g,"\\'")}','en');event.stopPropagation()">🔊 English</button></div>
+      <div class="cf-hint">탭해서 한국어 보기 · Tap for Korean</div>`;
+    back.innerHTML=`<div class="cb-en">${w.k} ${gramLabel(w.k)}</div><div class="cb-sen">${w.s||''}</div>
+      <div class="card-tts-row"><button class="ctts" onclick="speak('${w.k.replace(/'/g,"\\'")}','ko');event.stopPropagation()">🔊 한국어</button></div>`;
+  }
+  const pgEl=document.getElementById('cpg'), pnEl=document.getElementById('cpgn');
+  if(pgEl) pgEl.style.width=(CW.length?Math.round(CI/CW.length*100):0)+'%';
+  if(pnEl) pnEl.textContent=(CI+1)+' / '+CW.length;
+}
+function cardFlip(){
+  const f=document.getElementById('cf'),b=document.getElementById('cb');
+  if(!f||!b)return;
+  const showing=f.style.display!=='none';
+  f.style.display=showing?'none':'';b.style.display=showing?'':'none';
+}
+function cardNav(d){
+  CI=Math.max(0,Math.min(CW.length-1,CI+d));
+  document.getElementById('cf').style.display='';
+  document.getElementById('cb').style.display='none';
+  renderCard();
+}
+document.addEventListener('keydown',e=>{
+  if(CM==='card'){
+    if(e.key==='ArrowRight')cardNav(1);
+    else if(e.key==='ArrowLeft')cardNav(-1);
+    else if(e.key===' '){e.preventDefault();cardFlip();}
+  }
+});
+
+// ── QUIZ VIEW ─────────────────────────────────────────────────────────────────
+function initQuiz(sf){
+  QSF=sf!==undefined?sf:-1; QDir='koen';
+  applyQuizFilter(); renderQuizUI();
+}
+function applyQuizFilter(){
+  const pool=QSF<0?[...CC.words]:CC.words.slice(QSF*10,(QSF+1)*10);
+  const filtered=pool;
+  QW=shuffle([...filtered]); QI=0; QS=0; QA=null;
+}
+function renderQuizUI(){
+  const c=CC,sets=Math.ceil(c.words.length/10);
+  let sfHtml=`<button class="sfbtn${QSF<0?' active':''}"
+    style="${QSF<0?'background:'+c.color+';color:#fff':''}"
+    onclick="initQuiz(-1)">전체 (${QW.length})</button>`;
+  for(let s=0;s<sets;s++){
+    const isA=QSF===s,done=getProg(c.id,s);
+    sfHtml+=`<button class="sfbtn${isA?' active':''}"
+      style="${isA?'background:'+c.color+';color:#fff':''}"
+      onclick="initQuiz(${s})">Set ${s+1}${done?' ('+done.score+')':''}</button>`;
+  }
+  document.getElementById('qv').innerHTML=`
+    <div class="sf-bar">${sfHtml}</div>
+    <div class="qdir">
+      <button class="qdbtn${QDir==='koen'?' active':''}" onclick="setQDir('koen')">🇰🇷 KO→EN 🇬🇧</button>
+      <button class="qdbtn${QDir==='enko'?' active':''}" onclick="setQDir('enko')">🇬🇧 EN→KO 🇰🇷</button>
+    </div>
+    <div class="qhdr">
+      <div class="qscore" id="qsc">0 / 0</div>
+      <button class="qreset" onclick="applyQuizFilter();renderQuizUI()">↺ 재시작 · Restart</button>
+    </div>
+    <div class="qprogbar">
+      <div class="pgtrack" style="flex:1"><div class="pgfill" id="qpg" style="width:0%;background:${c.color}"></div></div>
+      <div class="pgnum" id="qpgn">0 / ${QW.length}</div>
+    </div>
+    <div id="qbody"></div>`;
+  renderQuizQ();
+}
+function setQDir(d){ QDir=d; applyQuizFilter(); renderQuizUI(); }
+function renderQuizQ(){
+  if(QI>=QW.length){
+    const pct=QW.length?Math.round(QS/QW.length*100):0;
+    // Save progress
+    if(QSF>=0){
+      const sc=QS+'/'+QW.length;
+      saveProgress(CC.id,QSF,sc);
+      logQuizAttempt(CC.id,QSF,sc,pct);
+    } else {
+      const sc=QS+'/'+QW.length;
+      const totalSets=Math.ceil(CC.words.length/10);
+      for(let i=0;i<totalSets;i++) saveProgress(CC.id,i,sc);
+      logQuizAttempt(CC.id,-1,sc,pct);
+    }
+    renderSidebar();
+    document.getElementById('qbody').innerHTML=`
+      <div class="qcard">
+        <div class="qword">🎉 완료! · Complete!</div>
+        <div class="qpron">점수: ${QS} / ${QW.length} (${pct}%)</div>
+        ${QSF>=0?`<div style="color:#16a34a;font-weight:700;margin-top:8px;font-size:.88rem">✓ Set ${QSF+1} 저장됨! · Saved!</div>`:''}
+      </div>
+      <button class="qnext" style="display:block" onclick="applyQuizFilter();renderQuizUI()">↺ 다시 시작 · Try Again</button>
+      ${QSF>=0&&QSF<Math.ceil(CC.words.length/10)-1?
+        `<button class="qnext" style="display:block;margin-top:8px" onclick="initQuiz(${QSF+1})">▶ 다음 Set ${QSF+2} · Next Set</button>`:''}`;
+    return;
+  }
+  const w=QW[QI];
+  const pool=CC.words.filter(x=>x!==w);
+  const wrong=shuffle([...pool]).slice(0,3);
+  const opts=shuffle([w,...wrong]);
+  const question=QDir==='koen'?w.k:w.e;
+  const getAns=o=>QDir==='koen'?o.e:o.k;
+  document.getElementById('qsc').textContent=`${QS} / ${QI}`;
+  document.getElementById('qpg').style.width=QW.length?Math.round(QI/QW.length*100)+'%':'0%';
+  document.getElementById('qpgn').textContent=QI+' / '+QW.length;
+  document.getElementById('qbody').innerHTML=`
+    <div class="qcard">
+      <div class="qword">${question}</div>
+      <div class="qpron">${QDir==='koen'?gramLabel(w.k):''}</div>
+    </div>
+    <div class="qopts">
+      ${opts.map((o,i)=>`<button class="opt" onclick="answerQ(${i},${o===w})" id="opt${i}">${getAns(o)}</button>`).join('')}
+    </div>
+    <button class="qnext" id="qnxt" onclick="nextQ()">다음 · Next ▶</button>`;
+}
+function answerQ(idx,correct){
+  if(QA!==null)return; QA=idx;
+  if(correct)QS++;
+  document.querySelectorAll('.opt').forEach((b,i)=>{
+    b.disabled=true;
+    if(i===idx) b.classList.add(correct?'correct':'wrong');
+  });
+  if(!correct){
+    // Show correct answer and 'Next' button on wrong answer
+    const w=QW[QI];
+    document.querySelectorAll('.opt').forEach(b=>{
+      if(b.textContent===(QDir==='koen'?w.e:w.k))b.classList.add('correct');
+    });
+    document.getElementById('qnxt').style.display='block';
+  } else {
+    // Auto-advance after short delay on correct answer
+    setTimeout(()=>{ QI++; QA=null; renderQuizQ(); }, 600);
+  }
+}
+function nextQ(){ QI++; QA=null; renderQuizQ(); }
+
+// ── FLASHCARD MODAL ───────────────────────────────────────────────────────────
+function openFC(cid,sf){
+  const c=DATA.find(x=>x.id===cid);
+  FCW=shuffle([...c.words.slice(sf*10,(sf+1)*10)]); FCI=0; FCFlipped=false;
+  document.getElementById('fco').classList.add('on'); renderFC();
+}
+function closeFC(){ document.getElementById('fco').classList.remove('on'); }
+function renderFC(){
+  if(!FCW.length)return;
+  const w=FCW[FCI]; FCFlipped=false;
+  document.getElementById('fct').textContent=`${FCI+1} / ${FCW.length}`;
+  document.getElementById('fcf').textContent=w.k;
+  document.getElementById('fcf').style.display='';
+  document.getElementById('fcen').style.display='none';
+  document.getElementById('fcsen').style.display='none';
+  document.getElementById('fck').textContent=(FCI+1)+' / '+FCW.length;
+}
+function fcFlip(){
+  const w=FCW[FCI]; FCFlipped=!FCFlipped;
+  if(FCFlipped){
+    document.getElementById('fcf').style.display='none';
+    document.getElementById('fcen').textContent=w.e; document.getElementById('fcen').style.display='';
+    document.getElementById('fcsen').textContent=w.s||''; document.getElementById('fcsen').style.display='';
+  } else {
+    document.getElementById('fcf').style.display='';
+    document.getElementById('fcen').style.display='none';
+    document.getElementById('fcsen').style.display='none';
+  }
+}
+function fcNav(d){ FCI=Math.max(0,Math.min(FCW.length-1,FCI+d)); renderFC(); }
+function fcTTS(lang){ const w=FCW[FCI]; speak(lang==='ko'?w.k:w.e,lang==='ko'?'ko-KR':'en-US'); }
+
+// ── TTS ───────────────────────────────────────────────────────────────────────
+function speak(text,lang){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=lang==='ko'?'ko-KR':'en-US'; u.rate=.9;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────────
+function doSearch(q){
+  q=q.trim().toLowerCase();
+  if(!q){ document.getElementById('sv').style.display='none';
+    if(CC){document.getElementById('cv').style.display='';}
+    else{document.getElementById('wel').style.display='';}
+    return; }
+  document.getElementById('wel').style.display='none';
+  document.getElementById('cv').style.display='none';
+  const sv=document.getElementById('sv'); sv.style.display='';
+  const res=[];
+  DATA.forEach(c=>c.words.forEach(w=>{
+    if(w.k.includes(q)||w.e.toLowerCase().includes(q)||(w.s&&w.s.includes(q)))
+      res.push({...w,cat:c});
+  }));
+  if(!res.length){sv.innerHTML='<p style="color:var(--tx3);padding:20px">검색 결과가 없습니다.</p>';return;}
+  sv.innerHTML=`<p style="font-size:.82rem;color:var(--tx3);margin-bottom:12px">${res.length} results found</p>`+
+    res.slice(0,50).map(r=>`<div style="background:var(--surf);border-radius:12px;padding:12px 16px;margin-bottom:8px;border:1px solid var(--brd2)">
+      <span class="stag" style="background:${r.cat.color}">${r.cat.ko}</span>
+      <span style="margin-left:8px;font-weight:700">${r.k}</span> ${gramLabel(r.k)}
+      <span style="margin-left:6px;color:var(--tx2);font-size:.85rem">${r.e}</span>
+      ${r.s?`<div class="sc" style="margin-top:4px">${r.s}</div>`:''}
+    </div>`).join('');
+}
+
+// ── MY PAGE ───────────────────────────────────────────────────────────────────
+async function openMyPage(){
+  const overlay=document.getElementById('mp-overlay');
+  overlay.classList.add('open');
+  const u=currentUser;
+  const initials=(u.displayName||u.email||'?')[0].toUpperCase();
+  document.getElementById('mp-avatar').textContent=initials;
+  document.getElementById('mp-name').textContent=u.displayName||u.email.split('@')[0];
+  document.getElementById('mp-email').textContent=u.email;
+
+  // Use in-memory PROG for sets (always up-to-date)
+  // Only fetch Firestore for: streak/time (userData) and quiz log
+  let timeSpent={}, userData={}, logs=[];
+  try {
+    const pd=await db.collection('progress').doc(u.uid).get();
+    if(pd.exists){ timeSpent=pd.data().timeSpent||{}; }
+  } catch(e){}
+  try {
+    const ud=await db.collection('users').doc(u.uid).get();
+    userData=ud.exists?ud.data():{};
+  } catch(e){}
+  try {
+    const ls=await db.collection('progress').doc(u.uid).collection('quizLog')
+      .orderBy('timestamp','desc').limit(30).get();
+    ls.forEach(d=>logs.push(d.data()));
+  } catch(e){}
+
+  renderMpOverview(PROG, timeSpent, userData);
+  renderMpCats(PROG);
+  renderMpGram(PROG);
+  renderMpLog(logs);
+}
+function closeMyPage(){ document.getElementById('mp-overlay').classList.remove('open'); }
+function switchMpTab(idx, btn){
+  document.querySelectorAll('.mptab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mp-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('mp-panel-'+idx).classList.add('active');
+}
+
+function renderMpOverview(prog, timeSpent, ud){
+  const totalDone=Object.keys(prog).length;
+  const TOTAL_SETS=DATA.reduce((s,c)=>s+Math.ceil(c.words.length/10),0);
+  const pct=Math.round(totalDone/TOTAL_SETS*100);
+  const totalSecs=Object.values(timeSpent||{}).reduce((a,b)=>a+b,0);
+  const streak=ud.streak||0;
+  // Avg quiz score
+  const allPcts=Object.values(prog).map(s=>s&&s.pct?s.pct:0).filter(Boolean);
+  const avgPct=allPcts.length?Math.round(allPcts.reduce((a,b)=>a+b)/allPcts.length):0;
+  document.getElementById('mp-panel-0').innerHTML=`
+    <div class="streak-box">
+      <div class="streak-fire">🔥</div>
+      <div><div class="streak-n">${streak}</div><div class="streak-lbl">일 연속 학습 · Day Streak</div></div>
+      <div style="margin-left:auto;text-align:right;font-size:.78rem;color:var(--tx3)">
+        마지막 접속 · Last seen<br>${ud.lastSeen?fmtDate(ud.lastSeen.toMillis?ud.lastSeen.toMillis():Date.now()):'-'}
+      </div>
+    </div>
+    <div class="mp-stat-grid">
+      <div class="mp-stat"><div class="n">${pct}%</div><div class="l">전체 진도 · Progress</div></div>
+      <div class="mp-stat"><div class="n">${totalDone}</div><div class="l">완료 Set · Done</div></div>
+      <div class="mp-stat"><div class="n">${TOTAL_SETS-totalDone}</div><div class="l">남은 Set · Left</div></div>
+      <div class="mp-stat"><div class="n">${avgPct}%</div><div class="l">평균 퀴즈 점수 · Avg Score</div></div>
+      <div class="mp-stat"><div class="n">${fmtSecs(totalSecs)}</div><div class="l">총 학습 시간 · Study Time</div></div>
+    </div>
+    <div style="background:var(--surf);border-radius:14px;padding:14px 18px;border:1px solid var(--brd2)">
+      <div class="mp-sec-title" style="margin-bottom:8px">전체 진도 · Overall Progress</div>
+      <div class="pgtrack" style="height:12px;border-radius:6px">
+        <div class="pgfill" style="width:${pct}%;background:var(--a);height:100%;border-radius:6px"></div>
+      </div>
+      <div style="text-align:right;font-size:.76rem;color:var(--tx3);margin-top:4px">${totalDone} / ${TOTAL_SETS} Sets 완료</div>
+    </div>`;
+}
+
+function renderMpCats(prog){
+  let html='<div class="mp-cat-list">';
+  DATA.forEach(c=>{
+    const total=Math.ceil(c.words.length/10);
+    let done=0;
+    for(let i=0;i<total;i++) if(prog[String(c.id)+'_'+i]) done++;
+    const pct=total?Math.round(done/total*100):0;
+    html+=`<div class="mp-cat-row">
+      <div class="mp-cat-name" title="${c.ko}">${c.ko}</div>
+      <div class="mp-cat-bar"><div class="mp-cat-fill" style="width:${pct}%;background:${c.color}"></div></div>
+      <div class="mp-cat-pct">${pct}%</div>
+    </div>`;
+  });
+  html+='</div>';
+  document.getElementById('mp-panel-1').innerHTML=html;
+}
+
+function renderMpGram(prog){
+  const PAST=['았어요','었어요','했어요','았습니다','었습니다','했습니다','았다','었다','했다','았어','었어'];
+  const HON =['하십시오','합니다','드립니다','겠습니다','겠어요','하세요','이세요','세요','해요','이에요','예요','아요','어요','습니다'];
+  function getGram(k){
+    for(const e of PAST) if(k.endsWith(e)) return 'past';
+    for(const e of HON)  if(k.endsWith(e)) return 'hon';
+    return 'base';
+  }
+  let pastN=0,honN=0,baseN=0;
+  DATA.forEach(c=>c.words.forEach(w=>{
+    const g=getGram(w.k);
+    if(g==='past') pastN++;
+    else if(g==='hon') honN++;
+    else baseN++;
+  }));
+  const total=pastN+honN+baseN;
+  const pastPct=Math.round(pastN/total*100);
+  const honPct=Math.round(honN/total*100);
+  const basePct=100-pastPct-honPct;
+  document.getElementById('mp-panel-2').innerHTML=`
+    <div class="mp-sec-title" style="margin-bottom:16px">단어 유형 분포 · Word Type Distribution</div>
+    <div class="lv-stat-row">
+      <div class="lv-stat-card" style="background:#e8f0fe;border-color:#a4c2f4">
+        <div class="nn" style="color:#1a56db">${pastPct}%</div>
+        <div class="lt" style="color:#1a56db">과거형 · Past Tense</div>
+        <div class="lsub" style="color:#1a56db">${pastN}단어</div>
+      </div>
+      <div class="lv-stat-card" style="background:#fef3e2;border-color:#f6c06e">
+        <div class="nn" style="color:#b45309">${honPct}%</div>
+        <div class="lt" style="color:#b45309">존댓말 · Honorific</div>
+        <div class="lsub" style="color:#b45309">${honN}단어</div>
+      </div>
+      <div class="lv-stat-card" style="background:var(--surf2);border-color:var(--brd)">
+        <div class="nn" style="color:var(--tx)">${basePct}%</div>
+        <div class="lt" style="color:var(--tx)">기본형 · Base Form</div>
+        <div class="lsub" style="color:var(--tx)">${baseN}단어</div>
+      </div>
+    </div>
+    <p style="font-size:.78rem;color:var(--tx3);margin-top:12px">🔵 과거형: ~았/었 어요/다 &nbsp;|&nbsp; 🟠 존댓말: ~합니다/해요/세요 &nbsp;|&nbsp; ⚪ 기본형: 명사·동사원형</p>`;
+}
+
+
+function renderMpLog(logs){
+  if(!logs.length){
+    document.getElementById('mp-panel-3').innerHTML='<p style="color:var(--tx3);padding:20px;font-size:.85rem">퀴즈 기록이 없습니다 · No quiz history yet.</p>';
+    return;
+  }
+  const rows=logs.map(l=>{
+    const cat=DATA.find(c=>String(c.id)===String(l.cid));
+    const catName=cat?cat.ko:'?';
+    const cls=l.pct>=90?'bg-good':l.pct>=60?'bg-ok':'bg-low';
+    const ts=l.timestamp?fmtDate(l.timestamp.toMillis?l.timestamp.toMillis():Date.now()):'-';
+    const setLabel=l.setIndex>=0?'Set '+(l.setIndex+1):'전체';
+    return `<tr><td>${catName}</td><td>${setLabel}</td>
+      <td><span class="badgep ${cls}">${l.score} (${l.pct}%)</span></td><td>${ts}</td></tr>`;
+  }).join('');
+  document.getElementById('mp-panel-3').innerHTML=`
+    <table class="mp-log-table">
+      <thead><tr><th>카테고리 · Category</th><th>Set</th><th>점수 · Score</th><th>날짜 · Date</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── Admin dashboard ───────────────────────────────────────────────────────────
+function openAdmin(){ window.open('teacher_dashboard.html','_blank'); }
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+function fmtDate(ms){
+  const d=new Date(ms), now=Date.now(), diff=now-ms;
+  if(diff<60000)return '방금 전';
+  if(diff<3600000)return Math.floor(diff/60000)+'분 전';
+  if(diff<86400000)return Math.floor(diff/3600000)+'시간 전';
+  if(diff<604800000)return Math.floor(diff/86400000)+'일 전';
+  return d.toLocaleDateString('ko-KR');
+}
+function fmtSecs(s){
+  if(!s||s<1)return '0초';
+  if(s<60)return s+'초';
+  if(s<3600)return Math.floor(s/60)+'분 '+Math.round(s%60)+'초';
+  return Math.floor(s/3600)+'시간 '+Math.floor((s%3600)/60)+'분';
+}
+function toggleSB(){ document.getElementById('sb').classList.toggle('open'); }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderSidebar();
+
+</script>
+</body>
+</html>
