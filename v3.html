@@ -1440,11 +1440,13 @@ function renderQuizQ(){
     <div class="qcard">
       <div class="qword">${question}</div>
       <div class="qpron">${QDir==='koen'?gramLabel(w.k):''}</div>
+      <button class="ctts" style="margin-top:8px" onclick="speak('${question}','${QDir==='koen'?'ko':'en'}')">🔊 듣기</button>
     </div>
     <div class="qopts">
       ${opts.map((o,i)=>`<button class="opt" onclick="answerQ(${i},${o===w})" id="opt${i}">${getAns(o)}</button>`).join('')}
     </div>
     <button class="qnext" id="qnxt" onclick="nextQ()">다음 · Next ▶</button>`;
+  setTimeout(()=>speak(question, QDir==='koen'?'ko':'en'), 150);
 }
 function answerQ(idx,correct){
   if(QA!==null)return; QA=idx;
@@ -1939,11 +1941,7 @@ function answerTv(idx, correct){
     else if(i===idx) b.classList.add('tv-wrong');
   });
   document.getElementById('tv-exp').classList.add('show');
-  if(correct){
-    setTimeout(()=>nextTvQ(), 900);
-  } else {
-    document.getElementById('tv-next').classList.add('show');
-  }
+  document.getElementById('tv-next').classList.add('show');
   // Award XP
   if(typeof addXP==='function') addXP(correct?3:1);
 }
