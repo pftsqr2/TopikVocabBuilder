@@ -838,36 +838,6 @@ body {
     <div id="kv" style="display:none"></div>
     <div id="qv" style="display:none"></div>
   </div>
-</div>
-
-
-<div id="mp-overlay" onclick="if(event.target===this)closeMyPage()">
-  <div id="mp-box">
-    <div id="mp-hdr">
-      <div id="mp-avatar">?</div>
-      <div>
-        <div id="mp-name">—</div>
-        <div id="mp-email">—</div>
-      </div>
-      <button id="mp-close" onclick="closeMyPage()">✕</button>
-    </div>
-    <div class="mp-tabs">
-      <button class="mptab active" onclick="switchMpTab(0,this)">🏠 개요 · Overview</button>
-      <button class="mptab" onclick="switchMpTab(1,this)">📂 카테고리 · Categories</button>
-      <button class="mptab" onclick="switchMpTab(2,this)">📊 문법 · Grammar</button>
-      <button class="mptab" onclick="switchMpTab(3,this)">🏅 뱃지 · Badges</button>
-      <button class="mptab" onclick="switchMpTab(4,this)">📝 퀴즈 기록 · Quiz History</button>
-    </div>
-    <div id="mp-panel-0" class="mp-panel active"></div>
-    <div id="mp-panel-1" class="mp-panel"></div>
-    <div id="mp-panel-2" class="mp-panel"></div>
-    <div id="mp-panel-3" class="mp-panel"></div>
-    <div id="mp-panel-4" class="mp-panel"></div>
-  </div>
-</div>
-
-
-
 <!-- ══ TRIVIA VIEW ══════════════════════════════════════════════ -->
 <div id="tv" style="display:none">
   <!-- Category selection -->
@@ -919,6 +889,33 @@ body {
       <span class="tv-prog-label" id="tv-prog-label">0/10</span>
     </div>
     <div id="tv-qbody"></div>
+  </div>
+</div>
+</div>
+
+
+<div id="mp-overlay" onclick="if(event.target===this)closeMyPage()">
+  <div id="mp-box">
+    <div id="mp-hdr">
+      <div id="mp-avatar">?</div>
+      <div>
+        <div id="mp-name">—</div>
+        <div id="mp-email">—</div>
+      </div>
+      <button id="mp-close" onclick="closeMyPage()">✕</button>
+    </div>
+    <div class="mp-tabs">
+      <button class="mptab active" onclick="switchMpTab(0,this)">🏠 개요 · Overview</button>
+      <button class="mptab" onclick="switchMpTab(1,this)">📂 카테고리 · Categories</button>
+      <button class="mptab" onclick="switchMpTab(2,this)">📊 문법 · Grammar</button>
+      <button class="mptab" onclick="switchMpTab(3,this)">🏅 뱃지 · Badges</button>
+      <button class="mptab" onclick="switchMpTab(4,this)">📝 퀴즈 기록 · Quiz History</button>
+    </div>
+    <div id="mp-panel-0" class="mp-panel active"></div>
+    <div id="mp-panel-1" class="mp-panel"></div>
+    <div id="mp-panel-2" class="mp-panel"></div>
+    <div id="mp-panel-3" class="mp-panel"></div>
+    <div id="mp-panel-4" class="mp-panel"></div>
   </div>
 </div>
 
@@ -1209,6 +1206,8 @@ function showTriviaCat() {
   document.getElementById('sv').style.display  = 'none';
   document.getElementById('cv').style.display  = 'none';
   document.getElementById('tv').style.display  = '';
+  document.getElementById('main').scrollTop = 0;
+  window.scrollTo(0, 0);
   showTvCats();
 }
 
