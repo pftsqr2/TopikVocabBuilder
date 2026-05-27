@@ -802,22 +802,33 @@ body {
 .wel-stat .l{font-size:.68rem;color:var(--tx3);margin-top:1px}
 
 .wel-guide-title{font-size:.82rem;font-weight:800;color:var(--tx3);
-  text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;text-align:center}
-.wel-steps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
-@media(max-width:500px){.wel-steps{grid-template-columns:1fr}}
-.wel-step{background:#fff;border-radius:18px;padding:16px 16px 14px;
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;text-align:center}
+.wel-flow{display:flex;flex-direction:column;gap:0;margin-bottom:20px}
+.wel-flow-row{display:flex;align-items:stretch;gap:0}
+.wel-step{background:#fff;border-radius:16px;padding:15px 13px 13px;
   box-shadow:0 3px 12px var(--shad);border:1.5px solid var(--brd2);
-  display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+  display:flex;flex-direction:column;gap:5px;position:relative;overflow:hidden;
+  flex:1;min-width:0}
 .wel-step::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
-  border-radius:18px 18px 0 0}
+  border-radius:16px 16px 0 0}
 .ws1::before{background:#6366f1} .ws2::before{background:#ec4899}
 .ws3::before{background:#10b981} .ws4::before{background:#f59e0b}
 .ws5::before{background:#0ea5e9} .ws6::before{background:#7c3aed}
-.wel-step-num{font-size:.65rem;font-weight:900;color:var(--tx3);letter-spacing:.05em}
-.wel-step-icon{font-size:1.8rem;line-height:1}
-.wel-step-ko{font-size:.88rem;font-weight:800;color:var(--tx)}
-.wel-step-en{font-size:.75rem;color:var(--tx3);line-height:1.5}
-
+.wel-step-num{font-size:.6rem;font-weight:900;color:var(--tx3);letter-spacing:.05em}
+.wel-step-icon{font-size:1.65rem;line-height:1}
+.wel-step-ko{font-size:.84rem;font-weight:800;color:var(--tx)}
+.wel-step-en{font-size:.72rem;color:var(--tx3);line-height:1.45}
+.wel-arr-h{display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;width:28px}
+.wel-arr-h::after{content:'→';font-size:1.35rem;color:#a78bfa;font-weight:700}
+.wel-flow-turn{display:flex;justify-content:center;height:26px;align-items:center}
+.wel-arr-v{font-size:1.5rem;color:#a78bfa;font-weight:700}
+@media(max-width:620px){
+  .wel-flow-row{flex-direction:column;gap:0}
+  .wel-arr-h{width:auto;height:22px}
+  .wel-arr-h::after{content:'↓'}
+  .wel-flow-turn{height:22px}
+}
 .wel-tip{background:linear-gradient(135deg,var(--al),var(--surf2));
   border-radius:16px;padding:14px 18px;border-left:4px solid var(--a);
   font-size:.82rem;color:var(--ad);line-height:1.7;margin-top:4px}
@@ -896,42 +907,51 @@ body {
   </div>
 
   <div class="wel-guide-title">📖 학습 가이드 · How to Study</div>
-  <div class="wel-steps">
-    <div class="wel-step ws1">
-      <div class="wel-step-num">STEP 1</div>
-      <div class="wel-step-icon">📂</div>
-      <div class="wel-step-ko">카테고리를 선택하세요</div>
-      <div class="wel-step-en">Pick a category from the sidebar.<br>Start with <b>L1 · Greetings</b> or any topic you like.</div>
+  <div class="wel-flow">
+    <div class="wel-flow-row">
+      <div class="wel-step ws1">
+        <div class="wel-step-num">STEP 1</div>
+        <div class="wel-step-icon">📂</div>
+        <div class="wel-step-ko">카테고리를 선택하세요</div>
+        <div class="wel-step-en">Pick a category from the sidebar.<br>Start with <b>L1 · Greetings</b> or any topic you like.</div>
+      </div>
+      <div class="wel-arr-h"></div>
+      <div class="wel-step ws2">
+        <div class="wel-step-num">STEP 2</div>
+        <div class="wel-step-icon">🃏</div>
+        <div class="wel-step-ko">플래시 카드로 따라 읽기</div>
+        <div class="wel-step-en">In <b>Card mode</b>, listen to each word and repeat out loud. Cards auto-play audio.</div>
+      </div>
+      <div class="wel-arr-h"></div>
+      <div class="wel-step ws3">
+        <div class="wel-step-num">STEP 3</div>
+        <div class="wel-step-icon">✅</div>
+        <div class="wel-step-ko">'확실히 알겠어요' 체크</div>
+        <div class="wel-step-en">Press <b>확실히 알겠어요</b> when you know a word well. Unknown words stay in rotation.</div>
+      </div>
     </div>
-    <div class="wel-step ws2">
-      <div class="wel-step-num">STEP 2</div>
-      <div class="wel-step-icon">🃏</div>
-      <div class="wel-step-ko">플래시 카드로 따라 읽기</div>
-      <div class="wel-step-en">In <b>Card mode</b>, listen to each word and repeat it out loud. Cards auto-play audio.</div>
-    </div>
-    <div class="wel-step ws3">
-      <div class="wel-step-num">STEP 3</div>
-      <div class="wel-step-icon">✅</div>
-      <div class="wel-step-ko">'확실히 알겠어요' 체크</div>
-      <div class="wel-step-en">Press <b>확실히 알겠어요</b> when you know a word well. Unknown words stay in rotation.</div>
-    </div>
-    <div class="wel-step ws4">
-      <div class="wel-step-num">STEP 4</div>
-      <div class="wel-step-icon">❓</div>
-      <div class="wel-step-ko">퀴즈로 실력 확인</div>
-      <div class="wel-step-en">Switch to <b>Quiz mode</b> to test yourself. Scores are saved automatically.</div>
-    </div>
-    <div class="wel-step ws5">
-      <div class="wel-step-num">STEP 5</div>
-      <div class="wel-step-icon">🔁</div>
-      <div class="wel-step-ko">모르는 단어만 복습</div>
-      <div class="wel-step-en">Use the <b>filter toggle</b> in card mode to focus only on words you're unsure about.</div>
-    </div>
-    <div class="wel-step ws6">
-      <div class="wel-step-num">BONUS</div>
-      <div class="wel-step-icon">🌟</div>
-      <div class="wel-step-ko">K-Culture Trivia 도전!</div>
-      <div class="wel-step-en">Try <b>K-Culture Trivia</b> (sidebar item ★) for fun K-POP, K-Drama &amp; K-Food quizzes.</div>
+    <div class="wel-flow-turn"><span class="wel-arr-v">↓</span></div>
+    <div class="wel-flow-row">
+      <div class="wel-step ws4">
+        <div class="wel-step-num">STEP 4</div>
+        <div class="wel-step-icon">❓</div>
+        <div class="wel-step-ko">퀴즈로 실력 확인</div>
+        <div class="wel-step-en">Switch to <b>Quiz mode</b> to test yourself. Scores are saved automatically.</div>
+      </div>
+      <div class="wel-arr-h"></div>
+      <div class="wel-step ws5">
+        <div class="wel-step-num">STEP 5</div>
+        <div class="wel-step-icon">🔁</div>
+        <div class="wel-step-ko">모르는 단어만 복습</div>
+        <div class="wel-step-en">Use the <b>filter toggle</b> in card mode to focus only on words you're unsure about.</div>
+      </div>
+      <div class="wel-arr-h"></div>
+      <div class="wel-step ws6">
+        <div class="wel-step-num">BONUS</div>
+        <div class="wel-step-icon">🌟</div>
+        <div class="wel-step-ko">K-Culture Trivia 도전!</div>
+        <div class="wel-step-en">Try <b>K-Culture Trivia</b> (★ in sidebar) for fun K-POP, K-Drama &amp; K-Food quizzes.</div>
+      </div>
     </div>
   </div>
 
