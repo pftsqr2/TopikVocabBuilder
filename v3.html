@@ -760,6 +760,69 @@ body {
 }
 .tv-opt.tv-correct { animation:tvPop .28s ease forwards; }
 
+
+/* ── CARD MASTERY ─────────────────────────────────────── */
+.mastery-badge{display:inline-flex;align-items:center;gap:4px;
+  padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:700;
+  margin-top:10px;letter-spacing:.01em}
+.mb-0{background:#fee2e2;color:#dc2626}
+.mb-1{background:#fef3c7;color:#b45309}
+.mb-2{background:#d1fae5;color:#059669}
+
+.card-filter-row{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.cft{padding:5px 13px;border-radius:20px;font-size:.75rem;font-weight:700;
+  cursor:pointer;border:2px solid transparent;transition:.15s;opacity:.55}
+.cft.on{opacity:1}
+.cft-0{background:#fee2e2;color:#dc2626;border-color:#fca5a5}
+.cft-0.on{background:#dc2626;color:#fff;border-color:#dc2626}
+.cft-1{background:#fef3c7;color:#b45309;border-color:#fcd34d}
+.cft-1.on{background:#b45309;color:#fff;border-color:#b45309}
+.cft-2{background:#d1fae5;color:#059669;border-color:#6ee7b7}
+.cft-2.on{background:#059669;color:#fff;border-color:#059669}
+
+.cconfirm{padding:11px 18px;border-radius:50px;border:none;cursor:pointer;
+  font-size:.85rem;font-weight:800;font-family:inherit;
+  background:linear-gradient(135deg,#059669,#10b981);color:#fff;
+  box-shadow:0 4px 14px rgba(5,150,105,.35);transition:.15s}
+.cconfirm:hover{transform:translateY(-2px)}
+.cconfirm.done{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.card-empty{text-align:center;padding:40px 20px;color:var(--tx3);font-size:.9rem;line-height:1.8}
+
+/* ── LANDING PAGE ──────────────────────────────────────── */
+#wel{max-width:720px;margin:0 auto;padding:8px 4px 32px}
+.wel-hero{text-align:center;padding:28px 16px 20px;
+  background:linear-gradient(135deg,var(--surf2),var(--surf3));
+  border-radius:24px;margin-bottom:24px;border:1.5px solid var(--brd2)}
+.wel-hero h2{font-size:1.5rem;font-weight:900;color:var(--tx);margin-bottom:4px}
+.wel-hero .sub{font-size:.85rem;color:var(--tx3);margin-bottom:12px}
+.wel-stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.wel-stat{background:#fff;border-radius:14px;padding:10px 18px;text-align:center;
+  box-shadow:0 2px 8px var(--shad);min-width:80px}
+.wel-stat .n{font-size:1.3rem;font-weight:900;color:var(--a)}
+.wel-stat .l{font-size:.68rem;color:var(--tx3);margin-top:1px}
+
+.wel-guide-title{font-size:.82rem;font-weight:800;color:var(--tx3);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;text-align:center}
+.wel-steps{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+@media(max-width:500px){.wel-steps{grid-template-columns:1fr}}
+.wel-step{background:#fff;border-radius:18px;padding:16px 16px 14px;
+  box-shadow:0 3px 12px var(--shad);border:1.5px solid var(--brd2);
+  display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+.wel-step::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  border-radius:18px 18px 0 0}
+.ws1::before{background:#6366f1} .ws2::before{background:#ec4899}
+.ws3::before{background:#10b981} .ws4::before{background:#f59e0b}
+.ws5::before{background:#0ea5e9} .ws6::before{background:#7c3aed}
+.wel-step-num{font-size:.65rem;font-weight:900;color:var(--tx3);letter-spacing:.05em}
+.wel-step-icon{font-size:1.8rem;line-height:1}
+.wel-step-ko{font-size:.88rem;font-weight:800;color:var(--tx)}
+.wel-step-en{font-size:.75rem;color:var(--tx3);line-height:1.5}
+
+.wel-tip{background:linear-gradient(135deg,var(--al),var(--surf2));
+  border-radius:16px;padding:14px 18px;border-left:4px solid var(--a);
+  font-size:.82rem;color:var(--ad);line-height:1.7;margin-top:4px}
+.wel-tip b{color:var(--tx)}
+
 </style>
 </head>
 <body>
@@ -797,7 +860,7 @@ body {
 
 <div id="hdr">
   <button id="hbg" onclick="toggleSB()">☰</button>
-  <div class="htxt">
+  <div class="htxt" onclick="showWelcome()" style="cursor:pointer" title="홈으로">
     <div class="sub">TTMIK L1+L2 · 334단어 · 16 Categories</div>
     <h1>📚 TTMIK 단어장 <span style="font-weight:400;opacity:.7;font-size:.82rem">· L1 + L2</span></h1>
   </div>
@@ -821,11 +884,62 @@ body {
 
 <div id="main">
   <div id="wel">
-    <h2>📚 TTMIK L1+L2 단어장</h2><p style="font-size:1rem;color:var(--a);margin-top:-6px;margin-bottom:8px">Talk To Me In Korean · Level 1 &amp; 2</p>
-    <p>왼쪽에서 카테고리를 선택해 학습을 시작하세요 · Select a category to start learning.<br>
-    목록 · 카드 · 퀴즈 3가지 모드 · List, Card, and Quiz modes available.<br>
-    🟢 Level 1 (Easy) → 🟡 Level 2 (Medium) → 🔴 Level 3 (Hard)</p>
+  <div class="wel-hero">
+    <h2>🐋 TTMIK 단어장</h2>
+    <div class="sub">Talk To Me In Korean · Level 1 &amp; 2</div>
+    <div class="wel-stats">
+      <div class="wel-stat"><div class="n">334</div><div class="l">단어 · Words</div></div>
+      <div class="wel-stat"><div class="n">16</div><div class="l">카테고리 · Cats</div></div>
+      <div class="wel-stat"><div class="n">3</div><div class="l">학습 모드</div></div>
+      <div class="wel-stat"><div class="n">★</div><div class="l">K-Culture Trivia</div></div>
+    </div>
   </div>
+
+  <div class="wel-guide-title">📖 학습 가이드 · How to Study</div>
+  <div class="wel-steps">
+    <div class="wel-step ws1">
+      <div class="wel-step-num">STEP 1</div>
+      <div class="wel-step-icon">📂</div>
+      <div class="wel-step-ko">카테고리를 선택하세요</div>
+      <div class="wel-step-en">Pick a category from the sidebar.<br>Start with <b>L1 · Greetings</b> or any topic you like.</div>
+    </div>
+    <div class="wel-step ws2">
+      <div class="wel-step-num">STEP 2</div>
+      <div class="wel-step-icon">🃏</div>
+      <div class="wel-step-ko">플래시 카드로 따라 읽기</div>
+      <div class="wel-step-en">In <b>Card mode</b>, listen to each word and repeat it out loud. Cards auto-play audio.</div>
+    </div>
+    <div class="wel-step ws3">
+      <div class="wel-step-num">STEP 3</div>
+      <div class="wel-step-icon">✅</div>
+      <div class="wel-step-ko">'확실히 알겠어요' 체크</div>
+      <div class="wel-step-en">Press <b>확실히 알겠어요</b> when you know a word well. Unknown words stay in rotation.</div>
+    </div>
+    <div class="wel-step ws4">
+      <div class="wel-step-num">STEP 4</div>
+      <div class="wel-step-icon">❓</div>
+      <div class="wel-step-ko">퀴즈로 실력 확인</div>
+      <div class="wel-step-en">Switch to <b>Quiz mode</b> to test yourself. Scores are saved automatically.</div>
+    </div>
+    <div class="wel-step ws5">
+      <div class="wel-step-num">STEP 5</div>
+      <div class="wel-step-icon">🔁</div>
+      <div class="wel-step-ko">모르는 단어만 복습</div>
+      <div class="wel-step-en">Use the <b>filter toggle</b> in card mode to focus only on words you're unsure about.</div>
+    </div>
+    <div class="wel-step ws6">
+      <div class="wel-step-num">BONUS</div>
+      <div class="wel-step-icon">🌟</div>
+      <div class="wel-step-ko">K-Culture Trivia 도전!</div>
+      <div class="wel-step-en">Try <b>K-Culture Trivia</b> (sidebar item ★) for fun K-POP, K-Drama &amp; K-Food quizzes.</div>
+    </div>
+  </div>
+
+  <div class="wel-tip">
+    💡 <b>팁</b>: 카드 모드 → 확실히 아는 단어 체크 → 퀴즈 순서로 공부하면 가장 효과적이에요!<br>
+    <span style="color:var(--tx3)">Tip: Study in order — Cards → Mark what you know → Quiz for best results!</span>
+  </div>
+</div>
   <div id="sv" style="display:none"></div>
   <div id="cv" style="display:none">
     <div id="cat-hdr" class="ch"></div>
@@ -1144,6 +1258,82 @@ function catDone(c) {
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
+
+// ── CARD MASTERY ──────────────────────────────────────────────────────────────
+let MASTERY = {};
+try { MASTERY = JSON.parse(localStorage.getItem('bwk_mastery') || '{}'); } catch(e){}
+let C_FILTER = new Set([0, 1]); // default: show 잘 모르겠어요 + 조금 알겠어요
+
+const MASTERY_LABEL = ['❓ 잘 모르겠어요','🌱 조금 알겠어요','✅ 확실히 알겠어요'];
+const MASTERY_CLS   = ['mb-0','mb-1','mb-2'];
+
+function getMastery(catId, no) {
+  return MASTERY[catId+'_'+no] ?? 0;
+}
+function setMastery(catId, no, lv) {
+  MASTERY[catId+'_'+no] = lv;
+  try { localStorage.setItem('bwk_mastery', JSON.stringify(MASTERY)); } catch(e){}
+}
+function masteryCount(catId, words) {
+  const cnt = [0,0,0];
+  words.forEach(w => cnt[getMastery(catId, w.no)]++);
+  return cnt;
+}
+function toggleCFilter(lv) {
+  if (C_FILTER.has(lv)) {
+    if (C_FILTER.size > 1) C_FILTER.delete(lv);
+  } else {
+    C_FILTER.add(lv);
+  }
+  rebuildCardPool();
+}
+function rebuildCardPool() {
+  const pool = CSF < 0 ? [...CC.words] : CC.words.slice(CSF*10,(CSF+1)*10);
+  CW = shuffle(pool.filter(w => C_FILTER.has(getMastery(CC.id, w.no))));
+  CI = 0;
+  updateFilterBtns();
+  if (!CW.length) {
+    document.getElementById('cf').innerHTML =
+      '<div class="card-empty">이 필터에 해당하는 단어가 없어요.<br><span style="font-size:.8rem;color:var(--tx3)">No words match this filter.</span></div>';
+    document.getElementById('cb').style.display='none';
+    document.getElementById('cpg').style.width='0%';
+    document.getElementById('cpgn').textContent='0 / 0';
+    return;
+  }
+  renderCard();
+}
+function updateFilterBtns() {
+  if (!CC) return;
+  const cnt = masteryCount(CC.id, CSF<0?CC.words:CC.words.slice(CSF*10,(CSF+1)*10));
+  [0,1,2].forEach(lv => {
+    const btn = document.getElementById('cft-'+lv);
+    if (!btn) return;
+    btn.classList.toggle('on', C_FILTER.has(lv));
+    btn.textContent = MASTERY_LABEL[lv] + ' ' + cnt[lv];
+  });
+}
+function confirmCard() {
+  if (!CW.length) return;
+  const w = CW[CI];
+  setMastery(CC.id, w.no, 2);
+  // update badge on card
+  const badge = document.getElementById('mbadge');
+  if (badge) { badge.className='mastery-badge mb-2'; badge.textContent=MASTERY_LABEL[2]; }
+  const btn = document.getElementById('cconfirm-btn');
+  if (btn) { btn.classList.add('done'); btn.textContent='✅ 확인됨!'; }
+  updateFilterBtns();
+  // auto-advance after 600ms
+  setTimeout(()=>cardNav(1), 600);
+}
+function showWelcome() {
+  document.querySelectorAll('.ci').forEach(e=>e.classList.remove('active'));
+  if (CC) { stopTimer(CC.id); CC = null; }
+  document.getElementById('wel').style.display = '';
+  document.getElementById('sv').style.display  = 'none';
+  document.getElementById('cv').style.display  = 'none';
+  document.getElementById('tv').style.display  = 'none';
+}
+
 function renderSidebar() {
   document.getElementById('clist').innerHTML = DATA.map(c => {
     const {done,sets} = catDone(c);
@@ -1300,6 +1490,11 @@ function renderCardUI() {
       <div class="pgtrack"><div class="pgfill" id="cpg" style="width:${CW.length?Math.round(CI/CW.length*100):0}%;background:${c.color}"></div></div>
       <div class="pgnum" id="cpgn">${CI+1} / ${CW.length}</div>
     </div>
+    <div class="card-filter-row" id="card-filter-row">
+      <button class="cft cft-0 on" id="cft-0" onclick="toggleCFilter(0)">❓ 잘 모르겠어요</button>
+      <button class="cft cft-1 on" id="cft-1" onclick="toggleCFilter(1)">🌱 조금 알겠어요</button>
+      <button class="cft cft-2" id="cft-2" onclick="toggleCFilter(2)">✅ 확실히 알겠어요</button>
+    </div>
     <div class="card-wrap">
       <div class="card" id="crd" onclick="cardFlip()">
         <div class="card-front" id="cf"></div>
@@ -1308,10 +1503,10 @@ function renderCardUI() {
     </div>
     <div class="card-nav">
       <button class="cnav" onclick="cardNav(-1)">◀ Prev</button>
-      <button class="cflipbtn" id="cflip" onclick="cardFlip()" style="background:${c.color}">뒤집기 · Flip</button>
+      <button class="cconfirm" id="cconfirm-btn" onclick="confirmCard()">✅ 확실히 알겠어요</button>
       <button class="cnav" onclick="cardNav(1)">Next ▶</button>
     </div>`;
-  renderCard();
+  rebuildCardPool();
 }
 function setCDir(d){ CDir=d; renderCardUI(); }
 function renderCard(){
@@ -1320,8 +1515,12 @@ function renderCard(){
   const front=document.getElementById('cf'), back=document.getElementById('cb');
   front.style.display=''; back.style.display='none';
   if(CDir==='koen'){
+    const _mk = getMastery(CC.id, w.no);
+    if (_mk === 0) setMastery(CC.id, w.no, 1); // first view → 조금 알겠어요
+    const _lv = getMastery(CC.id, w.no);
     front.innerHTML=`<div class="cf-ko">${w.k} ${gramLabel(w.k)}</div>
       <div class="card-tts-row"><button class="ctts" onclick="speak('${w.k.replace(/'/g,"\\'")}','ko');event.stopPropagation()">🔊 한국어</button></div>
+      <span class="mastery-badge ${MASTERY_CLS[_lv]}" id="mbadge">${MASTERY_LABEL[_lv]}</span>
       <div class="cf-hint">탭해서 영어 보기 · Tap for English</div>`;
     back.innerHTML=`<div class="cb-en">${w.e}</div><div class="cb-sen">${w.s||''}</div>
       <div class="card-tts-row"><button class="ctts" onclick="speak('${w.e.replace(/'/g,"\\'")}','en');event.stopPropagation()">🔊 English</button></div>`;
@@ -1347,7 +1546,8 @@ function cardFlip(){
   f.style.display=showing?'none':'';b.style.display=showing?'':'none';
 }
 function cardNav(d){
-  CI=Math.max(0,Math.min(CW.length-1,CI+d));
+  if(!CW.length) return;
+  CI = (CI + d + CW.length) % CW.length;  // loop
   document.getElementById('cf').style.display='';
   document.getElementById('cb').style.display='none';
   renderCard();
