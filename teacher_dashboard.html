@@ -255,19 +255,51 @@ async function doLogout() { await auth.signOut(); }
 async function loadStudents() {
   document.getElementById('student-list').innerHTML = '<div class="loading">⏳ 불러오는 중...</div>';
   try {
-    const snap = await db.collection('progress').get();
+    // Load both collections in parallel
+    const [progressSnap, usersSnap] = await Promise.all([
+      db.collection('progress').get(),
+      db.collection('users').get()
+    ]);
+
+    // Build user profile map: uid → {email, displayName, game, streak, lastStudyDate}
+    const userMap = {};
+    usersSnap.forEach(doc => { userMap[doc.id] = doc.data(); });
+
     allStudents = [];
-    snap.forEach(doc => {
-      const d = doc.data();
-      if (d.email !== TEACHER_EMAIL) {
-        allStudents.push({ uid: doc.id, ...d });
+    progressSnap.forEach(doc => {
+      const profile = userMap[doc.id] || {};
+      // Skip teacher's own account
+      if ((profile.email || '') === TEACHER_EMAIL) return;
+      allStudents.push({
+        uid:         doc.id,
+        email:       profile.email       || '(이메일 없음)',
+        displayName: profile.displayName || '(이름 없음)',
+        streak:      profile.streak      || 0,
+        game:        profile.game        || {},
+        sets:        doc.data().sets     || {},
+        timeSpent:   doc.data().timeSpent|| {},
+        lastSeen:    doc.data().lastSeen || null,
+      });
+    });
+
+    // Also include users who registered but haven't done any quiz yet
+    usersSnap.forEach(doc => {
+      const p = doc.data();
+      if (p.email === TEACHER_EMAIL) return;
+      if (!allStudents.find(s => s.uid === doc.id)) {
+        allStudents.push({
+          uid: doc.id, email: p.email||'', displayName: p.displayName||'',
+          streak: p.streak||0, game: p.game||{}, sets:{}, timeSpent:{}, lastSeen:null
+        });
       }
     });
+
     updateStats();
     renderStudents(allStudents);
   } catch(e) {
     document.getElementById('student-list').innerHTML =
-      '<div class="empty">⚠️ 데이터를 불러오지 못했습니다: ' + e.message + '</div>';
+      '<div class="empty">⚠️ 데이터를 불러오지 못했습니다: ' + e.message +
+      '<br><br><small>Firestore 규칙을 업데이트했는지 확인하세요.</small></div>';
   }
 }
 
@@ -288,6 +320,17 @@ function updateStats() {
   document.getElementById('st-sets').textContent = totalSets;
   document.getElementById('st-avg').textContent =
     allStudents.length ? Math.round(totalPct / allStudents.length) + '%' : '-';
+}
+
+function getLevel(xp) {
+  const LEVELS = [
+    {lv:1,xp:0},{lv:2,xp:50},{lv:3,xp:120},{lv:4,xp:220},
+    {lv:5,xp:360},{lv:6,xp:540},{lv:7,xp:770},{lv:8,xp:1050},
+    {lv:9,xp:1400},{lv:10,xp:1850}
+  ];
+  let cur = LEVELS[0];
+  for (const l of LEVELS) { if (xp >= l.xp) cur = l; else break; }
+  return cur.lv;
 }
 
 // ── Render students ───────────────────────────────────────────────────────────
@@ -335,10 +378,12 @@ function studentCard(s) {
   const pct = Math.round(completedSets / TOTAL_SETS * 100);
   const name = s.displayName || s.email || '(이름 없음)';
   const initials = (name[0]||'?').toUpperCase();
-  const lastSeen = s.lastSeen ? fmtDate(s.lastSeen.toMillis()) : '기록 없음';
+  const lastSeen = s.lastSeen ? fmtDate(s.lastSeen.toMillis()) : '접속 기록 없음';
+  const xp    = s.game?.xp    || 0;
+  const lv    = getLevel(xp);
+  const quizzes = s.game?.quizzes || 0;
 
-  // Per-category completion for mini icons
-  const catDots = CATS.slice(0,10).map(c => {
+  const catDots = CATS.map(c => {
     const done = Array.from({length:c.sets},(_,i)=>s.sets?.[c.id+'_'+i]).filter(Boolean).length;
     const catPct = c.sets ? Math.round(done/c.sets*100) : 0;
     return `<span title="${c.ko}: ${done}/${c.sets}" style="display:inline-block;
@@ -351,15 +396,16 @@ function studentCard(s) {
       <div class="sc-avatar" style="background:${colorFromEmail(s.email)}">${initials}</div>
       <div>
         <div class="sc-name">${name}</div>
-        <div class="sc-email">${s.email||''}</div>
+        <div class="sc-email">${s.email}</div>
       </div>
-      <div style="margin-left:16px">${catDots}</div>
+      <div style="margin-left:12px;display:flex;flex-wrap:wrap;max-width:160px">${catDots}</div>
       <div class="sc-meta">
         <div class="sc-overall">
           <div class="ov-bar"><div class="ov-fill" style="width:${pct}%"></div></div>
           <div class="ov-pct">${pct}%</div>
         </div>
-        <div class="last">마지막 접속: ${lastSeen}</div>
+        <div class="last">Lv.${lv} · ${xp} XP · 퀴즈 ${quizzes}회</div>
+        <div class="last">마지막: ${lastSeen}</div>
       </div>
     </div>
     <div class="sc-detail" id="detail_${s.uid}"></div>
