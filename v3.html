@@ -1335,6 +1335,10 @@ function renderCard(){
   const pgEl=document.getElementById('cpg'), pnEl=document.getElementById('cpgn');
   if(pgEl) pgEl.style.width=(CW.length?Math.round(CI/CW.length*100):0)+'%';
   if(pnEl) pnEl.textContent=(CI+1)+' / '+CW.length;
+  // auto-play front face
+  const _autoText = CDir==='koen' ? w.k : w.e;
+  const _autoLang = CDir==='koen' ? 'ko' : 'en';
+  setTimeout(()=>speak(_autoText, _autoLang), 150);
 }
 function cardFlip(){
   const f=document.getElementById('cf'),b=document.getElementById('cb');
