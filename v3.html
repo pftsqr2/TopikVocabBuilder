@@ -1165,7 +1165,14 @@ function renderSidebar() {
       </div>
       <div class="cnt">${badge||c.words.length+'단어'}</div>
     </div>`;
-  }).join('');
+  }).join('') + `<div class="ci" id="ci-trivia" style="--cc:#f59e0b" onclick="showTriviaCat()">
+      <div class="cn">12</div>
+      <div class="cl">
+        <div class="cko">🌟 K-Culture Trivia</div>
+        <div class="cen">K-POP · K-FOOD · K-DRAMA · K-CELEB · K-TRAVEL</div>
+      </div>
+      <div class="cnt">245문제</div>
+    </div>`;
 }
 
 // ── Category View ─────────────────────────────────────────────────────────────
