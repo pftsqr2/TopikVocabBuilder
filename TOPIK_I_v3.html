@@ -1604,13 +1604,7 @@ function setMode(m) {
 function setModeQuizSet(sf){ setMode('quiz'); setTimeout(()=>initQuiz(sf),0); }
 
 // ── Level helpers ─────────────────────────────────────────────────────────────
-function gramLabel(k) {
-  const PAST=['았어요','었어요','했어요','았습니다','었습니다','했습니다','았다','었다','했다','았어','었어'];
-  const HON =['하십시오','합니다','드립니다','겠습니다','겠어요','하세요','이세요','세요','해요','이에요','예요','아요','어요','습니다'];
-  for(const e of PAST) if(k.endsWith(e)) return '<span class="grambadge gram-past">과거 · past</span>';
-  for(const e of HON)  if(k.endsWith(e)) return '<span class="grambadge gram-hon">존댓말 · honorific</span>';
-  return '';
-}
+function gramLabel(k) { return ''; }
 
 // ── LIST VIEW ─────────────────────────────────────────────────────────────────
 function renderList() {
