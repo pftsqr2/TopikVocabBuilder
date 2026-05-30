@@ -1887,11 +1887,15 @@ function renderQuizQ(){
     return;
   }
   const w=QW[QI];
-  const pool=CC.words.filter(x=>x!==w);
-  const wrong=shuffle([...pool]).slice(0,3);
+  const getAns=o=>QDir==='koen'?o.e:o.k;
+  // Deduplicate wrong options by displayed answer text to prevent identical choices
+  const seenAns=new Set([getAns(w)]);
+  const pool=shuffle(CC.words.filter(x=>x!==w)).filter(x=>{
+    const v=getAns(x); if(seenAns.has(v)) return false; seenAns.add(v); return true;
+  });
+  const wrong=pool.slice(0,3);
   const opts=shuffle([w,...wrong]);
   const question=QDir==='koen'?w.k:w.e;
-  const getAns=o=>QDir==='koen'?o.e:o.k;
   document.getElementById('qsc').textContent=`${QS} / ${QI}`;
   document.getElementById('qpg').style.width=QW.length?Math.round(QI/QW.length*100)+'%':'0%';
   document.getElementById('qpgn').textContent=QI+' / '+QW.length;
