@@ -1381,17 +1381,32 @@ async function sendReset() {
 async function loadProgress() {
   try {
     const doc = await db.collection('progress').doc(currentUser.uid).get();
-    PROG = doc.exists ? (doc.data().sets || {}) : {};
-  } catch(e) { console.warn('loadProgress', e); PROG = {}; }
+    const remote = doc.exists ? (doc.data().sets || {}) : {};
+    // Merge: keep whichever entry has more attempts (guest session wins if fresher)
+    const merged = { ...remote };
+    for (const k of Object.keys(PROG)) {
+      if (!remote[k] || (PROG[k].attempts||0) >= (remote[k].attempts||0)) {
+        merged[k] = PROG[k];
+      }
+    }
+    PROG = merged;
+    // If guest had progress, persist the merge back to Firestore
+    const hasGuestData = Object.keys(PROG).some(k => !remote[k]);
+    if (hasGuestData) {
+      db.collection('progress').doc(currentUser.uid)
+        .set({ sets: PROG }, { merge: true }).catch(e => console.warn('mergeProgress', e));
+    }
+  } catch(e) { console.warn('loadProgress', e); }
 }
 
 async function saveProgress(cid, si, score) {
-  if (!currentUser) return;
   const key = String(cid) + '_' + si;
   const parts = score.split('/');
   const pct = parts.length===2 ? Math.round(parseInt(parts[0])/parseInt(parts[1])*100) : 0;
+  // Always update in-memory PROG (guests see completion signs during session)
   PROG[key] = { score, pct, attempts: (PROG[key]?.attempts||0)+1,
     lastAt: new Date().toISOString() };
+  if (!currentUser) return; // guests: in-memory only, synced on login
   try {
     await db.collection('progress').doc(currentUser.uid).set({
       ['sets.'+key+'.score']:    score,
