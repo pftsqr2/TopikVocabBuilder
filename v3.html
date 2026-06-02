@@ -254,7 +254,10 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   cursor:pointer;padding:28px 24px;text-align:center;
   box-shadow:0 6px 24px var(--shad);border:1.5px solid var(--brd2);
-  transition:box-shadow .15s,transform .15s;user-select:none;position:relative}
+  transition:box-shadow .15s,transform .15s,border-color .3s;user-select:none;position:relative}
+.card.m0{border-color:var(--brd2)}
+.card.m1{border-color:#fbbf24;box-shadow:0 6px 24px rgba(251,191,36,.15)}
+.card.m2{border-color:#10b981;box-shadow:0 6px 24px rgba(16,185,129,.15)}
 .card:hover{box-shadow:0 10px 32px var(--shad2);transform:translateY(-2px)}
 .card-front,.card-back{width:100%}
 .card-face-anim{animation:cfadein .16s ease}
@@ -485,6 +488,11 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
   #xp-bar-row{padding:4px 12px}
   #xp-label{display:none}
 }
+
+/* ─── LOADING SPINNER ─── */
+.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--brd2);
+  border-top-color:var(--a);border-radius:50%;animation:rotate .6s linear infinite}
+@keyframes rotate{to{transform:rotate(360deg)}}
 
 /* ─── CONFETTI ─── */
 .confetti-piece{position:fixed;top:-12px;z-index:9999;
@@ -1068,7 +1076,7 @@ body {
   <div id="auth-box">
     <div class="auth-logo">📚</div>
     <div class="auth-title">TTMIK 단어장<br><span style="font-size:.75rem;font-weight:400;color:var(--tx3)">TTMIK Level 1+2</span></div>
-    <div class="auth-sub" id="auth-sub">학습 진도를 저장하려면 로그인하세요 · Log in to save your progress</div>
+    <div class="auth-sub" id="auth-sub">진도와 XP를 저장하고 뱃지를 모아보세요!<br><span style="font-size:.72rem;opacity:.7">Save your progress, earn XP &amp; collect badges</span></div>
     <div class="auth-tabs">
       <button class="atab active" id="tab-login" onclick="switchAuthTab('login')">로그인 · Login</button>
       <button class="atab" id="tab-register" onclick="switchAuthTab('register')">회원가입 · Sign Up</button>
@@ -1182,6 +1190,7 @@ body {
         <div class="wel-step-icon">🌟</div>
         <div class="wel-step-ko">K-Culture Trivia 도전!</div>
         <div class="wel-step-en">Try <b>K-Culture Trivia</b> (★ in sidebar) for fun K-POP, K-Drama &amp; K-Food quizzes.</div>
+        <button class="ctts" style="margin-top:8px;font-size:.78rem" onclick="showTriviaCat()">★ K-Culture Trivia 바로 가기</button>
       </div>
     </div>
   </div>
@@ -1861,8 +1870,14 @@ function showCat(id) {
   ch.style.background = CC.color;
   const sets = Math.ceil(CC.words.length/10);
   const {done} = catDone(CC);
+  // Calculate mastery for this category
+  const _m2=CC.words.filter(w=>getMastery(CC.id,w.no)===2).length;
+  const _m2pct=Math.round(_m2/CC.words.length*100);
   ch.innerHTML = `<div><div class="tko">${CC.ko}</div><div class="ten">${CC.en}</div></div>
-    <div class="wc">${CC.words.length}단어 · ${sets} Sets<br>진도 ${done}/${sets}</div>`;
+    <div class="wc">${CC.words.length}단어 · ${sets} Sets<br>
+      퀴즈 ${done}/${sets} &nbsp;|&nbsp;
+      <span style="color:rgba(255,255,255,.9)">✅ ${_m2pct}% 암기</span>
+    </div>`;
   LF = 0;
   setMode('list');
 }
@@ -1961,8 +1976,8 @@ function renderCardUI() {
   document.getElementById('kv').innerHTML = `
     <div class="sf-bar">${sfHtml}</div>
     <div class="dir-bar">
-      <button class="dbtn${CDir==='koen'?' active':''}" onclick="setCDir('koen')">🇰🇷 KO→EN 🇬🇧</button>
-      <button class="dbtn${CDir==='enko'?' active':''}" onclick="setCDir('enko')">🇬🇧 EN→KO 🇰🇷</button>
+      <button class="dbtn${CDir==='koen'?' active':''}" onclick="setCDir('koen')" title="Korean first">🇰🇷 한국어 먼저</button>
+      <button class="dbtn${CDir==='enko'?' active':''}" onclick="setCDir('enko')" title="English first">🇬🇧 English 먼저</button>
     </div>
     <div class="pgbar">
       <div class="pgtrack"><div class="pgfill" id="cpg" style="width:${CW.length?Math.round(CI/CW.length*100):0}%;background:${c.color}"></div></div>
@@ -2063,8 +2078,8 @@ function renderQuizUI(){
   document.getElementById('qv').innerHTML=`
     <div class="sf-bar">${sfHtml}</div>
     <div class="qdir">
-      <button class="qdbtn${QDir==='koen'?' active':''}" onclick="setQDir('koen')">🇰🇷 KO→EN 🇬🇧</button>
-      <button class="qdbtn${QDir==='enko'?' active':''}" onclick="setQDir('enko')">🇬🇧 EN→KO 🇰🇷</button>
+      <button class="qdbtn${QDir==='koen'?' active':''}" onclick="setQDir('koen')" title="Korean word shown → choose English meaning">🇰🇷 한국어 → English 🇬🇧</button>
+      <button class="qdbtn${QDir==='enko'?' active':''}" onclick="setQDir('enko')" title="English meaning shown → choose Korean word">🇬🇧 English → 한국어 🇰🇷</button>
     </div>
     <div class="qhdr">
       <div class="qscore" id="qsc">0 / 0</div>
@@ -2265,13 +2280,15 @@ function doSearch(q){
     if(w.k.includes(q)||w.e.toLowerCase().includes(q)||(w.s&&w.s.includes(q)))
       res.push({...w,cat:c});
   }));
-  if(!res.length){sv.innerHTML='<p style="color:var(--tx3);padding:20px">검색 결과가 없습니다.</p>';return;}
-  sv.innerHTML=`<p style="font-size:.82rem;color:var(--tx3);margin-bottom:12px">${res.length} results found</p>`+
-    res.slice(0,50).map(r=>`<div style="background:var(--surf);border-radius:12px;padding:12px 16px;margin-bottom:8px;border:1px solid var(--brd2)">
-      <span class="stag" style="background:${r.cat.color}">${r.cat.ko}</span>
-      <span style="margin-left:8px;font-weight:700">${r.k}</span> ${gramLabel(r.k)}
-      <span style="margin-left:6px;color:var(--tx2);font-size:.85rem">${r.e}</span>
-      ${r.s?`<div class="sc" style="margin-top:4px">${r.s}</div>`:''}
+  if(!res.length){sv.innerHTML='<div style="padding:40px;text-align:center;color:var(--tx3)">🔍 검색 결과가 없습니다 · No results found</div>';return;}
+  const hl=t=>t.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'gi'),
+    '<mark style="background:#fef9c3;border-radius:2px;padding:0 2px">$1</mark>');
+  sv.innerHTML=`<div style="font-size:.8rem;color:var(--tx3);margin-bottom:14px;font-weight:600">${res.length}개 결과 · ${res.length} results</div>`+
+    res.slice(0,60).map(r=>`<div style="background:var(--surf);border-radius:12px;padding:11px 16px;margin-bottom:8px;border:1px solid var(--brd2);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="showCat(${r.cat.id})">
+      <span class="stag" style="background:${r.cat.color};flex-shrink:0">${r.cat.ko}</span>
+      <span style="font-weight:700;font-size:.92rem">${hl(r.k)}</span>
+      <span style="color:var(--tx2);font-size:.82rem;flex:1">${hl(r.e)}</span>
+      <button onclick="speak('${r.k.replace(/'/g,"\\'")}','ko');event.stopPropagation()" style="background:none;border:none;cursor:pointer;font-size:.9rem;padding:4px;flex-shrink:0">🔊</button>
     </div>`).join('');
 }
 
