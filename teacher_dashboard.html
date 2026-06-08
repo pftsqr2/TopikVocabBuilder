@@ -716,13 +716,36 @@ async function teacherForgotPw(e){
     document.getElementById('lin-email').focus();
     return;
   }
-  link.textContent='전송 중...';
+  link.textContent='확인 중...';
   link.style.pointerEvents='none';
   err.textContent='';
+
+  // 이메일이 실제 Firebase Auth에 등록돼 있는지 먼저 확인
+  let methods=[];
+  try{ methods=await auth.fetchSignInMethodsForEmail(email); }
+  catch(ex){
+    if(ex.code==='auth/invalid-email'){
+      err.style.color='#dc2626';
+      err.textContent='이메일 형식이 올바르지 않습니다.';
+      link.textContent='비밀번호를 잊으셨나요?'; link.style.pointerEvents='';
+      return;
+    }
+    // 그 외 오류는 무시하고 전송 시도
+  }
+
+  if(methods.length===0){
+    err.style.color='#dc2626';
+    err.textContent='❌ 등록되지 않은 이메일입니다. 가입 시 사용한 이메일을 확인해 주세요.';
+    link.textContent='비밀번호를 잊으셨나요?'; link.style.pointerEvents='';
+    return;
+  }
+
+  link.textContent='전송 중...';
   try{
     await auth.sendPasswordResetEmail(email);
     err.style.color='#16a34a';
-    err.textContent='✅ '+email+' 로 재설정 링크를 보냈습니다. 이메일을 확인하세요.';
+    err.innerHTML='✅ <strong>'+email+'</strong> 로 재설정 링크를 보냈습니다.<br>'
+      +'<span style="font-size:.72rem;opacity:.85">📂 스팸·정크 폴더도 확인해 주세요 · 발신: noreply@topik1-vocab.firebaseapp.com</span>';
     link.textContent='↩ 로그인으로 돌아가기';
     link.style.pointerEvents='';
     link.onclick=(ev)=>{
@@ -734,13 +757,10 @@ async function teacherForgotPw(e){
     };
     document.getElementById('lin-pw').style.display='none';
   }catch(ex){
-    const m={'auth/user-not-found':'등록되지 않은 이메일입니다.',
-      'auth/invalid-email':'이메일 형식이 올바르지 않습니다.',
-      'auth/too-many-requests':'잠시 후 다시 시도하세요.'};
+    const m={'auth/too-many-requests':'잠시 후 다시 시도하세요.'};
     err.style.color='#dc2626';
     err.textContent=m[ex.code]||ex.message;
-    link.textContent='비밀번호를 잊으셨나요?';
-    link.style.pointerEvents='';
+    link.textContent='비밀번호를 잊으셨나요?'; link.style.pointerEvents='';
   }
 }
 async function doLogout(){ await auth.signOut(); }
