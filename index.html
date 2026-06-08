@@ -240,6 +240,13 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
   background:var(--brd2);color:var(--tx2);transition:.15s}
 .sfbtn:hover{background:var(--al);color:var(--ad)}
 .sfbtn.active{color:#fff}
+/* compact set bar (many sets) */
+.sf-compact{flex-wrap:nowrap;align-items:center;gap:8px;padding:6px 0}
+.sf-compact .sfbtn{padding:5px 10px;min-width:36px}
+.sf-sel{flex:1;max-width:160px;padding:5px 8px;border-radius:20px;
+  border:2px solid var(--brd2);background:var(--surf2);
+  color:var(--tx);font-size:.8rem;font-weight:700;font-family:inherit;cursor:pointer}
+.sf-info{font-size:.75rem;font-weight:700;white-space:nowrap}
 .dir-bar{display:flex;gap:6px;margin-bottom:14px}
 .dbtn{padding:5px 16px;border-radius:16px;border:2px solid var(--brd);
   cursor:pointer;font-size:.79rem;font-weight:700;font-family:inherit;
@@ -2158,26 +2165,42 @@ function initCard(sf) {
   CI=0; CDir='koen';
   renderCardUI();
 }
+function buildSfBar(sets, activeSf, color, clickFn, totalLabel) {
+  if (sets <= 8) {
+    // 버튼 방식 (소규모)
+    let h = '';
+    for(let s=0;s<sets;s++){
+      const isA=activeSf===s, done=getProg(CC.id,s);
+      h+=`<button class="sfbtn${isA?' active':''}" style="${isA?'background:'+color+';color:#fff':''}"
+        onclick="${clickFn}(${s})">Set ${s+1}${done?' ✓':''}</button>`;
+    }
+    h+=`<button class="sfbtn${activeSf<0?' active':''}" style="${activeSf<0?'background:'+color+';color:#fff':''}"
+      onclick="${clickFn}(-1)">${totalLabel}</button>`;
+    return `<div class="sf-bar">${h}</div>`;
+  } else {
+    // 드롭다운 방식 (대규모)
+    const cur = activeSf < 0 ? '전체' : `Set ${activeSf+1}`;
+    const prev = activeSf > 0 ? activeSf-1 : (activeSf<0 ? sets-1 : -1);
+    const next = activeSf < sets-1 ? activeSf+1 : (activeSf===sets-1 ? -1 : 0);
+    let opts = '';
+    for(let s=0;s<sets;s++){
+      const done=getProg(CC.id,s);
+      opts+=`<option value="${s}"${activeSf===s?' selected':''}>Set ${s+1}${done?' ✓':''}</option>`;
+    }
+    opts+=`<option value="-1"${activeSf<0?' selected':''}>${totalLabel}</option>`;
+    return `<div class="sf-bar sf-compact">
+      <button class="sfbtn" onclick="${clickFn}(${prev})" title="이전 세트">◀</button>
+      <select class="sf-sel" style="border-color:${color}" onchange="${clickFn}(parseInt(this.value))">${opts}</select>
+      <button class="sfbtn" onclick="${clickFn}(${next})" title="다음 세트">▶</button>
+      <span class="sf-info" style="color:${color}">${cur} · ${CC.words.length}단어</span>
+    </div>`;
+  }
+}
+
 function renderCardUI() {
   const c=CC, sets=Math.ceil(c.words.length/10);
-  let sfHtml='';
-  for(let s=0;s<sets;s++){
-    const isA=CSF===s, done=getProg(c.id,s);
-    sfHtml+=`<button class="sfbtn${isA?' active':''}"
-      style="${isA?'background:'+c.color+';color:#fff':''}"
-      onclick="initCard(${s})">Set ${s+1}${done?' ✓':''}</button>`;
-  }
-  sfHtml+=`<button class="sfbtn${CSF<0?' active':''}"
-    style="${CSF<0?'background:'+c.color+';color:#fff':''}"
-    onclick="initCard(-1)">전체 · All (${c.words.length})</button>`;
-  for(let s=0;s<sets;s++){
-    const isA=CSF===s, done=getProg(c.id,s);
-    sfHtml+=`<button class="sfbtn${isA?' active':''}"
-      style="${isA?'background:'+c.color+';color:#fff':''}"
-      onclick="initCard(${s})">Set ${s+1}${done?' ✓':''}</button>`;
-  }
   document.getElementById('kv').innerHTML = `
-    <div class="sf-bar">${sfHtml}</div>
+    ${buildSfBar(sets, CSF, c.color, 'initCard', '전체 · All ('+c.words.length+')')}
     <div class="dir-bar">
       <button class="dbtn${CDir==='koen'?' active':''}" onclick="setCDir('koen')" title="Korean first">🇰🇷 한국어 먼저</button>
       <button class="dbtn${CDir==='enko'?' active':''}" onclick="setCDir('enko')" title="English first">🇬🇧 English 먼저</button>
@@ -2272,24 +2295,8 @@ function applyQuizFilter(){
 }
 function renderQuizUI(){
   const c=CC,sets=Math.ceil(c.words.length/10);
-  let sfHtml='';
-  for(let s=0;s<sets;s++){
-    const isA=QSF===s,done=getProg(c.id,s);
-    sfHtml+=`<button class="sfbtn${isA?' active':''}"
-      style="${isA?'background:'+c.color+';color:#fff':''}"
-      onclick="initQuiz(${s})">Set ${s+1}${done?' ('+done.score+')':''}</button>`;
-  }
-  sfHtml+=`<button class="sfbtn${QSF<0?' active':''}"
-    style="${QSF<0?'background:'+c.color+';color:#fff':''}"
-    onclick="initQuiz(-1)">전체 (${QW.length})</button>`;
-  for(let s=0;s<sets;s++){
-    const isA=QSF===s,done=getProg(c.id,s);
-    sfHtml+=`<button class="sfbtn${isA?' active':''}"
-      style="${isA?'background:'+c.color+';color:#fff':''}"
-      onclick="initQuiz(${s})">Set ${s+1}${done?' ('+done.score+')':''}</button>`;
-  }
   document.getElementById('qv').innerHTML=`
-    <div class="sf-bar">${sfHtml}</div>
+    ${buildSfBar(sets, QSF, c.color, 'initQuiz', '전체 ('+QW.length+')')}
     <div class="qdir">
       <button class="qdbtn${QDir==='koen'?' active':''}" onclick="setQDir('koen')" title="Korean word shown → choose English meaning">🇰🇷 한국어 → English 🇬🇧</button>
       <button class="qdbtn${QDir==='enko'?' active':''}" onclick="setQDir('enko')" title="English meaning shown → choose Korean word">🇬🇧 English → 한국어 🇰🇷</button>
