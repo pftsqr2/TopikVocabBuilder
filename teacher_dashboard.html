@@ -502,6 +502,12 @@ body{
     <input id="lin-pw" class="linput" type="password" placeholder="비밀번호"
       onkeydown="if(event.key==='Enter')doLogin()">
     <button class="lbtn" onclick="doLogin()">로그인</button>
+    <div style="text-align:center;margin-top:12px">
+      <a id="forgot-link" href="#" onclick="teacherForgotPw(event)"
+        style="font-size:.75rem;color:#818cf8;text-decoration:none;opacity:.8">
+        비밀번호를 잊으셨나요?
+      </a>
+    </div>
   </div>
 </div>
 
@@ -697,6 +703,44 @@ async function doLogin(){
       'auth/wrong-password':'비밀번호가 틀렸습니다.',
       'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않습니다.'};
     err.textContent=m[e.code]||e.message;
+  }
+}
+async function teacherForgotPw(e){
+  e.preventDefault();
+  const email=document.getElementById('lin-email').value.trim();
+  const err=document.getElementById('login-err');
+  const link=document.getElementById('forgot-link');
+  if(!email){
+    err.style.color='#dc2626';
+    err.textContent='📧 이메일을 먼저 입력하세요';
+    document.getElementById('lin-email').focus();
+    return;
+  }
+  link.textContent='전송 중...';
+  link.style.pointerEvents='none';
+  err.textContent='';
+  try{
+    await auth.sendPasswordResetEmail(email);
+    err.style.color='#16a34a';
+    err.textContent='✅ '+email+' 로 재설정 링크를 보냈습니다. 이메일을 확인하세요.';
+    link.textContent='↩ 로그인으로 돌아가기';
+    link.style.pointerEvents='';
+    link.onclick=(ev)=>{
+      ev.preventDefault();
+      err.textContent=''; err.style.color='';
+      link.textContent='비밀번호를 잊으셨나요?';
+      link.onclick=teacherForgotPw;
+      document.getElementById('lin-pw').style.display='';
+    };
+    document.getElementById('lin-pw').style.display='none';
+  }catch(ex){
+    const m={'auth/user-not-found':'등록되지 않은 이메일입니다.',
+      'auth/invalid-email':'이메일 형식이 올바르지 않습니다.',
+      'auth/too-many-requests':'잠시 후 다시 시도하세요.'};
+    err.style.color='#dc2626';
+    err.textContent=m[ex.code]||ex.message;
+    link.textContent='비밀번호를 잊으셨나요?';
+    link.style.pointerEvents='';
   }
 }
 async function doLogout(){ await auth.signOut(); }
