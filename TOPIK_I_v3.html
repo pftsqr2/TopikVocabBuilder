@@ -1645,6 +1645,7 @@ async function loadProgress() {
       }
     }
     PROG = merged;
+    console.log('[Progress] 로드 완료:', Object.keys(PROG).length, '개 세트');
     // Cache to localStorage so progress loads instantly on next visit
     try { localStorage.setItem('bwk_progress', JSON.stringify(PROG)); } catch(e){}
     // If guest had progress, persist the merge back to Firestore
@@ -2672,8 +2673,35 @@ function renderMpGram(prog){
 
 
 function renderMpLog(logs){
+  // If quizLog is empty but PROG has sets data, synthesize history from sets
   if(!logs.length){
-    document.getElementById('mp-panel-4').innerHTML='<p style="color:var(--tx3);padding:20px;font-size:.85rem">퀴즈 기록이 없습니다 · No quiz history yet.</p>';
+    const progEntries = Object.entries(PROG).filter(([k,v])=>v&&v.score);
+    if(!progEntries.length){
+      document.getElementById('mp-panel-4').innerHTML='<p style="color:var(--tx3);padding:20px;font-size:.85rem">퀴즈 기록이 없습니다 · No quiz history yet.</p>';
+      return;
+    }
+    // Sort by lastAt descending
+    progEntries.sort((a,b)=>{
+      const ta=a[1].lastAt?new Date(a[1].lastAt).getTime():0;
+      const tb=b[1].lastAt?new Date(b[1].lastAt).getTime():0;
+      return tb-ta;
+    });
+    const rows=progEntries.map(([k,v])=>{
+      const parts=k.split('_'); const cid=parts[0]; const si=parseInt(parts[1])||0;
+      const cat=DATA.find(c=>String(c.id)===cid);
+      const catName=cat?cat.ko:'?';
+      const cls=(v.pct||0)>=90?'bg-good':(v.pct||0)>=60?'bg-ok':'bg-low';
+      const ts=v.lastAt?fmtDate(new Date(v.lastAt).getTime()):'-';
+      const att=v.attempts||1;
+      return `<tr><td>${catName}</td><td>Set ${si+1}</td>
+        <td><span class="badgep ${cls}">${v.score} (${v.pct}%)</span></td><td>${ts} · ${att}회</td></tr>`;
+    }).join('');
+    document.getElementById('mp-panel-4').innerHTML=`
+      <p style="font-size:.75rem;color:var(--tx3);padding:8px 4px 4px">📋 저장된 최고 점수 기록 · Best scores from progress data</p>
+      <table class="mp-log-table">
+        <thead><tr><th>카테고리 · Category</th><th>Set</th><th>최고 점수 · Best</th><th>날짜 · Date</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
     return;
   }
   const rows=logs.map(l=>{
@@ -2685,7 +2713,7 @@ function renderMpLog(logs){
     return `<tr><td>${catName}</td><td>${setLabel}</td>
       <td><span class="badgep ${cls}">${l.score} (${l.pct}%)</span></td><td>${ts}</td></tr>`;
   }).join('');
-  document.getElementById('mp-panel-3').innerHTML=`
+  document.getElementById('mp-panel-4').innerHTML=`
     <table class="mp-log-table">
       <thead><tr><th>카테고리 · Category</th><th>Set</th><th>점수 · Score</th><th>날짜 · Date</th></tr></thead>
       <tbody>${rows}</tbody>
