@@ -506,13 +506,32 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 
 
 /* ─── LEVEL FILTER ─── */
-#lf-bar{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px 6px;
+#lf-bar{display:flex;gap:5px;flex-wrap:wrap;padding:10px 12px 8px;
   border-bottom:1px solid var(--brd);background:var(--surf)}
-.lf-btn{flex:1;min-width:44px;padding:5px 4px;border-radius:20px;font-size:.72rem;
+.lf-btn{flex:1;min-width:40px;padding:5px 3px;border-radius:20px;font-size:.71rem;
   font-weight:700;border:1.5px solid var(--brd2);background:var(--surf2);
   color:var(--tx2);cursor:pointer;text-align:center;transition:.15s}
-.lf-btn.active{background:var(--a);color:#fff;border-color:var(--a)}
 .lf-btn:hover:not(.active){background:var(--al);border-color:var(--am)}
+.lf-btn[data-lv="0"].active{background:#6366f1;color:#fff;border-color:#6366f1}
+.lf-btn[data-lv="1"].active,.lf-btn[data-lv="2"].active{background:#6366f1;color:#fff;border-color:#6366f1}
+.lf-btn[data-lv="3"].active{background:#16a34a;color:#fff;border-color:#16a34a}
+.lf-btn[data-lv="4"].active{background:#2563eb;color:#fff;border-color:#2563eb}
+.lf-btn[data-lv="5"].active{background:#9333ea;color:#fff;border-color:#9333ea}
+.lf-btn[data-lv="6"].active{background:#dc2626;color:#fff;border-color:#dc2626}
+/* ─── LEVEL CHIP ─── */
+.lv-chip{display:inline-block;font-size:.6rem;font-weight:800;padding:1px 5px;
+  border-radius:10px;color:#fff;margin-left:4px;vertical-align:middle;line-height:1.5}
+.lv-chip.lv12{background:#6366f1}.lv-chip.lv1{background:#6366f1}.lv-chip.lv2{background:#6366f1}
+.lv-chip.lv3{background:#16a34a}.lv-chip.lv4{background:#2563eb}
+.lv-chip.lv5{background:#9333ea}.lv-chip.lv6{background:#dc2626}
+/* ─── SECTION HEADER ─── */
+.sb-sec{padding:8px 14px 5px;font-size:.7rem;font-weight:800;letter-spacing:.03em;
+  text-transform:uppercase;color:#fff;margin-top:4px}
+.sb-sec.sec12{background:linear-gradient(90deg,#6366f1,#818cf8)}
+.sb-sec.sec3{background:linear-gradient(90deg,#16a34a,#22c55e)}
+.sb-sec.sec4{background:linear-gradient(90deg,#2563eb,#60a5fa)}
+.sb-sec.sec5{background:linear-gradient(90deg,#9333ea,#c084fc)}
+.sb-sec.sec6{background:linear-gradient(90deg,#dc2626,#f87171)}
 
 /* ─── CONFETTI ─── */
 .confetti-piece{position:fixed;top:-12px;z-index:9999;
@@ -1119,7 +1138,7 @@ body {
   <button id="hbg" onclick="toggleSB()">☰</button>
   <button id="search-icon-btn" onclick="toggleMobileSearch()" title="검색">🔍</button>
   <div class="htxt" onclick="showWelcome()" style="cursor:pointer" title="홈으로">
-    <div class="sub">TOPIK 1-2급 · 339단어 · 16 Categories</div>
+    <div class="sub">TOPIK 1-6급 · 10,326단어 · 41 Categories</div>
     <h1>📚 TOPIK 1-6급 단어장</h1>
   </div>
   <input id="srch" type="text" placeholder="🔍 검색 · Search..." oninput="doSearch(this.value)">
@@ -1172,9 +1191,9 @@ body {
     </div>
     <div class="wel-eval-status" id="eval-status">로그인 후 확인 · Log in to see your level</div>
     <div class="wel-eval-opinion">
-      💬 <b>선생님 코멘트</b>: 이 단어장의 339개를 모두 외우면 <b>TOPIK 1–2급</b> 기초 어휘 완성!
+      💬 <b>선생님 코멘트</b>: 이 단어장의 10,326개를 모두 외우면 <b>TOPIK 1-6급</b> 기초 어휘 완성!
       3급을 목표로 한다면 추가 단어(~2,000개)와 문법이 추가로 필요해요.
-      하지만 이 339개는 <b>가장 자주 쓰이는 핵심 어휘</b>라서 시작하기에 완벽합니다 🐋<br>
+      하지만 이 10,326개는 <b>가장 자주 쓰이는 핵심 어휘</b>라서 시작하기에 완벽합니다 🐋<br>
       <span style="color:var(--tx3)">Teacher's note: These 339 words cover essential TOPIK Level 1–6 vocabulary. They are the most essential first words to master!</span>
     </div>
   </div>
@@ -1233,9 +1252,9 @@ body {
   <!-- ④ 앱 브랜딩 (최하단) -->
   <div class="wel-hero">
     <h2>🐋 TOPIK 1-6급 단어장</h2>
-    <div class="sub">TOPIK Level 1–6 · 10,326단어 · 41 카테고리</div>
+    <div class="sub">TOPIK Level 1–6 · 10,10,326단어 · 41 카테고리</div>
     <div class="wel-stats">
-      <div class="wel-stat"><div class="n" id="ws-words">339</div><div class="l">단어 · Words</div></div>
+      <div class="wel-stat"><div class="n" id="ws-words">10326</div><div class="l">단어 · Words</div></div>
       <div class="wel-stat"><div class="n">41</div><div class="l">카테고리 · Cats</div></div>
       <div class="wel-stat"><div class="n">3</div><div class="l">학습 모드</div></div>
       <div class="wel-stat"><div class="n">★</div><div class="l">K-Culture Trivia</div></div>
@@ -1924,6 +1943,14 @@ function showWelcome() {
 }
 
 function renderSidebar() {
+  const LV_COLORS = {12:'#6366f1',1:'#6366f1',2:'#6366f1',3:'#16a34a',4:'#2563eb',5:'#9333ea',6:'#dc2626'};
+  const renderLvChip = c => {
+    const mn = c.lv_min||1, mx = c.lv_max||2;
+    const key = (mn===1&&mx===2)?'12':(mn===mx?mn:mn);
+    const label = (mn===1&&mx===2)?'1-2급':(mn===mx?mn+'급':mn+'-'+mx+'급');
+    const cls = (mn===1&&mx===2)?'lv12':('lv'+mn);
+    return `<span class="lv-chip ${cls}">${label}</span>`;
+  };
   const renderCatItem = c => {
     const {done,sets} = catDone(c);
     const badge = done===sets&&sets>0
@@ -1939,7 +1966,7 @@ function renderSidebar() {
     return `<div class="ci" id="ci${c.id}" style="--cc:${c.color}" onclick="showCat(${c.id})" role="button" tabindex="0" aria-label="${c.ko}" onkeydown="if(event.key==='Enter')showCat(${c.id})">
       <div class="cn">${c.id}</div>
       <div class="cl">
-        <div class="cko">${c.ko}</div>
+        <div class="cko">${c.ko}${renderLvChip(c)}</div>
         <div class="cen">${c.en}</div>
         ${prog}
       </div>
@@ -1949,13 +1976,13 @@ function renderSidebar() {
 
   // 레벨 필터 버튼 렌더링
   const lfBar = `<div id="lf-bar">
-    <button class="lf-btn${LF_ACTIVE===0?' active':''}" onclick="setLF(0,this)">전체</button>
-    <button class="lf-btn${LF_ACTIVE===1?' active':''}" onclick="setLF(1,this)">1급</button>
-    <button class="lf-btn${LF_ACTIVE===2?' active':''}" onclick="setLF(2,this)">2급</button>
-    <button class="lf-btn${LF_ACTIVE===3?' active':''}" onclick="setLF(3,this)">3급</button>
-    <button class="lf-btn${LF_ACTIVE===4?' active':''}" onclick="setLF(4,this)">4급</button>
-    <button class="lf-btn${LF_ACTIVE===5?' active':''}" onclick="setLF(5,this)">5급</button>
-    <button class="lf-btn${LF_ACTIVE===6?' active':''}" onclick="setLF(6,this)">6급</button>
+    <button class="lf-btn${LF_ACTIVE===0?' active':''}" data-lv="0" onclick="setLF(0,this)">전체</button>
+    <button class="lf-btn${LF_ACTIVE===1?' active':''}" data-lv="1" onclick="setLF(1,this)">1급</button>
+    <button class="lf-btn${LF_ACTIVE===2?' active':''}" data-lv="2" onclick="setLF(2,this)">2급</button>
+    <button class="lf-btn${LF_ACTIVE===3?' active':''}" data-lv="3" onclick="setLF(3,this)">3급</button>
+    <button class="lf-btn${LF_ACTIVE===4?' active':''}" data-lv="4" onclick="setLF(4,this)">4급</button>
+    <button class="lf-btn${LF_ACTIVE===5?' active':''}" data-lv="5" onclick="setLF(5,this)">5급</button>
+    <button class="lf-btn${LF_ACTIVE===6?' active':''}" data-lv="6" onclick="setLF(6,this)">6급</button>
   </div>`;
 
   // 카테고리 필터링
@@ -1963,18 +1990,18 @@ function renderSidebar() {
 
   // 레벨 섹션 그룹
   const SECTIONS = [
-    {label:'📚 1-2급 기초·표현', min:1, max:2},
-    {label:'📗 3급 초중급',      min:3, max:3},
-    {label:'📘 4급 중급',        min:4, max:4},
-    {label:'📙 5급 중고급',      min:5, max:5},
-    {label:'📕 6급 고급',        min:6, max:6},
+    {label:'📚 1-2급 기초·표현', min:1, max:2, cls:'sec12'},
+    {label:'📗 3급 초중급',      min:3, max:3, cls:'sec3'},
+    {label:'📘 4급 중급',        min:4, max:4, cls:'sec4'},
+    {label:'📙 5급 중고급',      min:5, max:5, cls:'sec5'},
+    {label:'📕 6급 고급',        min:6, max:6, cls:'sec6'},
   ];
 
   let html = lfBar;
   SECTIONS.forEach(sec => {
     const cats = visible.filter(c => (c.lv_min||1) <= sec.max && (c.lv_max||6) >= sec.min);
     if(!cats.length) return;
-    html += `<div class="sb-sec">${sec.label}</div>` + cats.map(renderCatItem).join('');
+    html += `<div class="sb-sec ${sec.cls}">${sec.label}</div>` + cats.map(renderCatItem).join('');
   });
 
   html += `<div class="ci" id="ci-trivia" style="--cc:#f59e0b" onclick="showTriviaCat()" role="button" tabindex="0" aria-label="K-Culture Trivia" onkeydown="if(event.key==='Enter')showTriviaCat()">
