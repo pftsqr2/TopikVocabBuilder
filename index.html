@@ -490,6 +490,17 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
   #xp-label{display:none}
 }
 
+
+/* ─── TRIVIA SETS ─── */
+#tv-sets-sel{padding:18px 14px}
+.tv-set-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.tv-set-btn{padding:14px 8px;border-radius:12px;border:2px solid var(--brd2);
+  background:var(--surf2);cursor:pointer;text-align:center;transition:.15s;font-weight:700}
+.tv-set-btn:hover{border-color:var(--a);background:var(--al)}
+.tv-set-btn .tsn{font-size:1.1rem;font-weight:800;color:var(--tx)}
+.tv-set-btn .tsq{font-size:.7rem;color:var(--tx3);margin-top:3px}
+.tv-set-btn .tsc{font-size:.65rem;color:#16a34a;margin-top:2px;font-weight:700}
+
 /* ─── SET COMPLETE PULSE ─── */
 @keyframes set-complete-pop{
   0%{transform:scale(1)}
@@ -513,7 +524,7 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
   color:var(--tx2);cursor:pointer;text-align:center;transition:.15s}
 .lf-btn:hover:not(.active){background:var(--al);border-color:var(--am)}
 .lf-btn[data-lv="0"].active{background:#6366f1;color:#fff;border-color:#6366f1}
-.lf-btn[data-lv="1"].active,.lf-btn[data-lv="2"].active{background:#6366f1;color:#fff;border-color:#6366f1}
+.lf-btn[data-lv="12"].active{background:#6366f1;color:#fff;border-color:#6366f1}
 .lf-btn[data-lv="3"].active{background:#16a34a;color:#fff;border-color:#16a34a}
 .lf-btn[data-lv="4"].active{background:#2563eb;color:#fff;border-color:#2563eb}
 .lf-btn[data-lv="5"].active{background:#9333ea;color:#fff;border-color:#9333ea}
@@ -1282,35 +1293,36 @@ body {
 <!-- ══ TRIVIA VIEW ══════════════════════════════════════════════ -->
 <div id="tv" style="display:none">
   <!-- Category selection -->
-  <div id="tv-cats">
+  <div id="tv-sets-sel" style="display:none"></div>
+      <div id="tv-cats">
     <div class="tv-section-title">🌟 K-Culture Trivia</div>
     <div class="tv-section-sub">카테고리를 선택하세요 · Choose a category — 10 random questions each round</div>
     <div class="tv-grid">
-      <div class="tv-cat" onclick="startTrivia('kpop')" style="border-color:#ec4899">
+      <div class="tv-cat" onclick=\"showTvSets('kpop')\" style="border-color:#ec4899">
         <span class="tv-cat-icon">🎵</span>
         <div class="tv-cat-name">K-POP</div>
         <div class="tv-cat-name-en">K팝 · Music & Idols</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick="startTrivia('kfood')" style="border-color:#f59e0b">
+      <div class="tv-cat" onclick=\"showTvSets('kfood')\" style="border-color:#f59e0b">
         <span class="tv-cat-icon">🍜</span>
         <div class="tv-cat-name">K-FOOD</div>
         <div class="tv-cat-name-en">한식 · Korean Cuisine</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick="startTrivia('kdrama')" style="border-color:#6366f1">
+      <div class="tv-cat" onclick=\"showTvSets('kdrama')\" style="border-color:#6366f1">
         <span class="tv-cat-icon">🎬</span>
         <div class="tv-cat-name">K-DRAMA / MOVIE</div>
         <div class="tv-cat-name-en">드라마 & 영화</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick="startTrivia('kceleb')" style="border-color:#10b981">
+      <div class="tv-cat" onclick=\"showTvSets('kceleb')\" style="border-color:#10b981">
         <span class="tv-cat-icon">⭐</span>
         <div class="tv-cat-name">K-CELEBRITY</div>
         <div class="tv-cat-name-en">유명인 · Famous Koreans</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick="startTrivia('ktravel')" style="border-color:#0ea5e9">
+      <div class="tv-cat" onclick=\"showTvSets('ktravel')\" style="border-color:#0ea5e9">
         <span class="tv-cat-icon">✈️</span>
         <div class="tv-cat-name">K-TRAVEL</div>
         <div class="tv-cat-name-en">여행 · Visit Korea</div>
@@ -1977,8 +1989,7 @@ function renderSidebar() {
   // 레벨 필터 버튼 렌더링
   const lfBar = `<div id="lf-bar">
     <button class="lf-btn${LF_ACTIVE===0?' active':''}" data-lv="0" onclick="setLF(0,this)">전체</button>
-    <button class="lf-btn${LF_ACTIVE===1?' active':''}" data-lv="1" onclick="setLF(1,this)">1급</button>
-    <button class="lf-btn${LF_ACTIVE===2?' active':''}" data-lv="2" onclick="setLF(2,this)">2급</button>
+    <button class="lf-btn${LF_ACTIVE===12?' active':''}" data-lv="12" onclick="setLF(12,this)">1-2급</button>
     <button class="lf-btn${LF_ACTIVE===3?' active':''}" data-lv="3" onclick="setLF(3,this)">3급</button>
     <button class="lf-btn${LF_ACTIVE===4?' active':''}" data-lv="4" onclick="setLF(4,this)">4급</button>
     <button class="lf-btn${LF_ACTIVE===5?' active':''}" data-lv="5" onclick="setLF(5,this)">5급</button>
@@ -2125,15 +2136,17 @@ function renderList() {
   document.getElementById('lv').innerHTML = html;
 }
 // ── LEVEL FILTER ──────────────────────────────────────────────────────────
-let LF_ACTIVE = 0;
+let LF_ACTIVE = (()=>{ try{ return parseInt(localStorage.getItem('bwk_lf')||'0'); }catch(e){return 0;} })();
 function setLF(lv, btn){
   LF_ACTIVE = lv;
+  try{ localStorage.setItem('bwk_lf', lv); }catch(e){}
   document.querySelectorAll('.lf-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderSidebar();
 }
 function catMatchesLF(cat){
   if(LF_ACTIVE===0) return true;
+  if(LF_ACTIVE===12) return (cat.lv_min||1) <= 2 && (cat.lv_max||6) >= 1;
   return (cat.lv_min||1) <= LF_ACTIVE && (cat.lv_max||6) >= LF_ACTIVE;
 }
 
@@ -2147,7 +2160,14 @@ function initCard(sf) {
 }
 function renderCardUI() {
   const c=CC, sets=Math.ceil(c.words.length/10);
-  let sfHtml=`<button class="sfbtn${CSF<0?' active':''}"
+  let sfHtml='';
+  for(let s=0;s<sets;s++){
+    const isA=CSF===s, done=getProg(c.id,s);
+    sfHtml+=`<button class="sfbtn${isA?' active':''}"
+      style="${isA?'background:'+c.color+';color:#fff':''}"
+      onclick="initCard(${s})">Set ${s+1}${done?' ✓':''}</button>`;
+  }
+  sfHtml+=`<button class="sfbtn${CSF<0?' active':''}"
     style="${CSF<0?'background:'+c.color+';color:#fff':''}"
     onclick="initCard(-1)">전체 · All (${c.words.length})</button>`;
   for(let s=0;s<sets;s++){
@@ -2252,7 +2272,14 @@ function applyQuizFilter(){
 }
 function renderQuizUI(){
   const c=CC,sets=Math.ceil(c.words.length/10);
-  let sfHtml=`<button class="sfbtn${QSF<0?' active':''}"
+  let sfHtml='';
+  for(let s=0;s<sets;s++){
+    const isA=QSF===s,done=getProg(c.id,s);
+    sfHtml+=`<button class="sfbtn${isA?' active':''}"
+      style="${isA?'background:'+c.color+';color:#fff':''}"
+      onclick="initQuiz(${s})">Set ${s+1}${done?' ('+done.score+')':''}</button>`;
+  }
+  sfHtml+=`<button class="sfbtn${QSF<0?' active':''}"
     style="${QSF<0?'background:'+c.color+';color:#fff':''}"
     onclick="initQuiz(-1)">전체 (${QW.length})</button>`;
   for(let s=0;s<sets;s++){
@@ -3033,6 +3060,11 @@ function nextTvQ(){
 }
 
 function showTvResult(){
+  // 세트 점수 저장
+  if(TV_SET_IDX>=0){
+    try{localStorage.setItem('bwk_tv_'+TV_CAT+'_'+TV_SET_IDX, TV_SCORE+'/'+TV_QS.length);}catch(e){}
+  }
+
   document.getElementById('tv-prog').style.width='100%';
   document.getElementById('tv-prog-label').textContent = TV_QS.length+'/'+TV_QS.length;
   document.getElementById('tv-score').textContent = TV_SCORE+' / '+TV_QS.length;
@@ -3049,7 +3081,7 @@ function showTvResult(){
       <div class="tv-result-label" style="font-size:1rem;font-weight:700;margin-bottom:4px">${msg}</div>
       <div class="tv-result-label">정답률 ${pct}% · ${meta.label}</div>
       <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="tv-retry" onclick="startTrivia(TV_CAT)">🔄 다시하기 · Play Again</button>
+        <button class="tv-retry" onclick="showTvSets(TV_CAT)">🔄 다시하기 · Play Again</button>
         <button class="tv-retry outline" onclick="showTvCats()">📋 카테고리 · Categories</button>
       </div>
     </div>
