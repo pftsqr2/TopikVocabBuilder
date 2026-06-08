@@ -810,6 +810,11 @@ html = re.sub(r'339\s*개', f'{total_words:,}개', html)
 html = re.sub(r'339\s*단어', f'{total_words:,}단어', html)
 # 16 카테고리 / 16 Categories
 html = re.sub(r'\b16\s*(?:카테고리|Categories)', f'{len(ALL_DATA)} 카테고리', html)
+# English teacher note "339 words" → correct count
+html = re.sub(r'These \d+ words cover essential TOPIK Level [^<]+',
+              f'These {total_words:,} words cover all 6 levels of TOPIK vocabulary — '
+              'from everyday basics to advanced expressions. '
+              'Start with Level 1–2 scenarios and work your way up!', html)
 
 # ── 퀴즈·카드 세트 버튼 순서: Set 1,2,...N 먼저 → 전체 마지막 ──────────────────
 
