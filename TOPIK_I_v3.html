@@ -396,6 +396,44 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
   font-weight:700;text-align:left;border-bottom:2px solid var(--brd)}
 .mp-log-table td{padding:7px 10px;border-bottom:1px solid var(--brd2);color:var(--tx)}
 .mp-log-table tr:hover td{background:var(--surf3)}
+
+/* ── My Page v2 ── */
+#mp-hdr-xp{margin-top:8px}
+.mp-xp-row{display:flex;justify-content:space-between;font-size:.68rem;
+  color:rgba(255,255,255,.75);margin-bottom:4px}
+.mp-xp-track{height:4px;background:rgba(255,255,255,.25);border-radius:2px;overflow:hidden}
+.mp-xp-fill2{height:100%;background:rgba(255,255,255,.8);border-radius:2px;transition:width .5s}
+.mp-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:500px){.mp-kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.mp-kpi{background:var(--surf);border-radius:12px;padding:12px 8px;text-align:center;
+  border:1px solid var(--brd2);box-shadow:0 1px 4px var(--shad)}
+.mp-kpi .kn{font-size:1.5rem;font-weight:800;color:var(--tx);line-height:1.1}
+.mp-kpi .kl{font-size:.64rem;color:var(--tx3);margin-top:3px;line-height:1.4}
+.mp-track-box{background:var(--surf);border-radius:14px;padding:14px 18px;
+  border:1px solid var(--brd2);margin-bottom:16px}
+.mp-track-row{margin-bottom:12px}
+.mp-track-row:last-child{margin-bottom:0}
+.mp-track-hd{display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:5px}
+.mp-track-name{font-size:.79rem;font-weight:600;color:var(--tx)}
+.mp-track-val{font-size:.72rem;color:var(--tx3)}
+.mp-track-bar{height:10px;background:var(--brd2);border-radius:5px;overflow:hidden}
+.mp-track-fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.mp-footer-row{margin-top:12px;padding-top:10px;border-top:1px solid var(--brd2);
+  display:flex;gap:16px;flex-wrap:wrap;font-size:.74rem;color:var(--tx3)}
+.mp-ccat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(max-width:480px){.mp-ccat-grid{grid-template-columns:1fr}}
+.mp-ccat{border-radius:11px;padding:10px 12px;border:1.5px solid var(--brd2);
+  background:var(--surf);border-left-width:4px}
+.mp-ccat-nm{font-size:.79rem;font-weight:700;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-ccat-en{font-size:.63rem;color:var(--tx3);margin-bottom:7px}
+.mp-ccat-br{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.mp-ccat-br:last-child{margin-bottom:0}
+.mp-ccat-lbl{font-size:.6rem;color:var(--tx3);width:22px;flex-shrink:0;font-weight:600;text-transform:uppercase}
+.mp-ccat-b{flex:1;height:5px;background:var(--brd2);border-radius:3px;overflow:hidden}
+.mp-ccat-bf{height:100%;border-radius:3px;transition:width .5s}
+.mp-ccat-n{font-size:.62rem;color:var(--tx3);width:28px;text-align:right}
 .badgep{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.7rem;font-weight:700}
 .bg-good{background:#f0fdf4;color:#166534}.bg-ok{background:#fffbeb;color:#92400e}
 .bg-low{background:#fff1f2;color:#991b1b}
@@ -1327,26 +1365,21 @@ body {
   <div id="mp-box">
     <div id="mp-hdr">
       <div id="mp-avatar">?</div>
-      <div>
+      <div style="flex:1;min-width:0">
         <div id="mp-name">—</div>
         <div id="mp-email">—</div>
+        <div id="mp-hdr-xp"></div>
       </div>
       <button id="mp-close" onclick="closeMyPage()">✕</button>
     </div>
     <div class="mp-tabs">
-      <button class="mptab active" onclick="switchMpTab(0,this)">🏠 개요 · Overview</button>
-      <button class="mptab" onclick="switchMpTab(1,this)">📂 카테고리 · Categories</button>
-      <button class="mptab" onclick="switchMpTab(2,this)">📊 문법 · Grammar</button>
-      <button class="mptab" onclick="switchMpTab(3,this)">🏅 뱃지 · Badges</button>
-      <button class="mptab" onclick="switchMpTab(4,this)">📝 퀴즈 기록 · Quiz History</button>
-      <button class="mptab" onclick="switchMpTab(5,this)">🧠 마스터리 · Mastery</button>
+      <button class="mptab active" onclick="switchMpTab(0,this)">📊 실력 현황</button>
+      <button class="mptab" onclick="switchMpTab(1,this)">🏅 뱃지</button>
+      <button class="mptab" onclick="switchMpTab(2,this)">📝 퀴즈 기록</button>
     </div>
     <div id="mp-panel-0" class="mp-panel active"></div>
     <div id="mp-panel-1" class="mp-panel"></div>
     <div id="mp-panel-2" class="mp-panel"></div>
-    <div id="mp-panel-3" class="mp-panel"></div>
-    <div id="mp-panel-4" class="mp-panel"></div>
-    <div id="mp-panel-5" class="mp-panel"></div>
   </div>
 </div>
 
@@ -2497,7 +2530,6 @@ async function openMyPage(){
   if (!currentUser) { showNudge(); return; }
   const overlay=document.getElementById('mp-overlay');
   overlay.classList.add('open');
-  // Always reset to Overview tab
   document.querySelectorAll('.mptab').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.querySelectorAll('.mp-panel').forEach((p,i)=>p.classList.toggle('active',i===0));
   const u=currentUser;
@@ -2506,18 +2538,15 @@ async function openMyPage(){
   document.getElementById('mp-name').textContent=u.displayName||u.email.split('@')[0];
   document.getElementById('mp-email').textContent=u.email;
 
-  // Render overview immediately with in-memory data
-  renderMpOverview(PROG, {}, {streak:GAME_DATA.maxStreak||0});
-  renderMpCats(PROG);
-  renderMpGram(PROG);
+  // Render immediately with in-memory data
+  renderMpDashboard(PROG, {}, {});
   renderMpBadges();
-  renderMpMastery();
 
-  // Fetch Firestore in background and re-render overview
+  // Fetch Firestore data in background, then re-render
   let timeSpent={}, userData={}, logs=[];
   try {
     const pd=await db.collection('progress').doc(u.uid).get();
-    if(pd.exists){ timeSpent=pd.data().timeSpent||{}; }
+    if(pd.exists) timeSpent=pd.data().timeSpent||{};
   } catch(e){}
   try {
     const ud=await db.collection('users').doc(u.uid).get();
@@ -2525,11 +2554,11 @@ async function openMyPage(){
   } catch(e){}
   try {
     const ls=await db.collection('progress').doc(u.uid).collection('quizLog')
-      .orderBy('timestamp','desc').limit(30).get();
+      .orderBy('timestamp','desc').limit(50).get();
     ls.forEach(d=>logs.push(d.data()));
   } catch(e){}
 
-  renderMpOverview(PROG, timeSpent, userData);
+  renderMpDashboard(PROG, timeSpent, userData);
   renderMpLog(logs);
 }
 function closeMyPage(){ document.getElementById('mp-overlay').classList.remove('open'); }
@@ -2540,57 +2569,124 @@ function switchMpTab(idx, btn){
   document.getElementById('mp-panel-'+idx).classList.add('active');
 }
 
-function renderMpOverview(prog, timeSpent, ud){
-  const totalDone=Object.keys(prog).length;
+function renderMpDashboard(prog, timeSpent, ud){
+  // ── Compute stats ────────────────────────────────────────────
   const TOTAL_SETS=DATA.reduce((s,c)=>s+Math.ceil(c.words.length/10),0);
-  const pct=Math.round(totalDone/TOTAL_SETS*100);
-  const totalSecs=Object.values(timeSpent||{}).reduce((a,b)=>a+b,0);
-  const streak=ud.streak||0;
-  // Avg quiz score
-  const allPcts=Object.values(prog).map(s=>s&&s.pct?s.pct:0).filter(Boolean);
-  const avgPct=allPcts.length?Math.round(allPcts.reduce((a,b)=>a+b)/allPcts.length):0;
-  // Mastery stats from localStorage
+  const progVals=Object.values(prog).filter(v=>v?.pct);
+  const doneSets=progVals.length;
+  const quizPct=Math.round(doneSets/TOTAL_SETS*100);
+  const avgScore=progVals.length?Math.round(progVals.reduce((a,v)=>a+(v.pct||0),0)/progVals.length):0;
   let m0=0,m1=0,m2=0,mTotal=0;
   DATA.forEach(cat=>cat.words.forEach(w=>{
     mTotal++;
     const lv=getMastery(cat.id,w.no);
     if(lv===2)m2++; else if(lv===1)m1++; else m0++;
   }));
-  document.getElementById('mp-panel-0').innerHTML=`
-    <div class="streak-box">
-      <div class="streak-fire">🔥</div>
-      <div><div class="streak-n">${streak}</div><div class="streak-lbl">일 연속 학습 · Day Streak</div></div>
-      <div style="margin-left:auto;text-align:right;font-size:.78rem;color:var(--tx3)">
-        마지막 접속 · Last seen<br>${ud.lastSeen?fmtDate(ud.lastSeen.toMillis?ud.lastSeen.toMillis():Date.now()):'-'}
-      </div>
+  const mastPct=Math.round(m2/mTotal*100);
+  const partPct=Math.round((m1+m2)/mTotal*100);
+  const totalSecs=Object.values(timeSpent||{}).reduce((a,b)=>a+b,0);
+  const streak=ud.streak||GAME_DATA.maxStreak||0;
+  const lastSeen=ud.lastSeen?fmtDate(ud.lastSeen.toMillis?ud.lastSeen.toMillis():Date.now()):null;
+
+  // ── XP / Level in header ─────────────────────────────────────
+  const lvObj=getLevel(GAME_DATA.xp||0);
+  const nextLv=LEVELS.find(l=>l.lv===lvObj.lv+1);
+  const xpPct=nextLv?Math.round(((GAME_DATA.xp||0)-lvObj.xp)/(nextLv.xp-lvObj.xp)*100):100;
+  const xpTxt=nextLv?`${GAME_DATA.xp||0} / ${nextLv.xp} XP`:`${GAME_DATA.xp||0} XP (MAX)`;
+  const hdrXp=document.getElementById('mp-hdr-xp');
+  if(hdrXp) hdrXp.innerHTML=`
+    <div class="mp-xp-row">
+      <span>Lv.${lvObj.lv} ${lvObj.name} · ${lvObj.nameEn}</span>
+      <span>${xpTxt}</span>
     </div>
-    <div class="mp-stat-grid">
-      <div class="mp-stat"><div class="n">${pct}%</div><div class="l">전체 진도 · Progress</div></div>
-      <div class="mp-stat"><div class="n">${totalDone}</div><div class="l">완료 Set · Done</div></div>
-      <div class="mp-stat"><div class="n">${TOTAL_SETS-totalDone}</div><div class="l">남은 Set · Left</div></div>
-      <div class="mp-stat"><div class="n">${avgPct}%</div><div class="l">평균 퀴즈 점수 · Avg Score</div></div>
-      <div class="mp-stat"><div class="n">${fmtSecs(totalSecs)}</div><div class="l">총 학습 시간 · Study Time</div></div>
-    </div>
-    <div style="background:var(--surf);border-radius:14px;padding:14px 18px;border:1px solid var(--brd2);margin-bottom:14px">
-      <div class="mp-sec-title" style="margin-bottom:10px">🧠 단어 마스터리 · Word Mastery</div>
-      <div style="display:flex;gap:0;height:12px;border-radius:6px;overflow:hidden;margin-bottom:8px">
-        <div style="width:${Math.round(m2/mTotal*100)}%;background:#10b981;transition:width .4s"></div>
-        <div style="width:${Math.round(m1/mTotal*100)}%;background:#f59e0b"></div>
-        <div style="flex:1;background:#e5e7eb"></div>
+    <div class="mp-xp-track"><div class="mp-xp-fill2" style="width:${xpPct}%"></div></div>`;
+
+  // ── Category breakdown ────────────────────────────────────────
+  const catCards=DATA.map(c=>{
+    const ns=Math.ceil(c.words.length/10);
+    let qs=0;
+    for(let i=0;i<ns;i++){const e=prog[String(c.id)+'_'+i];if(e?.pct)qs+=e.pct;}
+    const qp=Math.round(qs/ns);
+    let cm1=0,cm2=0;
+    c.words.forEach(w=>{const lv=getMastery(c.id,w.no);if(lv===2)cm2++;else if(lv===1)cm1++;});
+    const mp=Math.round((cm1+cm2)/c.words.length*100);
+    return `<div class="mp-ccat" style="border-left-color:${c.color}">
+      <div class="mp-ccat-nm">${c.ko}</div>
+      <div class="mp-ccat-en">${c.en}</div>
+      <div class="mp-ccat-br">
+        <span class="mp-ccat-lbl">암기</span>
+        <div class="mp-ccat-b"><div class="mp-ccat-bf" style="width:${mp}%;background:#10b981"></div></div>
+        <span class="mp-ccat-n">${mp}%</span>
       </div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem">
-        <span style="color:#10b981;font-weight:600">✅ 확실히 알겠어요 ${m2}단어</span>
-        <span style="color:#f59e0b;font-weight:600">🌱 조금 알겠어요 ${m1}단어</span>
-        <span style="color:#94a3b8;font-weight:600">❓ 잘 모르겠어요 ${m0}단어</span>
+      <div class="mp-ccat-br">
+        <span class="mp-ccat-lbl">퀴즈</span>
+        <div class="mp-ccat-b"><div class="mp-ccat-bf" style="width:${qp}%;background:#3b82f6"></div></div>
+        <span class="mp-ccat-n">${qp}%</span>
       </div>
-    </div>
-    <div style="background:var(--surf);border-radius:14px;padding:14px 18px;border:1px solid var(--brd2)">
-      <div class="mp-sec-title" style="margin-bottom:8px">전체 퀴즈 진도 · Overall Progress</div>
-      <div class="pgtrack" style="height:12px;border-radius:6px">
-        <div class="pgfill" style="width:${pct}%;background:var(--a);height:100%;border-radius:6px"></div>
-      </div>
-      <div style="text-align:right;font-size:.76rem;color:var(--tx3);margin-top:4px">${totalDone} / ${TOTAL_SETS} Sets 완료</div>
     </div>`;
+  }).join('');
+
+  // ── Render panel ──────────────────────────────────────────────
+  document.getElementById('mp-panel-0').innerHTML=`
+    <div class="mp-kpi-grid">
+      <div class="mp-kpi">
+        <div class="kn">${quizPct}%</div>
+        <div class="kl">퀴즈 진도<br>Quiz Progress</div>
+      </div>
+      <div class="mp-kpi">
+        <div class="kn" style="color:${avgScore>=80?'#10b981':avgScore>=60?'#f59e0b':'#ef4444'}">${avgScore?avgScore+'%':'—'}</div>
+        <div class="kl">평균 점수<br>Avg Score</div>
+      </div>
+      <div class="mp-kpi">
+        <div class="kn" style="color:#10b981">${mastPct}%</div>
+        <div class="kl">단어 암기<br>Mastered</div>
+      </div>
+      <div class="mp-kpi">
+        <div class="kn">${streak>0?'🔥':''}<span style="font-size:1.4rem">${streak}</span></div>
+        <div class="kl">일 연속<br>Day Streak</div>
+      </div>
+    </div>
+
+    <div class="mp-track-box">
+      <div class="mp-sec-title" style="margin-bottom:14px">스킬 트랙 · Skill Progress</div>
+      <div class="mp-track-row">
+        <div class="mp-track-hd">
+          <span class="mp-track-name">📝 퀴즈 완료 · Quiz Sets</span>
+          <span class="mp-track-val">${doneSets} / ${TOTAL_SETS} Sets</span>
+        </div>
+        <div class="mp-track-bar">
+          <div class="mp-track-fill" style="width:${quizPct}%;background:linear-gradient(90deg,#3b82f6,#6366f1)"></div>
+        </div>
+      </div>
+      <div class="mp-track-row">
+        <div class="mp-track-hd">
+          <span class="mp-track-name">🧠 완전 암기 · Fully Mastered</span>
+          <span class="mp-track-val">${m2} / ${mTotal}단어</span>
+        </div>
+        <div class="mp-track-bar">
+          <div class="mp-track-fill" style="width:${mastPct}%;background:linear-gradient(90deg,#10b981,#34d399)"></div>
+        </div>
+      </div>
+      <div class="mp-track-row">
+        <div class="mp-track-hd">
+          <span class="mp-track-name">🌱 학습 중 · In Progress</span>
+          <span class="mp-track-val">${m1+m2} / ${mTotal}단어</span>
+        </div>
+        <div class="mp-track-bar">
+          <div class="mp-track-fill" style="width:${partPct}%;background:linear-gradient(90deg,#f59e0b,#fbbf24)"></div>
+        </div>
+      </div>
+      <div class="mp-footer-row">
+        <span>⏱ ${fmtSecs(totalSecs)||'0초'}</span>
+        <span>🎯 퀴즈 ${GAME_DATA.quizzes||0}회</span>
+        <span>💯 만점 ${GAME_DATA.perfects||0}회</span>
+        <span>✨ ${GAME_DATA.xp||0} XP</span>
+        ${lastSeen?`<span style="margin-left:auto">마지막 접속 ${lastSeen}</span>`:''}
+      </div>
+    </div>
+
+    <div class="mp-sec-title" style="margin-bottom:10px">카테고리별 실력 · Category Breakdown</div>
+    <div class="mp-ccat-grid">${catCards}</div>`;
 }
 
 function renderMpMastery(){
@@ -2685,7 +2781,7 @@ function renderMpLog(logs){
   if(!logs.length){
     const progEntries = Object.entries(PROG).filter(([k,v])=>v&&v.score);
     if(!progEntries.length){
-      document.getElementById('mp-panel-4').innerHTML='<p style="color:var(--tx3);padding:20px;font-size:.85rem">퀴즈 기록이 없습니다 · No quiz history yet.</p>';
+      document.getElementById('mp-panel-2').innerHTML='<p style="color:var(--tx3);padding:20px;font-size:.85rem">퀴즈 기록이 없습니다 · No quiz history yet.</p>';
       return;
     }
     // Sort by lastAt descending
@@ -2704,7 +2800,7 @@ function renderMpLog(logs){
       return `<tr><td>${catName}</td><td>Set ${si+1}</td>
         <td><span class="badgep ${cls}">${v.score} (${v.pct}%)</span></td><td>${ts} · ${att}회</td></tr>`;
     }).join('');
-    document.getElementById('mp-panel-4').innerHTML=`
+    document.getElementById('mp-panel-2').innerHTML=`
       <p style="font-size:.75rem;color:var(--tx3);padding:8px 4px 4px">📋 저장된 최고 점수 기록 · Best scores from progress data</p>
       <table class="mp-log-table">
         <thead><tr><th>카테고리 · Category</th><th>Set</th><th>최고 점수 · Best</th><th>날짜 · Date</th></tr></thead>
@@ -2721,7 +2817,7 @@ function renderMpLog(logs){
     return `<tr><td>${catName}</td><td>${setLabel}</td>
       <td><span class="badgep ${cls}">${l.score} (${l.pct}%)</span></td><td>${ts}</td></tr>`;
   }).join('');
-  document.getElementById('mp-panel-4').innerHTML=`
+  document.getElementById('mp-panel-2').innerHTML=`
     <table class="mp-log-table">
       <thead><tr><th>카테고리 · Category</th><th>Set</th><th>점수 · Score</th><th>날짜 · Date</th></tr></thead>
       <tbody>${rows}</tbody>
@@ -2945,7 +3041,7 @@ function renderMpBadges() {
   }
   h += `</div><p style="font-size:.74rem;color:var(--tx3);margin-top:14px">
     ${earned.length} / ${BADGES.length}개 획득 · Badges earned</p>`;
-  document.getElementById('mp-panel-3').innerHTML = h;
+  document.getElementById('mp-panel-1').innerHTML = h;
 }
 
 // ── Persistence ────────────────────────────────────────
