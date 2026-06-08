@@ -1453,7 +1453,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── App State ─────────────────────────────────────────────────────────────────
 let currentUser = null;
-let PROG = {};          // { "cid_si": { score, pct, attempts, lastAt } }
+let PROG = (()=>{ try{ return JSON.parse(localStorage.getItem('bwk_progress')||'{}'); }catch(e){ return {}; } })();  // { "cid_si": { score, pct, attempts, lastAt } }
 let TIME_START = {};    // { cid: epochMs }
 let CC = null;          // current category
 let CM = 'list';        // current mode
@@ -1694,6 +1694,8 @@ async function loadProgress() {
       }
     }
     PROG = merged;
+    // Cache to localStorage so progress loads instantly on next visit
+    try { localStorage.setItem('bwk_progress', JSON.stringify(PROG)); } catch(e){}
     // If guest had progress, persist the merge back to Firestore
     const hasGuestData = Object.keys(PROG).some(k => !remote[k]);
     if (hasGuestData) {
@@ -1725,6 +1727,7 @@ async function saveProgress(cid, si, score) {
   // New best score — update in-memory and Firestore
   PROG[key] = { score, pct, attempts: (PROG[key]?.attempts||0)+1,
     lastAt: new Date().toISOString() };
+  try { localStorage.setItem('bwk_progress', JSON.stringify(PROG)); } catch(e){}
   if (!currentUser) return; // guests: in-memory only
   try {
     await db.collection('progress').doc(currentUser.uid).set({
