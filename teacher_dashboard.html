@@ -284,6 +284,23 @@ body{
   cursor:pointer;font-size:.78rem;font-family:inherit;font-weight:600;transition:.15s
 }
 .m-del:hover{background:rgba(239,68,68,.25)}
+.m-pw{
+  background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);
+  color:#a5b4fc;border-radius:8px;padding:6px 14px;
+  cursor:pointer;font-size:.78rem;font-family:inherit;font-weight:600;transition:.15s
+}
+.m-pw:hover{background:rgba(99,102,241,.28);color:#c7d2fe}
+.m-pw:disabled{opacity:.5;cursor:not-allowed}
+
+/* Toast notification */
+#toast{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#0f172a;color:#f1f5f9;padding:12px 22px;border-radius:12px;
+  font-size:.83rem;font-weight:600;z-index:9999;opacity:0;
+  transition:opacity .25s,transform .25s;pointer-events:none;
+  box-shadow:var(--s4),0 0 0 1px rgba(255,255,255,.08);white-space:nowrap
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Modal tabs */
 .modal-tabs{
@@ -588,6 +605,7 @@ body{
         <div class="m-chips" id="modal-badges"></div>
       </div>
       <div class="modal-actions">
+        <button class="m-pw" id="m-pw-btn" onclick="sendStudentPwReset()" title="학생에게 비밀번호 재설정 이메일 발송">🔑 비밀번호 재설정</button>
         <button class="m-del" onclick="confirmDelete()">🗑 삭제</button>
         <button class="m-close" onclick="closeModal()">✕ 닫기</button>
       </div>
@@ -604,6 +622,9 @@ body{
     <div id="mpanel-3" class="mpanel"></div>
   </div>
 </div>
+
+<!-- Toast -->
+<div id="toast"></div>
 
 <!-- Delete confirm -->
 <div id="confirm-overlay">
@@ -939,6 +960,38 @@ async function doDelete(){
     if(currentModalUid===uid) closeModal();
     updateStats(); filterStudents(document.getElementById('search-input').value);
   }catch(e){alert('삭제 오류: '+e.message);}
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = type==='ok' ? '#065f46' : type==='err' ? '#991b1b' : '#0f172a';
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ── 비밀번호 재설정 이메일 발송 ────────────────────────────────────────────────
+async function sendStudentPwReset() {
+  if (!currentModalUid) return;
+  const s = allStudents.find(x => x.uid === currentModalUid);
+  if (!s || !s.email) { showToast('이메일 주소를 찾을 수 없습니다.', 'err'); return; }
+
+  const btn = document.getElementById('m-pw-btn');
+  btn.disabled = true;
+  btn.textContent = '전송 중...';
+  try {
+    await auth.sendPasswordResetEmail(s.email);
+    showToast(`✅ ${s.email} 로 비밀번호 재설정 이메일을 보냈습니다.`, 'ok');
+    btn.textContent = '✓ 전송 완료';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '🔑 비밀번호 재설정'; }, 4000);
+  } catch(e) {
+    showToast('오류: ' + e.message, 'err');
+    btn.disabled = false;
+    btn.textContent = '🔑 비밀번호 재설정';
+  }
 }
 
 // ── Insights ──────────────────────────────────────────────────────────────────
