@@ -1988,12 +1988,20 @@ function renderSidebar() {
       +`<div style="width:${p2}%;background:#10b981;border-radius:2px 0 0 2px;height:100%"></div>`
       +`<div style="width:${p1}%;background:#f59e0b;height:100%"></div>`
       +`<div style="width:${p0}%;background:#e5e7eb;border-radius:0 2px 2px 0;height:100%"></div></div>`;
+    // quiz score bar (blue) — average pct across all sets (0 for unplayed sets)
+    const numSets=Math.ceil(c.words.length/10);
+    let qTotalPct=0;
+    for(let i=0;i<numSets;i++){ const e=PROG[String(c.id)+'_'+i]; if(e&&e.pct) qTotalPct+=e.pct; }
+    const qPct=Math.round(qTotalPct/numSets);
+    const qprog=`<div class="cprog" style="margin-top:2px">`
+      +`<div style="width:${qPct}%;background:#3b82f6;border-radius:2px;height:100%;transition:width .3s"></div></div>`;
     return `<div class="ci" id="ci${c.id}" style="--cc:${c.color}" onclick="showCat(${c.id})" role="button" tabindex="0" aria-label="${c.ko}" onkeydown="if(event.key==='Enter')showCat(${c.id})">
       <div class="cn">${c.id}</div>
       <div class="cl">
         <div class="cko">${c.ko}</div>
         <div class="cen">${c.en}</div>
         ${prog}
+        ${qprog}
       </div>
       <div class="cnt" title="${Math.round(m2/total*100)}% 완료">${badge||c.words.length+'단어'}</div>
     </div>`;
