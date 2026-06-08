@@ -624,15 +624,33 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 
 /* ─── BADGE NOTIFICATION ─── */
 .badge-notif{
-  position:fixed;bottom:168px;right:22px;background:white;
-  border-radius:14px;padding:12px 16px;display:flex;gap:12px;align-items:center;
-  box-shadow:0 4px 22px rgba(0,0,0,.2);border-left:4px solid var(--a);
-  transform:translateX(260px);opacity:0;
-  transition:all .4s cubic-bezier(.34,1.56,.64,1);z-index:1500;max-width:260px
+  position:fixed;bottom:168px;right:22px;background:var(--bg);
+  border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center;
+  box-shadow:0 6px 28px rgba(0,0,0,.22);border:2px solid var(--brd);
+  transform:translateX(280px);opacity:0;
+  transition:all .42s cubic-bezier(.34,1.56,.64,1);z-index:1500;max-width:270px
 }
 .badge-notif.show{transform:translateX(0);opacity:1}
 
-/* ─── BADGE GRID ─── */
+/* ─── BADGE v2 ─── */
+.bdg-v2-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-bottom:4px}
+.bdg-v2{border-radius:14px;padding:12px 8px 10px;text-align:center;border:2px solid;transition:.2s}
+.bdg-v2.earned{box-shadow:0 2px 14px var(--shad)}
+.bdg-v2.locked{opacity:.5;filter:grayscale(.5)}
+.bdg-v2-tier{font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.bdg-v2-icon{font-size:2rem;line-height:1;margin-bottom:5px}
+.bdg-v2-name{font-size:.73rem;font-weight:700;color:var(--tx);line-height:1.2}
+.bdg-v2-en{font-size:.6rem;color:var(--tx3);margin-top:2px}
+.bdg-v2-prog{margin-top:6px}
+.bdg-v2-bar{height:4px;background:rgba(0,0,0,.08);border-radius:2px;overflow:hidden;margin-bottom:2px}
+.bdg-v2-bar-fill{height:100%;border-radius:2px;opacity:.7}
+.bdg-v2-cnt{font-size:.57rem;color:var(--tx3)}
+.bdg-nextup{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.bdg-nu-card{background:var(--surf);border-radius:12px;padding:10px 14px;
+  display:flex;align-items:center;gap:12px;border:1.5px solid var(--brd2)}
+.bdg-summary{display:flex;align-items:center;gap:14px;margin-bottom:20px;
+  background:var(--surf);border-radius:14px;padding:14px 18px;border:1px solid var(--brd2)}
+/* Legacy badge grid (kept for compat) */
 .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:12px}
 
 /* ─── QUIZ WRONG REVIEW ─── */
@@ -2953,44 +2971,48 @@ const LEVELS = [
   {lv:10,name:'TOPIK 전설',nameEn:'TOPIK Legend',xp:3500}
 ];
 
+// tier: 0=Stone 1=Bronze 2=Silver 3=Gold 4=Diamond
+// thresh: quizzes|perfects|mastery|streak|cats|xp|level  val: threshold
 const BADGES = [
-  // ─ Quiz ─
-  {id:'first_quiz',  icon:'🎯', name:'첫 발걸음',     nameEn:'First Step',        desc:'첫 퀴즈 세트 완료! · First quiz done!'},
-  {id:'perfect',     icon:'💯', name:'만점 달성',     nameEn:'Perfect Score',     desc:'퀴즈 100% 달성! · Scored 100%!'},
-  {id:'perfect3',    icon:'🌟', name:'3회 만점',      nameEn:'Triple Perfect',    desc:'만점 3회 달성! · Scored 100% three times!'},
-  {id:'perfect10',   icon:'✨', name:'만점 달인',     nameEn:'Perfect Master',    desc:'만점 10회 달성! · Scored 100% ten times!'},
-  {id:'quiz10',      icon:'📝', name:'퀴즈 10세트',   nameEn:'Quiz Streak 10',   desc:'퀴즈 10세트 완료! · 10 quiz sets done!'},
-  {id:'quiz30',      icon:'📊', name:'퀴즈 30세트',   nameEn:'Quiz Streak 30',   desc:'퀴즈 30세트 완료! · 30 quiz sets done!'},
-  {id:'quiz50',      icon:'🎓', name:'퀴즈 마스터',   nameEn:'Quiz Master',      desc:'퀴즈 50세트 완료! · 50 quiz sets done!'},
-  // ─ Words Studied ─
-  {id:'words50',     icon:'📖', name:'50단어 탐험',   nameEn:'50 Words',         desc:'50개 단어 학습! · Studied 50 words!'},
-  {id:'words100',    icon:'📚', name:'단어 탐험가',   nameEn:'Word Explorer',    desc:'100개 단어 학습! · Studied 100 words!'},
-  {id:'words200',    icon:'📕', name:'단어 박사',     nameEn:'Word Doctor',      desc:'200개 단어 학습! · Studied 200 words!'},
-  {id:'words_all',   icon:'📗', name:'단어 완전정복', nameEn:'Word Conqueror',   desc:'전체 334개 학습! · Studied all 334 words!'},
-  // ─ Mastery ─
-  {id:'mastery10',   icon:'🌱', name:'새싹 학습자',   nameEn:'Seedling',         desc:'단어 10개 완전 암기! · Mastered 10 words!'},
-  {id:'mastery50',   icon:'🌿', name:'성장 학습자',   nameEn:'Growing',          desc:'단어 50개 완전 암기! · Mastered 50 words!'},
-  {id:'mastery100',  icon:'🌳', name:'단어 숲',       nameEn:'Word Forest',      desc:'단어 100개 완전 암기! · Mastered 100 words!'},
-  {id:'mastery200',  icon:'🏰', name:'단어 왕국',     nameEn:'Word Kingdom',     desc:'단어 200개 완전 암기! · Mastered 200 words!'},
-  {id:'mastery_all', icon:'👑', name:'단어 황제',     nameEn:'Word Emperor',     desc:'전체 334개 완전 암기! · Mastered all 334!'},
-  // ─ Streak ─
-  {id:'streak3',     icon:'🔥', name:'3일 연속',      nameEn:'3-Day Streak',     desc:'3일 연속 학습! · 3 days in a row!'},
-  {id:'streak7',     icon:'🌊', name:'7일 연속',      nameEn:'7-Day Streak',     desc:'7일 연속 학습! · 7 days in a row!'},
-  {id:'streak14',    icon:'⚡', name:'2주 연속',      nameEn:'2-Week Streak',    desc:'14일 연속 학습! · 14 days in a row!'},
-  {id:'streak30',    icon:'💎', name:'1달 연속',      nameEn:'1-Month Streak',   desc:'30일 연속 학습! · 30 days in a row!'},
-  // ─ Level ─
-  {id:'level3',      icon:'🥉', name:'레벨 3 달성',   nameEn:'Level 3',          desc:'레벨 3 달성! · Reached Level 3!'},
-  {id:'level5',      icon:'⭐', name:'레벨 5 달성',   nameEn:'Level 5',          desc:'레벨 5 달성! · Reached Level 5!'},
-  {id:'level7',      icon:'🥇', name:'레벨 7 달성',   nameEn:'Level 7',          desc:'레벨 7 달성! · Reached Level 7!'},
-  {id:'xp500',       icon:'💫', name:'XP 500 달성',   nameEn:'XP 500',           desc:'경험치 500 달성! · Earned 500 XP!'},
-  // ─ Categories ─
-  {id:'catdone',     icon:'🏆', name:'카테고리 완성', nameEn:'Category Done',    desc:'카테고리 1개 완성! · Completed a category!'},
-  {id:'cat3',        icon:'🎪', name:'3 카테고리',    nameEn:'3 Categories',     desc:'3개 카테고리 완성! · Completed 3 categories!'},
-  {id:'cat8',        icon:'🎭', name:'절반 정복',     nameEn:'Halfway Hero',     desc:'8개 카테고리 완성! · Completed 8 categories!'},
-  {id:'cat_all',     icon:'🌏', name:'전체 정복',     nameEn:'All Categories',   desc:'모든 카테고리 완성! · All categories done!'},
-  // ─ Special ─
-  {id:'topik_ready', icon:'📋', name:'TOPIK 준비완료',nameEn:'TOPIK Ready',     desc:'200단어 암기+퀴즈 20세트! · 200 mastered + 20 quizzes!'},
-  {id:'legend',      icon:'🐋', name:'TOPIK 전설',    nameEn:'TOPIK Legend',    desc:'최고 레벨 달성! · Reached max level!'}
+  // ─── 🎯 퀴즈 도전 (Quiz Challenge) ───────────────────────────
+  {id:'quiz1',    cat:'quiz',tier:0,icon:'🌱',name:'첫 도전',     nameEn:'First Step',      desc:'첫 퀴즈 완료!',          thresh:'quizzes', val:1},
+  {id:'quiz10',   cat:'quiz',tier:1,icon:'📝',name:'퀴즈 입문자', nameEn:'Quiz Rookie',     desc:'퀴즈 10세트 완료!',      thresh:'quizzes', val:10},
+  {id:'quiz30',   cat:'quiz',tier:2,icon:'📊',name:'퀴즈 도전자', nameEn:'Quiz Challenger', desc:'퀴즈 30세트 완료!',      thresh:'quizzes', val:30},
+  {id:'quiz60',   cat:'quiz',tier:3,icon:'🎓',name:'퀴즈 고수',   nameEn:'Quiz Expert',     desc:'퀴즈 60세트 완료!',      thresh:'quizzes', val:60},
+  {id:'quiz100',  cat:'quiz',tier:4,icon:'🏆',name:'퀴즈 챔피언', nameEn:'Quiz Champion',   desc:'퀴즈 100세트 완료!',     thresh:'quizzes', val:100},
+  // ─── 💯 완벽주의자 (Perfectionist) ───────────────────────────
+  {id:'perf1',    cat:'perf',tier:0,icon:'⭐',name:'첫 만점',     nameEn:'First Perfect',   desc:'퀴즈 100% 달성!',        thresh:'perfects',val:1},
+  {id:'perf3',    cat:'perf',tier:1,icon:'🌟',name:'3회 만점',    nameEn:'Triple Perfect',  desc:'만점 3회 달성!',         thresh:'perfects',val:3},
+  {id:'perf10',   cat:'perf',tier:2,icon:'✨',name:'만점 달인',   nameEn:'Perfect Expert',  desc:'만점 10회 달성!',        thresh:'perfects',val:10},
+  {id:'perf30',   cat:'perf',tier:3,icon:'💫',name:'완벽주의자',  nameEn:'Perfectionist',   desc:'만점 30회 달성!',        thresh:'perfects',val:30},
+  {id:'perf50',   cat:'perf',tier:4,icon:'👑',name:'완벽 황제',   nameEn:'Perfection King', desc:'만점 50회 달성!',        thresh:'perfects',val:50},
+  // ─── 🧠 단어 마스터 (Word Mastery) ───────────────────────────
+  {id:'mast10',   cat:'mast',tier:0,icon:'🌱',name:'새싹',        nameEn:'Seedling',        desc:'단어 10개 완전 암기!',   thresh:'mastery', val:10},
+  {id:'mast50',   cat:'mast',tier:1,icon:'🌿',name:'성장 중',     nameEn:'Sprouting',       desc:'단어 50개 완전 암기!',   thresh:'mastery', val:50},
+  {id:'mast150',  cat:'mast',tier:2,icon:'🌳',name:'단어 숲',     nameEn:'Word Forest',     desc:'단어 150개 완전 암기!',  thresh:'mastery', val:150},
+  {id:'mast400',  cat:'mast',tier:3,icon:'🏰',name:'단어 왕국',   nameEn:'Word Kingdom',    desc:'단어 400개 완전 암기!',  thresh:'mastery', val:400},
+  {id:'mast_all', cat:'mast',tier:4,icon:'👑',name:'단어 황제',   nameEn:'Word Emperor',    desc:'전체 단어 완전 암기!',   thresh:'mastery', val:0},
+  // ─── 🔥 학습 스트릭 (Study Streak) ───────────────────────────
+  {id:'str3',     cat:'str', tier:0,icon:'🔥',name:'3일 연속',    nameEn:'3-Day Streak',    desc:'3일 연속 학습!',         thresh:'streak',  val:3},
+  {id:'str7',     cat:'str', tier:1,icon:'🌊',name:'일주일 전사', nameEn:'7-Day Warrior',   desc:'7일 연속 학습!',         thresh:'streak',  val:7},
+  {id:'str30',    cat:'str', tier:2,icon:'⚡',name:'한달 전사',   nameEn:'1-Month Warrior', desc:'30일 연속 학습!',        thresh:'streak',  val:30},
+  {id:'str100',   cat:'str', tier:3,icon:'💎',name:'100일 전설',  nameEn:'100-Day Legend',  desc:'100일 연속 학습!',       thresh:'streak',  val:100},
+  {id:'str365',   cat:'str', tier:4,icon:'🌞',name:'1년 전설',    nameEn:'365-Day Legend',  desc:'365일 연속 학습!',       thresh:'streak',  val:365},
+  // ─── 📂 카테고리 정복 (Category Conquest) ────────────────────
+  {id:'cat1',     cat:'cat', tier:0,icon:'🗺️',name:'첫 정복',     nameEn:'First Conqueror', desc:'카테고리 1개 완성!',     thresh:'cats',    val:1},
+  {id:'cat5',     cat:'cat', tier:1,icon:'🌍',name:'5개 정복',    nameEn:'5 Categories',    desc:'카테고리 5개 완성!',     thresh:'cats',    val:5},
+  {id:'cat15',    cat:'cat', tier:2,icon:'🏅',name:'절반 정복',   nameEn:'Halfway Hero',    desc:'카테고리 15개 완성!',    thresh:'cats',    val:15},
+  {id:'cat_half', cat:'cat', tier:3,icon:'🎖️',name:'대정복자',    nameEn:'Great Conqueror', desc:'카테고리 25개 완성!',    thresh:'cats',    val:25},
+  {id:'cat_all',  cat:'cat', tier:4,icon:'🌏',name:'전체 정복',   nameEn:'Full Conqueror',  desc:'모든 카테고리 완성!',    thresh:'cats',    val:0},
+  // ─── ✨ XP & 레벨 (XP & Level) ───────────────────────────────
+  {id:'xp100',    cat:'xp',  tier:0,icon:'⚡',name:'XP 100',      nameEn:'100 XP',          desc:'경험치 100 달성!',       thresh:'xp',      val:100},
+  {id:'xp300',    cat:'xp',  tier:1,icon:'💫',name:'XP 300',      nameEn:'300 XP',          desc:'경험치 300 달성!',       thresh:'xp',      val:300},
+  {id:'xp800',    cat:'xp',  tier:2,icon:'🌠',name:'XP 800',      nameEn:'800 XP',          desc:'경험치 800 달성!',       thresh:'xp',      val:800},
+  {id:'xp2000',   cat:'xp',  tier:3,icon:'🚀',name:'XP 2000',     nameEn:'2000 XP',         desc:'경험치 2000 달성!',      thresh:'xp',      val:2000},
+  {id:'xp5000',   cat:'xp',  tier:4,icon:'🌌',name:'XP 5000',     nameEn:'5000 XP',         desc:'경험치 5000 달성!',      thresh:'xp',      val:5000},
+  // ─── 🐋 특별 업적 (Special) ──────────────────────────────────
+  {id:'topik_i',  cat:'spec',tier:3,icon:'📋',name:'TOPIK I 준비',nameEn:'TOPIK I Ready',   desc:'퀴즈 50세트 + 단어 150개 암기 달성!', thresh:'topik1',  val:0},
+  {id:'legend',   cat:'spec',tier:4,icon:'🐋',name:'TOPIK 전설',  nameEn:'TOPIK Legend',    desc:'최고 레벨 Lv.10 달성!', thresh:'level',   val:10},
 ];
 
 let GAME_DATA = {xp:0,level:1,badges:[],quizzes:0,perfects:0,wordsStudied:0,maxStreak:0,lastLoginDay:''};
@@ -3047,31 +3069,24 @@ function showLevelUp(lv) {
 // ── Badge system ───────────────────────────────────────
 function checkBadges() {
   const g = GAME_DATA;
-  let catsDone = 0;
+  let catsDone=0, masteryDone=0;
   DATA.forEach(c=>{
-    const total=Math.ceil(c.words.length/10);
-    let done=0;
+    const total=Math.ceil(c.words.length/10); let done=0;
     for(let i=0;i<total;i++) if(PROG[String(c.id)+'_'+i]) done++;
-    if(done===total && total>0) catsDone++;
+    if(done===total&&total>0) catsDone++;
   });
-  let masteryDone=0;
+  const totalWords=DATA.reduce((s,c)=>s+c.words.length,0);
   DATA.forEach(cat=>cat.words.forEach(w=>{if(getMastery(cat.id,w.no)===2)masteryDone++;}));
-  const cond = {
-    first_quiz:(g.quizzes||0)>=1,
-    perfect:(g.perfects||0)>=1, perfect3:(g.perfects||0)>=3, perfect10:(g.perfects||0)>=10,
-    quiz10:(g.quizzes||0)>=10, quiz30:(g.quizzes||0)>=30, quiz50:(g.quizzes||0)>=50,
-    words50:(g.wordsStudied||0)>=50, words100:(g.wordsStudied||0)>=100,
-    words200:(g.wordsStudied||0)>=200, words_all:(g.wordsStudied||0)>=334,
-    streak3:(g.maxStreak||0)>=3, streak7:(g.maxStreak||0)>=7,
-    streak14:(g.maxStreak||0)>=14, streak30:(g.maxStreak||0)>=30,
-    level3:(g.level||1)>=3, level5:(g.level||1)>=5, level7:(g.level||1)>=7,
-    xp500:(g.xp||0)>=500,
-    catdone:catsDone>=1, cat3:catsDone>=3, cat8:catsDone>=8, cat_all:catsDone>=16,
-    mastery10:masteryDone>=10, mastery50:masteryDone>=50, mastery100:masteryDone>=100,
-    mastery200:masteryDone>=200, mastery_all:masteryDone>=334,
-    topik_ready:masteryDone>=200&&(g.quizzes||0)>=20,
-    legend:(g.level||1)>=10
+  const vals={
+    quizzes:g.quizzes||0, perfects:g.perfects||0, mastery:masteryDone,
+    streak:g.maxStreak||0, cats:catsDone, xp:g.xp||0, level:g.level||1,
   };
+  const cond={};
+  BADGES.forEach(b=>{
+    if(b.thresh==='topik1') cond[b.id]=masteryDone>=150&&(g.quizzes||0)>=50;
+    else if(b.val===0) cond[b.id]=(vals[b.thresh]||(b.thresh==='mastery'?masteryDone:0))>=(b.thresh==='mastery'?totalWords:b.thresh==='cats'?DATA.length:9999);
+    else cond[b.id]=(vals[b.thresh]||0)>=b.val;
+  });
   for (const b of BADGES) {
     if (!g.badges.includes(b.id) && cond[b.id]) {
       g.badges.push(b.id);
@@ -3081,35 +3096,170 @@ function checkBadges() {
 }
 
 function showBadgeUnlock(badge) {
-  const el = document.createElement('div');
-  el.className = 'badge-notif';
-  el.innerHTML = `<span style="font-size:1.9rem;line-height:1">${badge.icon}</span>
+  const TIER_CFG=[
+    {ko:'스톤',  color:'#64748b', border:'#94a3b8'},
+    {ko:'브론즈', color:'#92400e', border:'#d97706'},
+    {ko:'실버',  color:'#1d4ed8', border:'#3b82f6'},
+    {ko:'골드',  color:'#a16207', border:'#eab308'},
+    {ko:'다이아', color:'#7c3aed', border:'#8b5cf6'},
+  ];
+  const t=TIER_CFG[badge.tier||0];
+  const el=document.createElement('div');
+  el.className='badge-notif';
+  el.style.borderColor=t.border;
+  el.innerHTML=`
+    <div style="font-size:2.2rem;line-height:1;min-width:40px;text-align:center">${badge.icon}</div>
     <div>
-      <div style="font-weight:800;font-size:.8rem;color:var(--tx)">🏅 새 뱃지! · New Badge!</div>
-      <div style="font-weight:700;font-size:.78rem;color:var(--a);margin:2px 0">${badge.name} · ${badge.nameEn}</div>
-      <div style="font-size:.68rem;color:var(--tx2)">${badge.desc}</div>
+      <div style="font-size:.62rem;font-weight:800;color:${t.color};text-transform:uppercase;letter-spacing:.5px">🏅 ${t.ko} 뱃지 획득!</div>
+      <div style="font-weight:800;font-size:.82rem;color:var(--tx);margin:2px 0">${badge.name}</div>
+      <div style="font-size:.68rem;color:var(--tx2)">${badge.nameEn} · ${badge.desc}</div>
     </div>`;
   document.body.appendChild(el);
-  setTimeout(()=>el.classList.add('show'), 80);
-  setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>el.remove(),450); }, 3500);
+  setTimeout(()=>el.classList.add('show'),80);
+  setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),450);},4000);
 }
 
 function renderMpBadges() {
-  const earned = GAME_DATA.badges||[];
-  let h = '<div class="mp-sec-title" style="margin-bottom:16px">🏅 뱃지 컬렉션 · Badge Collection</div>';
-  h += '<div class="badge-grid">';
-  for (const b of BADGES) {
-    const has = earned.includes(b.id);
-    h += `<div class="bdg-card ${has?'earned':'locked'}">
-      <div class="bdg-icon">${has?b.icon:'🔒'}</div>
-      <div class="bdg-name">${b.name}</div>
-      <div class="bdg-en">${b.nameEn}</div>
-      <div class="bdg-desc">${has?b.desc:'???'}</div>
-    </div>`;
+  const g=GAME_DATA;
+  // Only count badges in current BADGES array (ignore legacy IDs)
+  const earned=(g.badges||[]).filter(id=>BADGES.some(b=>b.id===id));
+
+  // Compute live progress values
+  let catsDone=0,masteryDone=0;
+  DATA.forEach(c=>{
+    const total=Math.ceil(c.words.length/10);let done=0;
+    for(let i=0;i<total;i++) if(PROG[String(c.id)+'_'+i]) done++;
+    if(done===total&&total>0) catsDone++;
+  });
+  const totalWords=DATA.reduce((s,c)=>s+c.words.length,0);
+  DATA.forEach(cat=>cat.words.forEach(w=>{if(getMastery(cat.id,w.no)===2)masteryDone++;}));
+  const vals={quizzes:g.quizzes||0,perfects:g.perfects||0,mastery:masteryDone,
+    streak:g.maxStreak||0,cats:catsDone,xp:g.xp||0,level:g.level||1};
+
+  // Tier config: Stone Bronze Silver Gold Diamond
+  const T=[
+    {ko:'스톤',  color:'#64748b',bg:'var(--surf2)',border:'#94a3b8'},
+    {ko:'브론즈', color:'#92400e',bg:'#fef3c7',   border:'#d97706'},
+    {ko:'실버',  color:'#1d4ed8',bg:'#eff6ff',   border:'#3b82f6'},
+    {ko:'골드',  color:'#a16207',bg:'#fefce8',   border:'#eab308'},
+    {ko:'다이아', color:'#7c3aed',bg:'#f5f3ff',   border:'#8b5cf6'},
+  ];
+
+  // Badge category labels
+  const CAT_LABELS={
+    quiz:'🎯 퀴즈 도전 · Quiz Challenge',
+    perf:'💯 완벽주의자 · Perfectionist',
+    mast:'🧠 단어 마스터 · Word Mastery',
+    str: '🔥 학습 스트릭 · Study Streak',
+    cat: '📂 카테고리 정복 · Category Conquest',
+    xp:  '✨ 경험치 · XP & Level',
+    spec:'🐋 특별 업적 · Special',
+  };
+
+  // Progress for a badge (curr, max, pct)
+  function bprog(b){
+    if(b.thresh==='topik1'){
+      const a=Math.min(masteryDone,150),amax=150;
+      const c=Math.min(g.quizzes||0,50),cmax=50;
+      const pct=Math.round((a/amax+c/cmax)/2*100);
+      return {curr:pct,max:100,pct,dual:[`단어 ${a}/${amax}`,`퀴즈 ${c}/${cmax}`]};
+    }
+    const maxV=b.val===0?(b.thresh==='mastery'?totalWords:b.thresh==='cats'?DATA.length:9999):b.val;
+    const curr=vals[b.thresh]||0;
+    return {curr,max:maxV,pct:Math.min(100,Math.round(curr/maxV*100))};
   }
-  h += `</div><p style="font-size:.74rem;color:var(--tx3);margin-top:14px">
-    ${earned.length} / ${BADGES.length}개 획득 · Badges earned</p>`;
-  document.getElementById('mp-panel-1').innerHTML = h;
+
+  // "Next Up" — closest locked badges (10-99%)
+  const nextUp=BADGES
+    .filter(b=>!earned.includes(b.id))
+    .map(b=>{const p=bprog(b);return{b,p};})
+    .filter(x=>x.p.pct>=5&&x.p.pct<100)
+    .sort((a,b2)=>b2.p.pct-a.p.pct)
+    .slice(0,3);
+
+  let h='';
+
+  // ── Summary bar ──────────────────────────────────────────────
+  h+=`<div class="bdg-summary">
+    <div style="text-align:center">
+      <div style="font-size:1.6rem;font-weight:800;color:var(--tx);line-height:1">${earned.length}</div>
+      <div style="font-size:.68rem;color:var(--tx3)">/ ${BADGES.length} 획득</div>
+    </div>
+    <div style="flex:1">
+      <div style="height:8px;background:var(--brd2);border-radius:4px;overflow:hidden;margin-bottom:5px">
+        <div style="width:${Math.round(earned.length/BADGES.length*100)}%;height:100%;border-radius:4px;
+          background:linear-gradient(90deg,#f59e0b,#8b5cf6);transition:.6s"></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${T.map((t,i)=>{const n=BADGES.filter(b=>b.tier===i&&earned.includes(b.id)).length;
+          return n?`<span style="font-size:.65rem;font-weight:700;color:${t.color};
+            background:${t.bg};padding:2px 8px;border-radius:10px;border:1px solid ${t.border}">${t.ko} ${n}</span>`:'';}
+        ).join('')}
+      </div>
+    </div>
+  </div>`;
+
+  // ── Next Up ──────────────────────────────────────────────────
+  if(nextUp.length){
+    h+=`<div class="mp-sec-title" style="margin-bottom:10px">🎯 다음 목표 · Next Up</div>
+    <div class="bdg-nextup">`;
+    for(const{b,p}of nextUp){
+      const t=T[b.tier];
+      h+=`<div class="bdg-nu-card" style="border-color:${t.border}">
+        <div style="font-size:1.9rem;min-width:38px;text-align:center">${b.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <span style="font-size:.79rem;font-weight:700;color:var(--tx)">${b.name}</span>
+            <span style="font-size:.58rem;font-weight:800;color:${t.color};background:${t.bg};
+              padding:1px 6px;border-radius:8px;border:1px solid ${t.border}">${t.ko}</span>
+          </div>
+          <div style="font-size:.67rem;color:var(--tx3);margin-bottom:5px">
+            ${p.dual?p.dual.join(' · '):`${p.curr} / ${p.max}`} — ${b.desc}
+          </div>
+          <div style="height:6px;background:var(--brd2);border-radius:3px;overflow:hidden">
+            <div style="width:${p.pct}%;height:100%;background:${t.color};border-radius:3px;transition:.5s"></div>
+          </div>
+        </div>
+        <div style="font-size:.8rem;font-weight:800;color:${t.color};min-width:32px;text-align:right">${p.pct}%</div>
+      </div>`;
+    }
+    h+='</div>';
+  }
+
+  // ── Badge categories ──────────────────────────────────────────
+  const cats=[...new Set(BADGES.map(b=>b.cat))];
+  for(const cat of cats){
+    const bs=BADGES.filter(b=>b.cat===cat);
+    h+=`<div style="margin-bottom:20px">
+      <div class="mp-sec-title" style="margin-bottom:10px">${CAT_LABELS[cat]||cat}</div>
+      <div class="bdg-v2-grid">`;
+    for(const b of bs){
+      const has=earned.includes(b.id);
+      const t=T[b.tier];
+      const p=bprog(b);
+      if(has){
+        h+=`<div class="bdg-v2 earned" style="border-color:${t.border};background:${t.bg}">
+          <div class="bdg-v2-tier" style="color:${t.color}">${t.ko}</div>
+          <div class="bdg-v2-icon">${b.icon}</div>
+          <div class="bdg-v2-name">${b.name}</div>
+          <div class="bdg-v2-en">${b.nameEn}</div>
+        </div>`;
+      } else {
+        h+=`<div class="bdg-v2 locked" style="border-color:var(--brd2);background:var(--surf2)">
+          <div class="bdg-v2-tier" style="color:var(--tx3)">${t.ko}</div>
+          <div class="bdg-v2-icon">${b.icon}</div>
+          <div class="bdg-v2-name" style="color:var(--tx2)">${b.name}</div>
+          <div class="bdg-v2-prog">
+            <div class="bdg-v2-bar"><div class="bdg-v2-bar-fill" style="width:${p.pct}%;background:${t.color}"></div></div>
+            <div class="bdg-v2-cnt">${p.dual?p.pct+'%':`${p.curr}/${p.max}`}</div>
+          </div>
+        </div>`;
+      }
+    }
+    h+='</div></div>';
+  }
+
+  document.getElementById('mp-panel-1').innerHTML=h;
 }
 
 // ── Persistence ────────────────────────────────────────
