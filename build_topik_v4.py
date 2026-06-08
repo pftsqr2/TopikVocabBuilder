@@ -982,17 +982,7 @@ html = html.replace(
     "onclick=\"startTrivia(TV_CAT)\"",
     "onclick=\"showTvSets(TV_CAT)\"")
 
-# tv-result에서 세트 저장
-SAVE_TV_SCORE = """  // 세트 점수 저장
-  if(TV_SET_IDX>=0){
-    try{localStorage.setItem('bwk_tv_'+TV_CAT+'_'+TV_SET_IDX, TV_SCORE+'/'+TV_QS.length);}catch(e){}
-  }
-"""
-
-html = re.sub(
-    r'(function showTvResult\(\)\s*\{)',
-    r'\1\n' + SAVE_TV_SCORE,
-    html)
+# showTvResult 세트 저장 로직은 TOPIK_I_v3.html에 직접 포함됨 (중복 패치 불필요)
 
 # tv 섹션에 tv-sets-sel div 추가
 html = html.replace(

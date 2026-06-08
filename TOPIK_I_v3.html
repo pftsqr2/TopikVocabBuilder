@@ -1537,30 +1537,42 @@ async function submitAuth() {
   const email = document.getElementById('ain-email').value.trim();
   const pw    = document.getElementById('ain-pw').value;
   const errEl = document.getElementById('auth-err');
+  const btn   = document.getElementById('auth-submit-btn');
   errEl.textContent = '';
   if (!email || !pw) { errEl.textContent = '이메일과 비밀번호를 입력하세요 · Please enter email and password.'; return; }
+  btn.disabled = true; btn.textContent = '처리 중...';
+  const AUTH_MSGS = {
+    'auth/user-not-found':    '이메일을 찾을 수 없습니다 · Email not found.',
+    'auth/wrong-password':    '비밀번호가 틀렸습니다 · Wrong password.',
+    'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않습니다 · Incorrect email or password.',
+    'auth/email-already-in-use':'이미 사용 중인 이메일 · Email already in use.',
+    'auth/weak-password':     '비밀번호는 6자 이상 · Password must be at least 6 characters.',
+    'auth/invalid-email':     '올바른 이메일 형식이 아닙니다 · Invalid email format.',
+    'auth/too-many-requests': '너무 많은 시도로 잠시 차단됐어요. 잠시 후 다시 시도하거나 비밀번호를 재설정하세요.',
+    'auth/network-request-failed':'네트워크 오류 · Check your internet connection.',
+    'auth/user-disabled':     '비활성화된 계정입니다 · This account has been disabled.',
+    'auth/operation-not-allowed':'이메일/비밀번호 로그인이 비활성화됐습니다.',
+  };
   try {
     if (IS_REGISTER) {
       const name = document.getElementById('ain-name').value.trim();
       const cred = await auth.createUserWithEmailAndPassword(email, pw);
       if (name) await cred.user.updateProfile({ displayName: name });
-      await db.collection('users').doc(cred.user.uid).set({
-        email, displayName: name, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        streak:0, lastStudyDate:''
-      });
+      // Firestore profile save — non-fatal (auth succeeds even if this fails)
+      try {
+        await db.collection('users').doc(cred.user.uid).set({
+          email, displayName: name, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          streak:0, lastStudyDate:''
+        });
+      } catch(dbErr) { console.warn('Profile save failed (non-fatal):', dbErr.message); }
     } else {
       await auth.signInWithEmailAndPassword(email, pw);
     }
   } catch(e) {
-    const msgs = {
-      'auth/user-not-found':'이메일을 찾을 수 없습니다 · Email not found.',
-      'auth/wrong-password':'비밀번호가 틀렸습니다 · Wrong password.',
-      'auth/email-already-in-use':'이미 사용 중인 이메일 · Email already in use.',
-      'auth/weak-password':'비밀번호는 6자 이상 · Password must be at least 6 characters.',
-      'auth/invalid-email':'올바른 이메일 형식이 아닙니다 · Invalid email format.',
-      'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않습니다 · Incorrect email or password.'
-    };
-    errEl.textContent = msgs[e.code] || e.message;
+    errEl.style.color = '#dc2626';
+    errEl.textContent = AUTH_MSGS[e.code] || e.message;
+    btn.disabled = false;
+    btn.textContent = IS_REGISTER ? '회원가입 · Sign Up' : '로그인 · Login';
   }
 }
 async function doLogout() {
