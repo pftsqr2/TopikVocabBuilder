@@ -247,6 +247,7 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
   border:2px solid var(--brd2);background:var(--surf2);
   color:var(--tx);font-size:.8rem;font-weight:700;font-family:inherit;cursor:pointer}
 .sf-info{font-size:.75rem;font-weight:700;white-space:nowrap}
+.sfbtn.sf-done{border:1.5px solid #16a34a;color:#16a34a}
 .dir-bar{display:flex;gap:6px;margin-bottom:14px}
 .dbtn{padding:5px 16px;border-radius:16px;border:2px solid var(--brd);
   cursor:pointer;font-size:.79rem;font-weight:700;font-family:inherit;
@@ -1450,7 +1451,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── App State ─────────────────────────────────────────────────────────────────
 let currentUser = null;
-let PROG = {};          // { "cid_si": { score, pct, attempts, lastAt } }
+let PROG = (()=>{ try{ return JSON.parse(localStorage.getItem('bwk_prog')||'{}'); }catch(e){return {};} })();
+// { "cid_si": { score, pct, attempts, lastAt } }
 let TIME_START = {};    // { cid: epochMs }
 let CC = null;          // current category
 let CM = 'list';        // current mode
@@ -1545,7 +1547,8 @@ auth.onAuthStateChanged(async user => {
     updateEvalBar();
     updateWelcomeCTA();
   } else {
-    currentUser = null; PROG = {};
+    currentUser = null;
+    // Guest: keep localStorage PROG (don't wipe it)
     document.getElementById('uname').textContent = '';
     ['mypage-btn','logout-btn','admin-btn'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('signin-btn').style.display = '';
@@ -2083,6 +2086,15 @@ function showTriviaCat() {
   showTvCats();
 }
 
+// 첫 미완료 세트 찾기: 완료 안된 세트 중 가장 앞 것 반환, 다 완료면 0
+function nextUndoneSf(c) {
+  const sets = Math.ceil(c.words.length / 10);
+  for (let s = 0; s < sets; s++) {
+    if (!getProg(c.id, s)) return s;
+  }
+  return 0; // 전체 완료 → Set 1로 돌아가기
+}
+
 function setMode(m) {
   CM = m;
   ['list','card','quiz'].forEach(x=>{
@@ -2092,8 +2104,8 @@ function setMode(m) {
     btn.style.background = x===m&&CC ? CC.color : '';
   });
   if (m==='list') renderList();
-  else if (m==='card') initCard();
-  else if (m==='quiz') initQuiz();
+  else if (m==='card') initCard(nextUndoneSf(CC));
+  else if (m==='quiz') initQuiz(nextUndoneSf(CC));
 }
 function setModeQuizSet(sf){ setMode('quiz'); setTimeout(()=>initQuiz(sf),0); }
 
@@ -2160,33 +2172,37 @@ function catMatchesLF(cat){
 
 // ── CARD VIEW ─────────────────────────────────────────────────────────────────
 function initCard(sf) {
-  CSF = sf!==undefined ? sf : -1;
+  CSF = sf!==undefined ? sf : nextUndoneSf(CC);
   const pool = CSF<0 ? [...CC.words] : CC.words.slice(CSF*10,(CSF+1)*10);
   CW=shuffle([...pool]);
   CI=0; CDir='koen';
   renderCardUI();
 }
 function buildSfBar(sets, activeSf, color, clickFn, totalLabel) {
+  const doneLabel = (s) => {
+    const d = getProg(CC.id, s);
+    if (!d) return '';
+    return d.pct >= 80 ? ' ✓' : ` (${d.score})`;
+  };
   if (sets <= 8) {
-    // 버튼 방식 (소규모)
     let h = '';
     for(let s=0;s<sets;s++){
-      const isA=activeSf===s, done=getProg(CC.id,s);
-      h+=`<button class="sfbtn${isA?' active':''}" style="${isA?'background:'+color+';color:#fff':''}"
-        onclick="${clickFn}(${s})">Set ${s+1}${done?' ✓':''}</button>`;
+      const isA=activeSf===s, d=getProg(CC.id,s);
+      const dl=doneLabel(s);
+      h+=`<button class="sfbtn${isA?' active':''}${dl?' sf-done':''}" style="${isA?'background:'+color+';color:#fff':''}"
+        onclick="${clickFn}(${s})">Set ${s+1}${dl}</button>`;
     }
     h+=`<button class="sfbtn${activeSf<0?' active':''}" style="${activeSf<0?'background:'+color+';color:#fff':''}"
       onclick="${clickFn}(-1)">${totalLabel}</button>`;
     return `<div class="sf-bar">${h}</div>`;
   } else {
-    // 드롭다운 방식 (대규모)
     const cur = activeSf < 0 ? '전체' : `Set ${activeSf+1}`;
     const prev = activeSf > 0 ? activeSf-1 : (activeSf<0 ? sets-1 : -1);
     const next = activeSf < sets-1 ? activeSf+1 : (activeSf===sets-1 ? -1 : 0);
     let opts = '';
     for(let s=0;s<sets;s++){
-      const done=getProg(CC.id,s);
-      opts+=`<option value="${s}"${activeSf===s?' selected':''}>Set ${s+1}${done?' ✓':''}</option>`;
+      const dl=doneLabel(s);
+      opts+=`<option value="${s}"${activeSf===s?' selected':''}>Set ${s+1}${dl}</option>`;
     }
     opts+=`<option value="-1"${activeSf<0?' selected':''}>${totalLabel}</option>`;
     return `<div class="sf-bar sf-compact">
@@ -2286,7 +2302,7 @@ function cardNav(d){
 }
 // ── QUIZ VIEW ─────────────────────────────────────────────────────────────────
 function initQuiz(sf){
-  QSF=sf!==undefined?sf:-1; QDir='koen';
+  QSF=sf!==undefined?sf:nextUndoneSf(CC); QDir='koen';
   applyQuizFilter(); renderQuizUI();
 }
 function applyQuizFilter(){
@@ -2355,20 +2371,25 @@ function toggleHideEn(btn) {
 function renderQuizQ(){
   if(QI>=QW.length){
     const pct=QW.length?Math.round(QS/QW.length*100):0;
-    // Save progress (logged-in users only)
-    if(currentUser) {
-      if(QSF>=0){
-        const sc=QS+'/'+QW.length;
-        saveProgress(CC.id,QSF,sc);
-        logQuizAttempt(CC.id,QSF,sc,pct);
+    // ── 세트 완료 저장: 로그인/게스트 모두 ──────────────────────────────────
+    if(QSF>=0){
+      const sc=QS+'/'+QW.length;
+      const key=String(CC.id)+'_'+QSF;
+      // 최고 점수 또는 신규이면 저장
+      if(!PROG[key] || pct >= (PROG[key].pct||0)){
+        PROG[key] = { score:sc, pct, attempts:(PROG[key]?.attempts||0)+1, lastAt:Date.now() };
+        try{ localStorage.setItem('bwk_prog', JSON.stringify(PROG)); }catch(e){}
+      }
+      if(currentUser){
+        saveProgress(CC.id, QSF, sc);
+        logQuizAttempt(CC.id, QSF, sc, pct);
       } else {
-        const sc=QS+'/'+QW.length;
-        // All-words mode: log attempt only, do NOT overwrite individual set scores
-        logQuizAttempt(CC.id,-1,sc,pct);
+        setTimeout(showNudge, 3800);
       }
     } else {
-      // Guest: show nudge after user has had time to read score
-      setTimeout(showNudge, 3800);
+      // 전체 모드: 개별 세트 점수 덮어쓰지 않음
+      if(currentUser) logQuizAttempt(CC.id,-1,QS+'/'+QW.length,pct);
+      else setTimeout(showNudge, 3800);
     }
     // ── XP award ──
     const _xpEarned = Math.round(pct/10)*2 + (pct===100?10:0);
@@ -2404,8 +2425,19 @@ function renderQuizQ(){
       </div>
       ${_wrongHtml}
       <button class="qnext" style="display:block;margin-top:14px" onclick="applyQuizFilter();renderQuizUI()">↺ 다시 시작 · Try Again</button>
-      ${QSF>=0&&QSF<Math.ceil(CC.words.length/10)-1?
-        `<button class="qnext" style="display:block;margin-top:8px" onclick="initQuiz(${QSF+1})">▶ 다음 Set ${QSF+2} · Next Set</button>`:''}`;
+      ${(()=>{
+        const totalSets=Math.ceil(CC.words.length/10);
+        const nextSf=nextUndoneSf(CC);
+        // 다음 미완료 세트가 있고, 현재 세트와 다를 때만 표시
+        if(QSF>=0 && nextSf !== QSF){
+          return `<button class="qnext" style="display:block;margin-top:8px;background:#16a34a" onclick="initQuiz(${nextSf})">▶ 다음 Set ${nextSf+1} · Next Set</button>`;
+        }
+        if(QSF>=0 && QSF<totalSets-1){
+          return `<button class="qnext" style="display:block;margin-top:8px" onclick="initQuiz(${QSF+1})">▶ Set ${QSF+2} 다시하기</button>`;
+        }
+        return '';
+      })()}`;
+    renderSidebar();
     return;
   }
   const w=QW[QI];
