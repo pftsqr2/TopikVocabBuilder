@@ -507,6 +507,7 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 .tv-set-btn .tsn{font-size:1.1rem;font-weight:800;color:var(--tx)}
 .tv-set-btn .tsq{font-size:.7rem;color:var(--tx3);margin-top:3px}
 .tv-set-btn .tsc{font-size:.65rem;color:#16a34a;margin-top:2px;font-weight:700}
+.tv-set-all{grid-column:1/-1;background:var(--al)}
 
 /* ─── SET COMPLETE PULSE ─── */
 @keyframes set-complete-pop{
@@ -1305,31 +1306,31 @@ body {
     <div class="tv-section-title">🌟 K-Culture Trivia</div>
     <div class="tv-section-sub">카테고리를 선택하세요 · Choose a category — 10 random questions each round</div>
     <div class="tv-grid">
-      <div class="tv-cat" onclick=\"showTvSets('kpop')\" style="border-color:#ec4899">
+      <div class="tv-cat" onclick="showTvSets('kpop')" style="border-color:#ec4899">
         <span class="tv-cat-icon">🎵</span>
         <div class="tv-cat-name">K-POP</div>
         <div class="tv-cat-name-en">K팝 · Music & Idols</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick=\"showTvSets('kfood')\" style="border-color:#f59e0b">
+      <div class="tv-cat" onclick="showTvSets('kfood')" style="border-color:#f59e0b">
         <span class="tv-cat-icon">🍜</span>
         <div class="tv-cat-name">K-FOOD</div>
         <div class="tv-cat-name-en">한식 · Korean Cuisine</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick=\"showTvSets('kdrama')\" style="border-color:#6366f1">
+      <div class="tv-cat" onclick="showTvSets('kdrama')" style="border-color:#6366f1">
         <span class="tv-cat-icon">🎬</span>
         <div class="tv-cat-name">K-DRAMA / MOVIE</div>
         <div class="tv-cat-name-en">드라마 & 영화</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick=\"showTvSets('kceleb')\" style="border-color:#10b981">
+      <div class="tv-cat" onclick="showTvSets('kceleb')" style="border-color:#10b981">
         <span class="tv-cat-icon">⭐</span>
         <div class="tv-cat-name">K-CELEBRITY</div>
         <div class="tv-cat-name-en">유명인 · Famous Koreans</div>
         <div class="tv-cat-count">50 questions</div>
       </div>
-      <div class="tv-cat" onclick=\"showTvSets('ktravel')\" style="border-color:#0ea5e9">
+      <div class="tv-cat" onclick="showTvSets('ktravel')" style="border-color:#0ea5e9">
         <span class="tv-cat-icon">✈️</span>
         <div class="tv-cat-name">K-TRAVEL</div>
         <div class="tv-cat-name-en">여행 · Visit Korea</div>
@@ -2999,9 +3000,72 @@ const TV_PER_ROUND = 10;
 
 function shuffle(a){ return a.slice().sort(()=>Math.random()-.5); }
 
+// ── TRIVIA SET SELECTOR ───────────────────────────────────────────────────────
+const TV_SET_SIZE = 10;
+let TV_SET_IDX = -1;
+
 function showTvCats(){
   document.getElementById('tv-cats').style.display='block';
   document.getElementById('tv-quiz').style.display='none';
+  const ss = document.getElementById('tv-sets-sel');
+  if(ss) ss.style.display='none';
+}
+
+function showTvSets(cat) {
+  TV_CAT = cat;
+  const meta = TRIVIA_META[cat];
+  const total = TRIVIA_DB[cat].length;
+  const sets  = Math.ceil(total / TV_SET_SIZE);
+  let btns = '';
+  for (let s=0; s<sets; s++){
+    const score = getTvSetScore(cat, s);
+    btns += `<div class="tv-set-btn" onclick="startTriviaSet('${cat}',${s})" style="border-color:${meta.color}">
+      <div class="tsn">Set ${s+1}</div>
+      <div class="tsq">Q${s*TV_SET_SIZE+1}–${Math.min((s+1)*TV_SET_SIZE,total)}</div>
+      ${score ? `<div class="tsc">✓ ${score}</div>` : ''}
+    </div>`;
+  }
+  btns += `<div class="tv-set-btn tv-set-all" onclick="startTriviaSet('${cat}',-1)" style="border-color:${meta.color}">
+    <div class="tsn">전체 랜덤</div>
+    <div class="tsq">${TV_SET_SIZE}문제 랜덤 출제</div>
+  </div>`;
+
+  document.getElementById('tv-cats').style.display = 'none';
+  document.getElementById('tv-quiz').style.display = 'none';
+  const ss = document.getElementById('tv-sets-sel');
+  ss.style.display = 'block';
+  ss.innerHTML = `
+    <button class="tv-back" onclick="showTvCats()">← 카테고리</button>
+    <div style="display:flex;align-items:center;gap:12px;margin:14px 0 8px">
+      <span style="font-size:2.2rem">${meta.label.split(' ')[0]}</span>
+      <div>
+        <div style="font-weight:800;font-size:1rem">${meta.label}</div>
+        <div style="font-size:.75rem;color:var(--tx3)">${total}문제 · ${sets} Sets (${TV_SET_SIZE}문제/set)</div>
+      </div>
+    </div>
+    <div class="tv-set-grid">${btns}</div>`;
+}
+
+function getTvSetScore(cat, s){
+  try{ return localStorage.getItem('bwk_tv_'+cat+'_'+s)||''; }catch(e){return '';}
+}
+
+function startTriviaSet(cat, setIdx) {
+  TV_CAT = cat; TV_SET_IDX = setIdx;
+  const all = TRIVIA_DB[cat];
+  TV_QS = setIdx < 0
+    ? shuffle(all).slice(0, TV_SET_SIZE)
+    : shuffle(all.slice(setIdx*TV_SET_SIZE, (setIdx+1)*TV_SET_SIZE));
+  TV_IDX=0; TV_SCORE=0; TV_ANS=null;
+  const meta = TRIVIA_META[cat];
+  const lb = document.getElementById('tv-cat-label');
+  lb.textContent = meta.label + (setIdx>=0 ? ' · Set '+(setIdx+1) : ' · 랜덤');
+  lb.style.background = meta.color;
+  const ss = document.getElementById('tv-sets-sel');
+  if(ss) ss.style.display='none';
+  document.getElementById('tv-cats').style.display='none';
+  document.getElementById('tv-quiz').style.display='block';
+  renderTvQ();
 }
 
 function startTrivia(cat){
