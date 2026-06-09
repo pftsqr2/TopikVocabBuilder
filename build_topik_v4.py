@@ -1004,6 +1004,11 @@ out = BASE / "TOPIK_I_v4.html"
 with open(out, "w", encoding="utf-8") as f:
     f.write(html)
 
+# GitHub Pages entry point — keep in sync with v4
+idx = BASE / "index.html"
+with open(idx, "w", encoding="utf-8") as f:
+    f.write(html)
+
 size_kb = out.stat().st_size // 1024
 print(f"\n✅ 저장 완료: {out}")
 print(f"   파일 크기: {size_kb:,} KB")

@@ -60,7 +60,7 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 
 /* ── Auth Modal ── */
 #auth-overlay{position:fixed;inset:0;background:rgba(50,20,5,.6);z-index:9999;
-  display:flex;align-items:center;justify-content:center;padding:16px}
+  display:none;align-items:center;justify-content:center;padding:16px}
 #auth-box{background:var(--surf);border-radius:20px;width:100%;max-width:360px;
   padding:32px 28px;box-shadow:0 12px 50px rgba(100,40,5,.25);
   border:1.5px solid var(--brd)}
@@ -1604,6 +1604,8 @@ auth.onAuthStateChanged(async user => {
     document.getElementById('uname').textContent = '';
     ['mypage-btn','logout-btn','admin-btn'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('signin-btn').style.display = '';
+    // Show login overlay now that auth has resolved with no session
+    document.getElementById('auth-overlay').style.display = 'flex';
     // Guest mode: show app without login
     renderSidebar();
     updateEvalBar();
