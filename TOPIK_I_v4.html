@@ -2330,6 +2330,29 @@ function renderCardUI() {
   document.getElementById('kv').innerHTML = `
     ${buildSfBar(sets, CSF, c.color, 'initCard', '전체 · All ('+c.words.length+')')}
     <div class="dir-bar">
+      <button class="dbtn${CDir==='koen'?' active':''}" onclick="setCDir('koen')" title="Korean first">🇰🇷 한국어 먼저</button>
+      <button class="dbtn${CDir==='enko'?' active':''}" onclick="setCDir('enko')" title="English first">🇬🇧 English 먼저</button>
+    </div>
+    <div class="pgbar">
+      <div class="pgtrack"><div class="pgfill" id="cpg" style="width:${CW.length?Math.round(CI/CW.length*100):0}%;background:${c.color}"></div></div>
+      <div class="pgnum" id="cpgn">${CI+1} / ${CW.length}</div>
+    </div>
+    <div class="card-filter-row" id="card-filter-row">
+      <button class="cft cft-0 on" id="cft-0" onclick="toggleCFilter(0)">❓ 잘 모르겠어요</button>
+      <button class="cft cft-1 on" id="cft-1" onclick="toggleCFilter(1)">🌱 조금 알겠어요</button>
+      <button class="cft cft-2" id="cft-2" onclick="toggleCFilter(2)">✅ 확실히 알겠어요</button>
+    </div>
+    <div class="card-wrap">
+      <div class="card" id="crd" onclick="cardFlip()" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();cardFlip()}">
+        <div class="card-front" id="cf"></div>
+        <div class="card-back" id="cb" style="display:none"></div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="cnav" onclick="cardNav(-1)">◀ Prev</button>
+      <button class="cconfirm" id="cconfirm-btn" onclick="confirmCard()">✅ 확실히 알겠어요</button>
+      <button class="cnav" onclick="cardNav(1)">Next ▶</button>
+    </div>`;
   rebuildCardPool();
 }
 function setCDir(d){ CDir=d; renderCardUI(); }
@@ -2403,6 +2426,18 @@ function renderQuizUI(){
   document.getElementById('qv').innerHTML=`
     ${buildSfBar(sets, QSF, c.color, 'initQuiz', '전체 ('+QW.length+')')}
     <div class="qdir">
+      <button class="qdbtn${QDir==='koen'?' active':''}" onclick="setQDir('koen')" title="Korean word shown → choose English meaning">🇰🇷 한국어 → English 🇬🇧</button>
+      <button class="qdbtn${QDir==='enko'?' active':''}" onclick="setQDir('enko')" title="English meaning shown → choose Korean word">🇬🇧 English → 한국어 🇰🇷</button>
+    </div>
+    <div class="qhdr">
+      <div class="qscore" id="qsc">0 / 0</div>
+      <button class="qreset" onclick="applyQuizFilter();renderQuizUI()">↺ 재시작 · Restart</button>
+    </div>
+    <div class="qprogbar">
+      <div class="pgtrack" style="flex:1"><div class="pgfill" id="qpg" style="width:0%;background:${c.color}"></div></div>
+      <div class="pgnum" id="qpgn">0 / ${QW.length}</div>
+    </div>
+    <div id="qbody"></div>`;
   renderQuizQ();
 }
 function setQDir(d){ QDir=d; applyQuizFilter(); renderQuizUI(); }
