@@ -1009,6 +1009,11 @@ idx = BASE / "index.html"
 with open(idx, "w", encoding="utf-8") as f:
     f.write(html)
 
+# Legacy URL /v3.html — keep in sync so old bookmarks still work
+v3 = BASE / "v3.html"
+with open(v3, "w", encoding="utf-8") as f:
+    f.write(html)
+
 size_kb = out.stat().st_size // 1024
 print(f"\n✅ 저장 완료: {out}")
 print(f"   파일 크기: {size_kb:,} KB")
