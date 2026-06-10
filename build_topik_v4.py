@@ -565,10 +565,203 @@ if untagged_words:
     _add_scenario_cat("ETC", "📝 기타 어휘", "Other Vocabulary", "#94a3b8", untagged_words)
 
 
-# ── 3-6급 레벨별 카테고리 ─────────────────────────────────────────────────────
+# ── 3-6급 TOPIK 시험 주제별 카테고리 ──────────────────────────────────────────
 LEVEL_COLORS = {3:"#16a34a", 4:"#2563eb", 5:"#9333ea", 6:"#dc2626"}
 LEVEL_EMOJI  = {3:"📗", 4:"📘", 5:"📙", 6:"📕"}
 LEVEL_NAMES  = {3:"초중급", 4:"중급", 5:"중고급", 6:"고급"}
+
+# TOPIK 시험 주제 8개
+# 키워드는 영문 뜻(english 필드)에 대해 소문자 부분 문자열 검색
+TOPIK_TOPICS = [
+    ("🏛️ 사회·경제",  "Society & Economy",
+     ["society","social","economy","economic","econom","politics","political","government","policy",
+      "law","legal","rule","right","vote","election","nation","national","citizen","population",
+      "welfare","poverty","wealth","income","tax","bank","account","financ","industry","market",
+      "trade","company","business","labor","employ","unemploy","wage","salary","contract",
+      "invest","capital","price","cost","profit","budget","currency","debt","loan","public",
+      "institution","administration","organization","community","constitution","democracy",
+      "military","war","peace","conflict","crisis","reform","revolution","protest","movement",
+      "security","justice","court","crime","punishment","regulation","minister","parliament",
+      "official","authority","region","district","urban","rural","immigr","diplomat",
+      "individual","personal","private","public","subscribe","subscriber","membership",
+      "register","registration","member","fee","charge","discount","refund","receipt",
+      "insurance","pension","tax","fund","stock","bond","property","real estate","rent",
+      "lease","ownership","consumer","producer","supply","demand","competition","monopoly",
+      "free trade","export","import","globalization","inflation","recession","growth",
+      "development","gdp","poverty","inequality","discrimination","freedom","liberty",
+      "human rights","protest","demonstration","strike","union","association","club",
+      "committee","board","council","assembly","congress","senate","mayor","president",
+      "prime minister","ambassador","treaty","agreement","coalition","alliance",
+      "signboard","bulletin","notice","announcement","advertisement","commercial",
+      "guard","security guard","police","soldier","military","army","navy","air force",
+      "crime","criminal","theft","robbery","fraud","corruption","bribe",
+      "hospital fee","tuition","expense","budget","financial","monetary"]),
+
+    ("💭 심리·감정",  "Psychology & Emotions",
+     ["feel","feeling","emotion","emotional","happy","happiness","joy","joyful","glad",
+      "sad","sadness","sorrow","sorrowful","cry","tears","angry","anger","rage","furious",
+      "fear","afraid","scared","scare","frighten","terror","love","beloved","hate","hatred",
+      "lonely","loneliness","alone","isolated","proud","pride","shame","ashamed","guilt",
+      "embarrass","surprise","shock","shocked","hope","hopeful","despair","desperate",
+      "desire","wish","will","mind","heart","soul","spirit","psychological","mental",
+      "attitude","personality","character","mood","feeling","stress","anxiety","anxious",
+      "worry","worried","nervous","tension","confidence","trust","distrust","jealous",
+      "envy","regret","nostalgia","nostalgic","comfort","console","relief","relieved",
+      "excited","excite","bored","bore","frustrated","disappoint","satisfied","satisf",
+      "curious","curiosity","sympathy","empathy","resentment","passion","passionate",
+      "courage","courageous","coward","arrogant","humble","optimistic","pessimistic",
+      "sensitive","rational","instinct","intuition","conscience","dream","aspiration",
+      "impression","impressed","touching","moved","appreciate","appreciation","admire",
+      "encourage","motivation","inspired","inspiration","sense","sensation","perception",
+      "instinct","intuition","memory","remember","forget","miss","longing","yearning",
+      "confession","confess","honest","sincere","faithful","loyal","betray","jealous",
+      "bitter","sweet emotion","warm","cold feeling","thrill","excited","disappointment"]),
+
+    ("🎨 문화·예술",  "Culture, Arts & Media",
+     ["culture","cultural","art","artistic","artist","music","musical","song","sing","singer",
+      "dance","dancer","movie","film","cinema","theater","drama","novel","literature",
+      "literary","story","poem","poetry","poet","tradition","traditional","festival",
+      "media","news","newspaper","magazine","broadcast","broadcasting","publish","book",
+      "fashion","design","designer","paint","painting","draw","drawing","exhibit","exhibition",
+      "museum","gallery","sculpture","photograph","photography","photographer",
+      "language","dialect","religion","religious","belief","ceremony","ritual","myth",
+      "legend","heritage","custom","celebrity","famous","fame","popular","trend","trendy",
+      "lifestyle","advertising","journalism","journalist","interview","review","critic",
+      "award","prize","competition","recreation","hobby","leisure","tour","tourism",
+      "tourist","architecture","architect","monument","landmark","palace","temple","shrine",
+      "sport","sports","athlete","stadium","arena","match","game","competition","champion",
+      "performance","perform","performer","concert","audience","fan","idol","star",
+      "comic","cartoon","animation","webtoon","podcast","streaming","content","creator",
+      "folk","legend","myth","heritage","ancient","historical","dynasty","kingdom","era",
+      "royal","palace","museum piece","artifact","relic","souvenir","exhibition hall",
+      "theater","stage","actor","actress","director","producer","script","screenplay",
+      "K-pop","K-drama","hallyu","Korean wave","entertainment","media","pop culture"]),
+
+    ("🌿 자연·환경",  "Nature & Environment",
+     ["nature","natural","environment","environmental","animal","plant","tree","flower",
+      "mountain","river","sea","ocean","lake","pond","stream","sky","air","water","earth",
+      "land","ground","weather","season","rain","snow","wind","temperature","climate",
+      "forest","jungle","field","soil","stone","rock","bird","fish","insect","bug",
+      "ecosystem","species","ecology","ecological","pollution","pollute","disaster",
+      "earthquake","flood","drought","volcano","tsunami","hurricane","typhoon","storm",
+      "fog","cloud","desert","glacier","atmosphere","resource","energy","recycle","waste",
+      "conservation","sustainable","biodiversity","habitat","wildlife","crop","harvest",
+      "agriculture","farming","farm","garden","botanical","mineral","fossil","coal",
+      "coast","beach","island","valley","plain","plateau","sunrise","sunset","star",
+      "moon","space","universe","galaxy","planet","comet","heat","cold","warm","cool",
+      "humidity","pressure","oxygen","carbon","nitrogen","soil","sand","grass","leaf",
+      "root","seed","fruit","berry","mushroom","bamboo","pine","oak","willow","lotus",
+      "rose","tulip","cherry blossom","chrysanthemum","forsythia","iris","dandelion",
+      "dog","cat","rabbit","horse","cow","pig","sheep","goat","deer","bear","tiger",
+      "lion","elephant","monkey","bird","eagle","sparrow","swallow","butterfly",
+      "cultivate","grow","plant","harvest","seasonal","spring","summer","autumn","winter",
+      "gas","air pollution","water pollution","global warming","ozone","climate change",
+      "dry","humid","freezing","thirst","persimmon","sweet potato","vegetable","herb"]),
+
+    ("💉 의료·건강",  "Health & Medicine",
+     ["health","healthy","medical","medicine","doctor","physician","hospital","clinic",
+      "disease","sick","illness","ill","pain","ache","hurt","wound","injury","cure",
+      "treat","treatment","therapy","symptom","diagnosis","diagnose","surgery","operation",
+      "operate","body","physical","exercise","workout","diet","nutrition","blood","bone",
+      "muscle","brain","organ","nerve","cell","virus","bacteria","infection","infectious",
+      "immune","immunity","vaccine","vaccination","drug","medication","pill","tablet",
+      "pharmacy","pharmacist","nurse","patient","emergency","recovery","recover","heal",
+      "prevention","prevent","hygiene","hygienic","sleep","fatigue","tired","exhausted",
+      "obesity","obese","fat","diabetes","cancer","allergy","allergic","wellness","well",
+      "rehabilitation","disability","disabled","fever","headache","stomach","breath",
+      "breathing","respiratory","heart","lung","kidney","liver","intestine","skin","eye",
+      "ear","tooth","dental","pregnancy","pregnant","birth","baby","newborn","aging",
+      "elderly","senior","mental health","depression","anxiety disorder","trauma",
+      "symptom","prognosis","prescription","dosage","side effect","aftereffect",
+      "ambulance","first aid","bandage","injection","blood pressure","pulse","weight",
+      "height","bmi","calorie","protein","vitamin","mineral","supplement","organic",
+      "itchy","itch","dry skin","rash","sore","swelling","inflammation","fracture",
+      "dislocation","sprain","bruise","blister","nausea","vomit","diarrhea","constipation",
+      "insomnia","sleepy","drowsy","dizzy","faint","pale","thirst","dehydration"]),
+
+    ("📚 교육·학습",  "Education & Learning",
+     ["education","educate","educational","school","study","learn","learning","teach",
+      "teaching","teacher","professor","instructor","tutor","coach","student","pupil",
+      "class","classroom","grade","score","exam","test","quiz","university","college",
+      "research","knowledge","skill","skilled","language","major","subject","course",
+      "library","textbook","lecture","lesson","lesson plan","scholarship","degree",
+      "diploma","literacy","literate","curriculum","kindergarten","elementary",
+      "training","workshop","seminar","thesis","dissertation","academic","intellectual",
+      "creative","think","logic","logical","reason","analyze","evaluate","understand",
+      "memorize","practice","progress","achievement","talent","genius","intelligence",
+      "wisdom","philosophy","history","geography","mathematics","science","literature",
+      "assignment","homework","report","presentation","portfolio","graduation","ceremony",
+      "enrollment","register","application","admission","campus","dormitory","cafeteria",
+      "lecture hall","lab","experiment","field trip","exchange","abroad","overseas study",
+      "bilingual","native speaker","fluent","vocabulary","grammar","pronunciation",
+      "comprehension","reading","writing","listening","speaking","communicate",
+      "principle","concept","theory","explanation","example","question","answer",
+      "discussion","debate","group work","project","committee","club","activity",
+      "after school","academy","private tutor","cram school","self-study","review",
+      "preview","preview","summary","outline","chart","diagram","graph","table"]),
+
+    ("⚙️ 과학·기술",  "Science & Technology",
+     ["science","scientific","scientist","technology","technological","technolog","computer",
+      "internet","online","digital","digitize","electric","electrical","electricity",
+      "electronic","energy","machine","device","gadget","appliance","system","software",
+      "hardware","network","wi-fi","bluetooth","robot","robotic","artificial intelligence",
+      "ai","program","programmer","code","coding","data","database","server","cloud",
+      "app","application","platform","website","discover","discovery","invent","invention",
+      "develop","development","experiment","hypothesis","theory","formula","equation",
+      "physics","chemistry","biology","biochemistry","atom","molecule","element",
+      "compound","reaction","chemical","force","gravity","light","sound","wave",
+      "radiation","nuclear","space","planet","solar system","galaxy","satellite","rocket",
+      "aviation","aircraft","airplane","automobile","car","vehicle","fuel","battery",
+      "solar energy","wind energy","engine","mechanism","automation","automatic",
+      "innovation","patent","laboratory","measurement","statistics","calculation",
+      "algorithm","communication","smartphone","mobile","tablet","laptop","monitor",
+      "keyboard","mouse","printer","scanner","camera","microphone","speaker","screen",
+      "signal","frequency","satellite","GPS","navigation","smart","sensor","chip",
+      "semiconductor","circuit","wire","cable","voltage","current","resistance",
+      "gas","steam","pressure","vacuum","temperature","chemical substance","material",
+      "plastic","metal","glass","fiber","rubber","ceramic","composite","nanotechnology",
+      "biotechnology","genetic","genome","DNA","RNA","evolution","mutation","clone",
+      "humidifier","air conditioner","heater","refrigerator","washing machine","oven",
+      "microwave","vacuum cleaner","fan","elevator","escalator","automatic","remote"]),
+
+    ("🏡 일상·생활",  "Daily Life & Living",
+     ["daily","everyday","life","live","living","home","house","household","family",
+      "food","meal","eat","eating","drink","drinking","cook","cooking","sleep","sleeping",
+      "travel","transport","transportation","shop","shopping","buy","purchase","sell",
+      "wear","cloth","clothes","clothing","garment","outfit","dress","tool","use","work",
+      "job","occupation","office","meet","visit","phone","call","money","pay","payment",
+      "road","street","walk","walking","run","running","drive","driving","bus","subway",
+      "train","taxi","market","store","shop","mall","restaurant","cafe","coffee shop",
+      "hotel","inn","room","bedroom","kitchen","bathroom","furniture","sofa","table",
+      "chair","bed","wardrobe","shelf","neighbor","friend","acquaintance","relation",
+      "schedule","plan","routine","appointment","errand","delivery","package","post",
+      "mail","convenience store","move","moving","rent","lease","commute","morning",
+      "evening","night","weekend","holiday","vacation","birthday","party","wedding",
+      "anniversary","funeral","ceremony","child","parent","mother","father","sibling",
+      "brother","sister","husband","wife","spouse","couple","elderly","pet","garden",
+      "apartment","neighborhood","address","floor","room","stairs","elevator","parking",
+      "powder","stove","humidifier","mop","fold","laundry","wash","clean","tidy",
+      "garbage","trash","recycle","repair","fix","replace","change","cash","coin",
+      "wallet","purse","bag","suitcase","umbrella","towel","soap","shampoo","toothbrush",
+      "mirror","clock","alarm","calendar","notebook","pen","pencil","scissors","tape",
+      "glue","stamp","envelope","box","jar","bottle","cup","bowl","plate","spoon","fork",
+      "chopstick","cutting board","pot","pan","kettle","blender","toaster","oven",
+      "grill","microwave","iron","hanger","pillow","blanket","mat","curtain","door",
+      "window","lock","key","switch","lamp","candle","flower pot","bookshelf",
+      "sweet potato","persimmon","fruit","vegetable","groceries","ingredient","seasoning",
+      "sauce","oil","sugar","salt","pepper","vinegar","soy sauce","flour","starch",
+      "chopstick","signboard","sign","announcement","memo","receipt","invoice","bill"]),
+]
+
+def classify_topik_topic(eng_meaning: str):
+    """영문 뜻을 보고 TOPIK 주제 인덱스 반환 (0~7). 매칭 없으면 -1."""
+    m = eng_meaning.lower()
+    best_idx, best_score = -1, 0
+    for idx, (ko, en, kws) in enumerate(TOPIK_TOPICS):
+        score = sum(1 for kw in kws if kw in m)
+        if score > best_score:
+            best_score, best_idx = score, idx
+    return best_idx  # -1 이면 기타
 
 LEVEL_DATA = []
 cat_id = 17 + len(NEW_DATA_12)  # 기존 16 + 시나리오 수
@@ -578,21 +771,42 @@ for lv in range(3, 7):
     emoji    = LEVEL_EMOJI[lv]
     lv_name  = LEVEL_NAMES[lv]
 
-    # POS 그룹 분류
-    nouns   = [w for w in lv_words if w["pos_en"] in ("noun","bound noun","pronoun","numeral")]
-    verbs   = [w for w in lv_words if w["pos_en"] in ("verb","adjective")]
-    others  = [w for w in lv_words if w not in nouns and w not in verbs]
+    # 주제별 버킷
+    buckets = [[] for _ in TOPIK_TOPICS]
+    other_bucket = []
+    for w in lv_words:
+        eng = word_data(w)[0] or ""  # 실제 영문 뜻 사용
+        idx = classify_topik_topic(eng)
+        if idx >= 0:
+            buckets[idx].append(w)
+        else:
+            other_bucket.append(w)
 
-    groups = [
-        (f"{emoji} {lv}급 명사",       f"TOPIK {lv} · Nouns ({lv_name})",       nouns),
-        (f"{emoji} {lv}급 동사/형용사", f"TOPIK {lv} · Verbs & Adj. ({lv_name})", verbs),
-        (f"{emoji} {lv}급 부사/기타",   f"TOPIK {lv} · Adverbs & More ({lv_name})", others),
-    ]
-    for ko, en, wlist in groups:
-        if not wlist:
-            continue
+    # 카테고리 생성 (단어 있는 것만)
+    groups = []
+    for i, (topic_ko, topic_en, _) in enumerate(TOPIK_TOPICS):
+        if buckets[i]:
+            short_name = topic_ko.split(" ",1)[1].split("·")[0].strip()
+            groups.append((
+                f"{emoji} {lv}급 {topic_ko.split(' ',1)[1]}",
+                f"TOPIK {lv} · {topic_en} ({lv_name})",
+                short_name,
+                buckets[i],
+            ))
+    # 분류 안 된 단어들은 품사별로 구분 (기타·일반 대신)
+    if other_bucket:
+        nouns_o  = [w for w in other_bucket if w["pos_en"] in ("noun","bound noun","pronoun","numeral")]
+        verbs_o  = [w for w in other_bucket if w["pos_en"] in ("verb","adjective")]
+        others_o = [w for w in other_bucket if w not in nouns_o and w not in verbs_o]
+        if nouns_o:
+            groups.append((f"{emoji} {lv}급 명사", f"TOPIK {lv} · Nouns ({lv_name})", f"{lv}급명사", nouns_o))
+        if verbs_o:
+            groups.append((f"{emoji} {lv}급 동사·형용사", f"TOPIK {lv} · Verbs & Adj. ({lv_name})", f"{lv}급동형", verbs_o))
+        if others_o:
+            groups.append((f"{emoji} {lv}급 부사·기타", f"TOPIK {lv} · Adverbs & More ({lv_name})", f"{lv}급기타", others_o))
+
+    for ko, en, short, wlist in groups:
         entries = [make_word_entry(w, i+1) for i, w in enumerate(wlist)]
-        short   = f"{lv}급{'명사' if '명사' in ko else '동형' if '동사' in ko else '기타'}"
         LEVEL_DATA.append({
             "id":    cat_id,
             "ko":    ko,
