@@ -1690,27 +1690,34 @@ async function sendReset() {
 
 // ── Firestore Progress ────────────────────────────────────────────────────────
 async function loadProgress() {
+  // localStorage 백업 먼저 읽기 (auth null 발화로 PROG={} 초기화되어도 보존)
+  let lsBackup = {};
+  try { lsBackup = JSON.parse(localStorage.getItem('bwk_progress')||'{}'); } catch(e){}
   try {
     const doc = await db.collection('progress').doc(currentUser.uid).get();
     const remote = doc.exists ? (doc.data().sets || {}) : {};
-    // Merge: keep whichever entry has more attempts (guest session wins if fresher)
-    const merged = { ...remote };
+    // Merge: Firestore + localStorage backup + current PROG (highest attempts wins)
+    const merged = { ...lsBackup, ...remote };
+    for (const k of Object.keys(remote)) {
+      const ls = lsBackup[k], re = remote[k];
+      if (ls && (ls.attempts||0) > (re.attempts||0)) merged[k] = ls;
+    }
     for (const k of Object.keys(PROG)) {
-      if (!remote[k] || (PROG[k].attempts||0) >= (remote[k].attempts||0)) {
-        merged[k] = PROG[k];
-      }
+      if (!merged[k] || (PROG[k].attempts||0) > (merged[k].attempts||0)) merged[k] = PROG[k];
     }
     PROG = merged;
     console.log('[Progress] 로드 완료:', Object.keys(PROG).length, '개 세트');
-    // Cache to localStorage so progress loads instantly on next visit
     try { localStorage.setItem('bwk_progress', JSON.stringify(PROG)); } catch(e){}
-    // If guest had progress, persist the merge back to Firestore
-    const hasGuestData = Object.keys(PROG).some(k => !remote[k]);
-    if (hasGuestData) {
+    const hasLocalData = Object.keys(PROG).some(k => !remote[k]);
+    if (hasLocalData) {
       db.collection('progress').doc(currentUser.uid)
         .set({ sets: PROG }, { merge: true }).catch(e => console.warn('mergeProgress', e));
     }
-  } catch(e) { console.warn('loadProgress', e); }
+  } catch(e) {
+    // Firestore 실패 시 localStorage 백업으로 복원
+    if (Object.keys(lsBackup).length > 0) PROG = lsBackup;
+    console.warn('loadProgress', e);
+  }
 }
 
 async function saveProgress(cid, si, score) {

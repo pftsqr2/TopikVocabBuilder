@@ -965,7 +965,8 @@ NEW_RENDER_SIDEBAR = r"""function renderSidebar() {
 
   let html = lfBar;
   SECTIONS.forEach(sec => {
-    const cats = visible.filter(c => (c.lv_min||1) <= sec.max && (c.lv_max||6) >= sec.min);
+    // 카테고리는 lv_min 기준 섹션에만 표시 (중복 방지)
+    const cats = visible.filter(c => (c.lv_min||1) >= sec.min && (c.lv_min||1) <= sec.max);
     if(!cats.length) return;
     html += `<div class="sb-sec ${sec.cls}">${sec.label}</div>` + cats.map(renderCatItem).join('');
   });
