@@ -1688,33 +1688,88 @@ async function sendReset() {
   }
 }
 
+// ── Firestore flat-key → nested 변환 helper ──────────────────────────────────
+// Firestore에서 set()+merge로 저장된 flat key ("sets.1_0.pct")를
+// 중첩 구조 {sets:{"1_0":{pct,...}}, timeSpent:{"1":4735}} 로 복원
+function parseProgDoc(raw) {
+  const sets = {};
+  const timeSpent = {};
+  let hasFlatKeys = false;
+  // 1단계: flat key 파싱 (낮은 우선순위)
+  for (const [k, v] of Object.entries(raw || {})) {
+    if (k.startsWith('sets.')) {
+      hasFlatKeys = true;
+      const rest = k.slice(5);            // "1_0.pct"
+      const d = rest.lastIndexOf('.');
+      if (d > 0) {
+        const sk = rest.slice(0, d);      // "1_0"
+        const fld = rest.slice(d + 1);    // "pct"
+        if (!sets[sk]) sets[sk] = {};
+        sets[sk][fld] = v;
+      }
+    } else if (k.startsWith('timeSpent.')) {
+      hasFlatKeys = true;
+      const cid = k.slice(10);
+      if (typeof v === 'number') timeSpent[cid] = v;
+    }
+  }
+  // 2단계: 중첩 구조 (높은 우선순위 - flat key 덮어씀)
+  if (raw && raw.sets) {
+    for (const [sk, sv] of Object.entries(raw.sets)) {
+      sets[sk] = { ...(sets[sk] || {}), ...(sv || {}) };
+    }
+  }
+  if (raw && raw.timeSpent) {
+    for (const [cid, secs] of Object.entries(raw.timeSpent)) {
+      if (typeof secs === 'number') timeSpent[cid] = secs;
+    }
+  }
+  return { sets, timeSpent, hasFlatKeys };
+}
+
 // ── Firestore Progress ────────────────────────────────────────────────────────
 async function loadProgress() {
-  // localStorage 백업 먼저 읽기 (auth null 발화로 PROG={} 초기화되어도 보존)
   let lsBackup = {};
   try { lsBackup = JSON.parse(localStorage.getItem('bwk_progress')||'{}'); } catch(e){}
   try {
-    const doc = await db.collection('progress').doc(currentUser.uid).get();
-    const remote = doc.exists ? (doc.data().sets || {}) : {};
-    // Merge: Firestore + localStorage backup + current PROG (highest attempts wins)
-    const merged = { ...lsBackup, ...remote };
-    for (const k of Object.keys(remote)) {
-      const ls = lsBackup[k], re = remote[k];
-      if (ls && (ls.attempts||0) > (re.attempts||0)) merged[k] = ls;
-    }
-    for (const k of Object.keys(PROG)) {
-      if (!merged[k] || (PROG[k].attempts||0) > (merged[k].attempts||0)) merged[k] = PROG[k];
+    const ref = db.collection('progress').doc(currentUser.uid);
+    const doc = await ref.get();
+    const { sets: remote, timeSpent: remoteTime, hasFlatKeys } = parseProgDoc(doc.exists ? doc.data() : {});
+
+    // timeSpent를 window 캐시에 저장 → openMyPage()에서 재사용
+    window._timeSpentCache = remoteTime;
+
+    // Merge: localStorage + Firestore (높은 pct 우선)
+    const merged = { ...lsBackup };
+    for (const [k, v] of Object.entries(remote)) {
+      if (!merged[k] || (v.pct||0) > (merged[k].pct||0)) merged[k] = v;
     }
     PROG = merged;
-    console.log('[Progress] 로드 완료:', Object.keys(PROG).length, '개 세트');
+    console.log('[Progress] 로드 완료:', Object.keys(PROG).length, '개 세트 | timeSpent:', Object.keys(remoteTime).length, '개 카테고리');
     try { localStorage.setItem('bwk_progress', JSON.stringify(PROG)); } catch(e){}
-    const hasLocalData = Object.keys(PROG).some(k => !remote[k]);
-    if (hasLocalData) {
-      db.collection('progress').doc(currentUser.uid)
-        .set({ sets: PROG }, { merge: true }).catch(e => console.warn('mergeProgress', e));
+
+    // flat key → 중첩 구조 마이그레이션 (1회성)
+    if (hasFlatKeys && doc.exists) {
+      const raw = doc.data();
+      const deletes = {};
+      for (const k of Object.keys(raw)) {
+        if (k.startsWith('sets.') || k.startsWith('timeSpent.')) {
+          deletes[k] = firebase.firestore.FieldValue.delete();
+        }
+      }
+      // 중첩 구조로 재작성 + flat key 삭제
+      ref.update({ ...deletes, sets: remote, timeSpent: remoteTime })
+        .catch(e => console.warn('[Migrate] flat→nested', e));
+    } else {
+      // localStorage에만 있는 데이터를 Firestore에 반영
+      const hasLocalOnly = Object.keys(PROG).some(k => !remote[k]);
+      if (hasLocalOnly) {
+        ref.update({ sets: PROG }).catch(() =>
+          ref.set({ sets: PROG, email: currentUser.email, displayName: currentUser.displayName||'' }, { merge: true })
+        );
+      }
     }
   } catch(e) {
-    // Firestore 실패 시 localStorage 백업으로 복원
     if (Object.keys(lsBackup).length > 0) PROG = lsBackup;
     console.warn('loadProgress', e);
   }
@@ -1724,38 +1779,55 @@ async function saveProgress(cid, si, score) {
   const key = String(cid) + '_' + si;
   const parts = score.split('/');
   const pct = parts.length===2 ? Math.round(parseInt(parts[0])/parseInt(parts[1])*100) : 0;
-  // Best-score protection: only save if new score is higher
   const prevPct = PROG[key]?.pct || 0;
+  const newAttempts = (PROG[key]?.attempts||0) + 1;
+
   if (pct <= prevPct) {
-    // Still track attempt count even if score didn't improve
-    PROG[key] = { ...PROG[key], attempts: (PROG[key]?.attempts||0)+1 };
+    PROG[key] = { ...PROG[key], attempts: newAttempts };
     if (!currentUser) return;
+    // update()는 dot-notation을 중첩 경로로 해석 → 올바른 Firestore 구조 생성
+    const ref = db.collection('progress').doc(currentUser.uid);
     try {
-      await db.collection('progress').doc(currentUser.uid).set({
+      await ref.update({
         ['sets.'+key+'.attempts']: firebase.firestore.FieldValue.increment(1),
         lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-        email: currentUser.email, displayName: currentUser.displayName||''
-      }, { merge: true });
-    } catch(e) {}
+      });
+    } catch(e) {
+      // 문서 없으면 생성 후 재시도
+      if (e.code === 'not-found') {
+        await ref.set({ sets:{[key]:{...PROG[key]}}, email:currentUser.email,
+          displayName:currentUser.displayName||'', lastSeen:firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+      }
+    }
     return;
   }
-  // New best score — update in-memory and Firestore
-  PROG[key] = { score, pct, attempts: (PROG[key]?.attempts||0)+1,
-    lastAt: new Date().toISOString() };
+  // 신기록 — 메모리 + localStorage 업데이트
+  PROG[key] = { score, pct, attempts: newAttempts, lastAt: new Date().toISOString() };
   try { localStorage.setItem('bwk_progress', JSON.stringify(PROG)); } catch(e){}
-  if (!currentUser) return; // guests: in-memory only
+  if (!currentUser) return;
+  const ref = db.collection('progress').doc(currentUser.uid);
   try {
-    await db.collection('progress').doc(currentUser.uid).set({
+    // update()로 중첩 경로에 정확히 저장
+    await ref.update({
       ['sets.'+key+'.score']:    score,
       ['sets.'+key+'.pct']:      pct,
       ['sets.'+key+'.attempts']: firebase.firestore.FieldValue.increment(1),
       ['sets.'+key+'.lastAt']:   firebase.firestore.FieldValue.serverTimestamp(),
       lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-      email: currentUser.email,
-      displayName: currentUser.displayName||''
-    }, { merge: true });
+      email: currentUser.email, displayName: currentUser.displayName||''
+    });
     updateStreak();
-  } catch(e) { console.warn('saveProgress', e); }
+  } catch(e) {
+    if (e.code === 'not-found') {
+      // 문서가 없으면 set()으로 생성
+      await ref.set({
+        sets: { [key]: { score, pct, attempts: newAttempts, lastAt: firebase.firestore.FieldValue.serverTimestamp() } },
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+        email: currentUser.email, displayName: currentUser.displayName||''
+      }, { merge: true });
+      updateStreak();
+    } else { console.warn('saveProgress', e); }
+  }
 }
 
 async function logQuizAttempt(cid, si, score, pct) {
@@ -1815,16 +1887,25 @@ async function stopTimer(cid) {
   const secs = Math.round((Date.now()-TIME_START[cid])/1000);
   delete TIME_START[cid];
   if (secs < 3 || secs > 7200) return;
-  // Accumulate in GAME_DATA so checkBadges can use it
   GAME_DATA.studySecs = (GAME_DATA.studySecs||0) + secs;
+  // window 캐시에도 누적
+  if (!window._timeSpentCache) window._timeSpentCache = {};
+  window._timeSpentCache[String(cid)] = (window._timeSpentCache[String(cid)]||0) + secs;
   checkBadges();
-  saveGameData(); // persist studySecs (non-blocking)
+  saveGameData();
+  const ref = db.collection('progress').doc(currentUser.uid);
   try {
-    await db.collection('progress').doc(currentUser.uid).set({
+    // update()로 timeSpent.{cid} 중첩 경로에 저장
+    await ref.update({
       ['timeSpent.'+cid]: firebase.firestore.FieldValue.increment(secs),
       lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-  } catch(e) {}
+    });
+  } catch(e) {
+    if (e.code === 'not-found') {
+      await ref.set({ timeSpent:{[cid]:secs}, email:currentUser.email,
+        displayName:currentUser.displayName||'', lastSeen:firebase.firestore.FieldValue.serverTimestamp() }, {merge:true});
+    }
+  }
 }
 window.addEventListener('beforeunload', ()=>{ if(CC) stopTimer(CC.id); });
 
@@ -2580,19 +2661,25 @@ async function openMyPage(){
   document.getElementById('mp-name').textContent=u.displayName||u.email.split('@')[0];
   document.getElementById('mp-email').textContent=u.email;
 
-  // Render immediately with in-memory data
-  renderMpDashboard(PROG, {}, {});
+  // loadProgress()가 이미 timeSpent를 window._timeSpentCache에 캐싱함
+  const cachedTime = window._timeSpentCache || {};
+  renderMpDashboard(PROG, cachedTime, {});
   renderMpBadges();
 
-  // Fetch Firestore data in background, then re-render
-  let timeSpent={}, userData={}, logs=[];
+  // Firestore에서 userData, quizLog 추가 로드 후 재렌더
+  let timeSpent=cachedTime, userData={}, logs=[];
   try {
-    const pd=await db.collection('progress').doc(u.uid).get();
-    if(pd.exists) timeSpent=pd.data().timeSpent||{};
-  } catch(e){}
-  try {
-    const ud=await db.collection('users').doc(u.uid).get();
-    userData=ud.exists?ud.data():{};
+    const [pdSnap, udSnap] = await Promise.all([
+      db.collection('progress').doc(u.uid).get(),
+      db.collection('users').doc(u.uid).get()
+    ]);
+    // parseProgDoc으로 flat key / 중첩 구조 양쪽 지원
+    const { timeSpent: fsTime } = parseProgDoc(pdSnap.exists ? pdSnap.data() : {});
+    // 로컬 캐시와 Firestore 값 합산 (stopTimer가 이미 누적했으므로 max 사용)
+    for (const [cid, secs] of Object.entries(fsTime)) {
+      timeSpent[cid] = Math.max(timeSpent[cid]||0, secs);
+    }
+    userData = udSnap.exists ? udSnap.data() : {};
   } catch(e){}
   try {
     const ls=await db.collection('progress').doc(u.uid).collection('quizLog')

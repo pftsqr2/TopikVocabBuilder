@@ -745,6 +745,38 @@ const TOTAL_SETS=CATS.reduce((s,c)=>s+c.sets,0); // 1067
 
 let allStudents=[],sortMode='recent',currentModalUid=null,pendingDeleteUid=null,logsCache={};
 
+// Firestore flat-key("sets.1_0.pct") → 중첩 구조({sets:{"1_0":{pct}}}) 복원
+function parseProgDoc(raw) {
+  const sets = {};
+  const timeSpent = {};
+  for (const [k, v] of Object.entries(raw || {})) {
+    if (k.startsWith('sets.')) {
+      const rest = k.slice(5);
+      const d = rest.lastIndexOf('.');
+      if (d > 0) {
+        const sk = rest.slice(0, d);
+        const fld = rest.slice(d + 1);
+        if (!sets[sk]) sets[sk] = {};
+        sets[sk][fld] = v;
+      }
+    } else if (k.startsWith('timeSpent.')) {
+      const cid = k.slice(10);
+      if (typeof v === 'number') timeSpent[cid] = v;
+    }
+  }
+  if (raw && raw.sets) {
+    for (const [sk, sv] of Object.entries(raw.sets)) {
+      sets[sk] = { ...(sets[sk] || {}), ...(sv || {}) };
+    }
+  }
+  if (raw && raw.timeSpent) {
+    for (const [cid, secs] of Object.entries(raw.timeSpent)) {
+      if (typeof secs === 'number') timeSpent[cid] = secs;
+    }
+  }
+  return { sets, timeSpent };
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 auth.onAuthStateChanged(async user=>{
   if(user){
@@ -842,9 +874,10 @@ async function loadStudents(){
     pSnap.forEach(d=>{
       const u=uMap[d.id]||{};
       if((u.email||'')===TEACHER_EMAIL) return;
+      const {sets,timeSpent}=parseProgDoc(d.data());
       allStudents.push({uid:d.id,email:u.email||'',displayName:u.displayName||'',
         createdAt:u.createdAt||null,streak:u.streak||0,game:u.game||{},
-        sets:d.data().sets||{},timeSpent:d.data().timeSpent||{},lastSeen:d.data().lastSeen||null,
+        sets,timeSpent,lastSeen:d.data().lastSeen||null,
         quizCount:d.data().quizCount||0});
     });
     uSnap.forEach(d=>{
