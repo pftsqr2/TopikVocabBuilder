@@ -2831,6 +2831,10 @@ async function openMyPage(){
   document.getElementById('mp-name').textContent=u.displayName||u.email.split('@')[0];
   document.getElementById('mp-email').textContent=u.email;
 
+  // 열 때마다 localStorage에서 최신 데이터 동기화
+  try { const lm=JSON.parse(localStorage.getItem('bwk_mastery')||'{}'); Object.assign(MASTERY,lm); } catch(e){}
+  try { const lp=JSON.parse(localStorage.getItem('bwk_progress')||'{}'); Object.assign(PROG,lp); } catch(e){}
+
   // loadProgress()가 이미 timeSpent를 window._timeSpentCache에 캐싱함
   const cachedTime = window._timeSpentCache || {};
   renderMpDashboard(PROG, cachedTime, {});
@@ -2982,14 +2986,19 @@ function renderMpDashboard(prog, timeSpent, ud){
         const ns=Math.ceil(cat.words.length/10);
         let qs=0; for(let i=0;i<ns;i++){const e=prog[String(id)+'_'+i];if(e?.pct)qs+=e.pct;}
         const qp=Math.round(qs/ns);
-        const cm2=cat.words.filter(w=>getMastery(id,w.no)===2).length;
-        const mp=Math.round(cm2/cat.words.length*100);
+        let _cm1=0,_cm2=0;
+        cat.words.forEach(w=>{const lv=getMastery(id,w.no);if(lv===2)_cm2++;else if(lv===1)_cm1++;});
+        const mp2=Math.round(_cm2/cat.words.length*100);
+        const mp1=Math.round(_cm1/cat.words.length*100);
         return `<div class="mp-recent-card" onclick="closeMyPage();showCat(${id});setMode('card')" style="border-top:3px solid ${cat.color}">
           <div class="mp-recent-nm">${cat.ko}</div>
           <div class="mp-recent-en">${cat.en}</div>
           <div style="margin-top:6px">
-            <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--tx3);margin-bottom:2px"><span>🃏 암기</span><span>${mp}%</span></div>
-            <div style="height:4px;background:var(--brd2);border-radius:2px"><div style="width:${mp}%;height:100%;border-radius:2px;background:#10b981"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--tx3);margin-bottom:2px"><span>🃏 암기</span><span>${mp2}%</span></div>
+            <div style="height:4px;background:var(--brd2);border-radius:2px;display:flex;overflow:hidden">
+              <div style="width:${mp2}%;background:#10b981"></div>
+              <div style="width:${mp1}%;background:#f59e0b"></div>
+            </div>
           </div>
           <div style="margin-top:5px">
             <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--tx3);margin-bottom:2px"><span>📝 퀴즈</span><span>${qp}%</span></div>
