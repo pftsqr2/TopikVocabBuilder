@@ -1892,6 +1892,13 @@ async function logQuizAttempt(cid, si, score, pct) {
       cid: String(cid), setIndex: si, score, pct,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
+  } catch(e) { console.warn('quizLog.add', e.code, e.message); }
+  // localStorage fallback so history shows even if Firestore quizLog fails
+  try {
+    const lsLog = JSON.parse(localStorage.getItem('bwk_quiz_log')||'[]');
+    lsLog.unshift({ cid: String(cid), setIndex: si, score, pct, ts: Date.now() });
+    if (lsLog.length > 100) lsLog.length = 100;
+    localStorage.setItem('bwk_quiz_log', JSON.stringify(lsLog));
   } catch(e) {}
 }
 
@@ -2533,6 +2540,33 @@ function renderQuizUI(){
 }
 function setQDir(d){ QDir=d; applyQuizFilter(); renderQuizUI(); }
 
+function _refreshCatHeader() {
+  if (!CC) return;
+  const ch = document.getElementById('cat-hdr');
+  if (!ch) return;
+  const sets = Math.ceil(CC.words.length/10);
+  const {done} = catDone(CC);
+  const m2 = CC.words.filter(w=>getMastery(CC.id,w.no)===2).length;
+  const m2pct = Math.round(m2/CC.words.length*100);
+  ch.innerHTML = `<div><div class="tko">${CC.ko}</div><div class="ten">${CC.en}</div></div>
+    <div class="wc">${CC.words.length}단어 · ${sets} Sets<br>
+      퀴즈 ${done}/${sets} &nbsp;|&nbsp;
+      <span style="color:rgba(255,255,255,.9)">✅ ${m2pct}% 암기</span>
+    </div>`;
+}
+function _refreshQuizSFBar() {
+  if (!CC) return;
+  const sfBar = document.querySelector('#qv .sf-bar');
+  if (!sfBar) return;
+  const sets = Math.ceil(CC.words.length/10);
+  let html = `<button class="sfbtn${QSF<0?' active':''}" style="${QSF<0?'background:'+CC.color+';color:#fff':''}" onclick="initQuiz(-1)">전체 (${CC.words.length})</button>`;
+  for (let s = 0; s < sets; s++) {
+    const isA = QSF===s, done = getProg(CC.id, s);
+    html += `<button class="sfbtn${isA?' active':''}" style="${isA?'background:'+CC.color+';color:#fff':''}" onclick="initQuiz(${s})">Set ${s+1}${done?' ('+done.score+')':''}</button>`;
+  }
+  sfBar.innerHTML = html;
+}
+
 function studyWrongWords() {
   if (!QWrong.length) return;
   QW = [...QWrong]; QI=0; QS=0; QA=null; QWrong=[]; QSF=-1;
@@ -2596,6 +2630,8 @@ function renderQuizQ(){
     if(_xpEarned>0) addXP(_xpEarned);
     else if(currentUser) saveGameData(); // save quizzes count even when no XP earned
     renderSidebar();
+    _refreshCatHeader();   // update "퀴즈 X/Y" in category header
+    _refreshQuizSFBar();   // update set buttons with new score
     const _wrongHtml = QWrong.length ? `
       <div class="wrong-review">
         <div class="wrong-review-title">❌ 틀린 단어 복습 · Review Mistakes (${QWrong.length}개)</div>
@@ -2787,9 +2823,17 @@ async function openMyPage(){
   } catch(e){}
   try {
     const ls=await db.collection('progress').doc(u.uid).collection('quizLog')
-      .orderBy('timestamp','desc').limit(50).get();
+      .orderBy('timestamp','desc').limit(100).get();
     ls.forEach(d=>logs.push(d.data()));
-  } catch(e){}
+  } catch(e){ console.warn('quizLog.get', e.code); }
+  // If Firestore quizLog is empty, fall back to localStorage quiz log
+  if (!logs.length) {
+    try {
+      const lsLog = JSON.parse(localStorage.getItem('bwk_quiz_log')||'[]');
+      // Convert ts (ms number) to pseudo-timestamp object renderMpLog understands
+      lsLog.forEach(l => logs.push({ ...l, timestamp: { _ms: l.ts, toMillis: null } }));
+    } catch(e) {}
+  }
 
   renderMpDashboard(PROG, timeSpent, userData);
   renderMpLog(logs);
@@ -3045,7 +3089,12 @@ function renderMpLog(logs){
     const cat=DATA.find(c=>String(c.id)===String(l.cid));
     const catName=cat?cat.ko:'?';
     const cls=l.pct>=90?'bg-good':l.pct>=60?'bg-ok':'bg-low';
-    const ts=l.timestamp?fmtDate(l.timestamp.toMillis?l.timestamp.toMillis():Date.now()):'-';
+    const tsMs=l.timestamp
+      ? (typeof l.timestamp==='number' ? l.timestamp
+         : l.timestamp._ms ? l.timestamp._ms
+         : l.timestamp.toMillis ? l.timestamp.toMillis() : Date.now())
+      : (l.ts||null);
+    const ts=tsMs?fmtDate(tsMs):'-';
     const setLabel=l.setIndex>=0?'Set '+(l.setIndex+1):'전체';
     return `<tr><td>${catName}</td><td>${setLabel}</td>
       <td><span class="badgep ${cls}">${l.score} (${l.pct}%)</span></td><td>${ts}</td></tr>`;
