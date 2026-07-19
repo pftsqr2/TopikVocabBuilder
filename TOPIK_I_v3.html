@@ -2095,14 +2095,26 @@ function updateEvalBar() {
 
 function updateSidebarBar(catId) {
   const cat=DATA.find(x=>x.id===catId); if(!cat)return;
-  const el=document.querySelector('#ci'+catId+' .cprog'); if(!el)return;
+  const ci=document.getElementById('ci'+catId); if(!ci)return;
   const total=cat.words.length; let m0=0,m1=0,m2=0;
   cat.words.forEach(w=>{const lv=getMastery(cat.id,w.no);if(lv===2)m2++;else if(lv===1)m1++;else m0++;});
   const p2=Math.round(m2/total*100),p1=Math.round(m1/total*100),p0=100-p2-p1;
-  el.style.display='flex';
-  el.innerHTML=`<div style="width:${p2}%;background:#10b981;border-radius:2px 0 0 2px;height:100%"></div>`
-    +`<div style="width:${p1}%;background:#f59e0b;height:100%"></div>`
-    +`<div style="width:${p0}%;background:#e5e7eb;border-radius:0 2px 2px 0;height:100%"></div>`;
+  const numSets=Math.ceil(cat.words.length/10);
+  let qTotalPct=0;
+  for(let i=0;i<numSets;i++){const e=PROG[String(catId)+'_'+i];if(e&&e.pct)qTotalPct+=e.pct;}
+  const qPct=Math.round(qTotalPct/numSets);
+  const cl=ci.querySelector('.cl'); if(!cl)return;
+  // Replace just the bar rows (last two children after cko/cen)
+  const bars=cl.querySelectorAll('div[style*="align-items:center"]');
+  if(bars.length>=2){
+    bars[0].querySelector('span:last-child').textContent=p2+'%';
+    const mb=bars[0].querySelector('.cprog'); if(mb) mb.innerHTML=
+      `<div style="width:${p2}%;background:#10b981;border-radius:2px 0 0 2px;height:100%"></div>`
+      +`<div style="width:${p1}%;background:#f59e0b;height:100%"></div>`
+      +`<div style="width:${p0}%;background:#e5e7eb;border-radius:0 2px 2px 0;height:100%"></div>`;
+    bars[1].querySelector('span:last-child').textContent=qPct+'%';
+    const qb=bars[1].querySelector('.cprog'); if(qb) qb.querySelector('div').style.width=qPct+'%';
+  }
 }
 
 // ── Smart Welcome CTA ─────────────────────────────────────────────────────────

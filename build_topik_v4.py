@@ -926,16 +926,29 @@ NEW_RENDER_SIDEBAR = r"""function renderSidebar() {
     const total=c.words.length; let m0=0,m1=0,m2=0;
     c.words.forEach(w=>{const lv=getMastery(c.id,w.no);if(lv===2)m2++;else if(lv===1)m1++;else m0++;});
     const p2=Math.round(m2/total*100),p1=Math.round(m1/total*100),p0=100-p2-p1;
-    const prog=`<div class="cprog" style="display:flex">`
+    const numSets=Math.ceil(c.words.length/10);
+    let qTotalPct=0;
+    for(let i=0;i<numSets;i++){const e=PROG[String(c.id)+'_'+i];if(e&&e.pct)qTotalPct+=e.pct;}
+    const qPct=Math.round(qTotalPct/numSets);
+    const prog=`<div style="display:flex;align-items:center;gap:4px;margin-top:3px">`
+      +`<span style="font-size:.55rem;color:var(--tx3);white-space:nowrap;min-width:28px">🃏 암기</span>`
+      +`<div class="cprog" style="display:flex;flex:1">`
       +`<div style="width:${p2}%;background:#10b981;border-radius:2px 0 0 2px;height:100%"></div>`
       +`<div style="width:${p1}%;background:#f59e0b;height:100%"></div>`
-      +`<div style="width:${p0}%;background:#e5e7eb;border-radius:0 2px 2px 0;height:100%"></div></div>`;
+      +`<div style="width:${p0}%;background:#e5e7eb;border-radius:0 2px 2px 0;height:100%"></div></div>`
+      +`<span style="font-size:.55rem;color:var(--tx3);min-width:22px;text-align:right">${p2}%</span></div>`;
+    const qprog=`<div style="display:flex;align-items:center;gap:4px;margin-top:2px">`
+      +`<span style="font-size:.55rem;color:var(--tx3);white-space:nowrap;min-width:28px">📝 퀴즈</span>`
+      +`<div class="cprog" style="flex:1">`
+      +`<div style="width:${qPct}%;background:#3b82f6;border-radius:2px;height:100%;transition:width .3s"></div></div>`
+      +`<span style="font-size:.55rem;color:var(--tx3);min-width:22px;text-align:right">${qPct}%</span></div>`;
     return `<div class="ci" id="ci${c.id}" style="--cc:${c.color}" onclick="showCat(${c.id})" role="button" tabindex="0" aria-label="${c.ko}" onkeydown="if(event.key==='Enter')showCat(${c.id})">
       <div class="cn">${c.id}</div>
       <div class="cl">
         <div class="cko">${c.ko}${renderLvChip(c)}</div>
         <div class="cen">${c.en}</div>
         ${prog}
+        ${qprog}
       </div>
       <div class="cnt" title="${Math.round(m2/total*100)}% 완료">${badge||c.words.length+'단어'}</div>
     </div>`;
