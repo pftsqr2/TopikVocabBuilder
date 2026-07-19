@@ -66,8 +66,15 @@ MANUAL_MEANINGS = {
     "나|pronoun":    "I; me (casual)",
     "일|noun":       "work; day; matter",
     "일|numeral":    "one (1); number one",
+    # Translation fixes (romanizations → real English meanings)
+    "하도":          "so much; to such an extent",
+    "바둑":          "Go (board game)",
+    "바래다주다":    "to walk someone home; to see someone off",
+    "군계일학":      "a crane among chickens (outstanding person)",
 }
 MANUAL_EXAMPLES = {
+    "군계일학":      ("그는 우리 중에 군계일학이에요.", "He stands out like a crane among chickens."),
+    "바래다주다":    ("집까지 바래다줄게요.",           "I'll walk you home."),
     "계시다":        ("어머니가 한국에 계셔요.",      "My mother is in Korea."),
     "주무시다":      ("할머니가 낮잠을 주무셔요.",    "My grandmother is taking a nap."),
     "드시다":        ("할아버지가 밥을 드셔요.",      "My grandfather is eating."),
