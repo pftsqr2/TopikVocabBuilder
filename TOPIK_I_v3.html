@@ -2000,6 +2000,12 @@ function setMastery(catId, no, lv) {
   try{localStorage.setItem('bwk_mastery',JSON.stringify(MASTERY));}catch(e){}
   updateSidebarBar(catId);
   updateEvalBar();
+  _refreshMpIfOpen();
+}
+function _refreshMpIfOpen() {
+  if (document.getElementById('mp-overlay')?.classList.contains('open')) {
+    renderMpDashboard(PROG, window._timeSpentCache||{}, {});
+  }
 }
 function masteryCount(catId, words) {
   const cnt = [0,0,0];
@@ -2588,8 +2594,9 @@ function renderQuizQ(){
     if(_xpEarned>0) addXP(_xpEarned);
     else if(currentUser) saveGameData(); // save quizzes count even when no XP earned
     renderSidebar();
-    _refreshCatHeader();   // update "퀴즈 X/Y" in category header
-    _refreshQuizSFBar();   // update set buttons with new score
+    _refreshCatHeader();
+    _refreshQuizSFBar();
+    _refreshMpIfOpen();
     const _wrongHtml = QWrong.length ? `
       <div class="wrong-review">
         <div class="wrong-review-title">❌ 틀린 단어 복습 · Review Mistakes (${QWrong.length}개)</div>
@@ -2874,6 +2881,25 @@ function renderMpDashboard(prog, timeSpent, ud){
     quizLabel='퀴즈 진도 · Quiz';
   }
 
+  // ── Grade CTA ─────────────────────────────────────────────────
+  let _t1=0,_d1=0,_t2=0,_d2=0,_t3=0,_d3=0;
+  DATA.forEach(cat=>cat.words.forEach(w=>{
+    const m=getMastery(cat.id,w.no);
+    if(w.lv<=1){_t1++;if(m===2)_d1++;}
+    else if(w.lv===2){_t2++;if(m===2)_d2++;}
+    else{_t3++;if(m===2)_d3++;}
+  }));
+  const _p1=_t1?_d1/_t1:0,_p2=_t2?_d2/_t2:0,_p3=_t3?_d3/_t3:0;
+  let ctaKo='',ctaEn='';
+  if(_p1<0.10){const n=Math.ceil(_t1*0.10)-_d1;ctaKo=`TOPIK 1급까지 기초 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more basic words to reach Level 1!`;}
+  else if(_p1<0.35){const n=Math.ceil(_t1*0.35)-_d1;ctaKo=`TOPIK 2급까지 기초 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more basic words to reach Level 2!`;}
+  else if(_p1<0.65){const n=Math.ceil(_t1*0.65)-_d1;ctaKo=`TOPIK 3급까지 기초 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more basic words to reach Level 3!`;}
+  else if(_p2<0.30){const n=Math.ceil(_t2*0.30)-_d2;ctaKo=`TOPIK 4급까지 중급 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more intermediate words to reach Level 4!`;}
+  else if(_p2<0.65){const n=Math.ceil(_t2*0.65)-_d2;ctaKo=`TOPIK 5급까지 중급 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more intermediate words to reach Level 5!`;}
+  else if(_p3<0.50){const n=Math.ceil(_t3*0.50)-_d3;ctaKo=`TOPIK 6급까지 고급 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more advanced words to reach Level 6!`;}
+  else{ctaKo='모든 단어를 마스터했어요! 최고 등급 달성 🏆';ctaEn='All words mastered! Top grade achieved 🏆';}
+  const _recCat=DATA.find(c=>c.words.some(w=>getMastery(c.id,w.no)<2))||DATA[0];
+
   // ── Recent folders ────────────────────────────────────────────
   const recentIds = getRecentCats();
   const recentHtml = recentIds.length ? `
@@ -2932,16 +2958,22 @@ function renderMpDashboard(prog, timeSpent, ud){
 
   // ── Render ────────────────────────────────────────────────────
   document.getElementById('mp-panel-0').innerHTML=`
-    <div class="mp-grade-banner" style="background:linear-gradient(135deg,${tg.color}22,${tg.color}11);border:1.5px solid ${tg.color}44">
-      <div>
-        <div style="font-size:2rem;font-weight:900;color:${tg.color};line-height:1">${tg.grade}</div>
-        <div style="font-size:.75rem;font-weight:600;color:${tg.color};opacity:.85;margin-top:1px">${tg.gradeEn}</div>
-        <div style="font-size:.7rem;color:var(--tx3);margin-top:4px">${tg.nextDesc}</div>
+    <div class="mp-grade-banner" style="background:linear-gradient(135deg,${tg.color}22,${tg.color}11);border:1.5px solid ${tg.color}44;cursor:pointer;flex-direction:column;gap:10px"
+         onclick="closeMyPage();showCat(${_recCat.id});setMode('card')">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+        <div>
+          <div style="font-size:.62rem;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">현재 TOPIK 등급 · Current Level</div>
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font-size:2rem;font-weight:900;color:${tg.color};line-height:1">${tg.grade}</span>
+            <span style="font-size:.8rem;font-weight:600;color:${tg.color};opacity:.8">${tg.gradeEn}</span>
+          </div>
+        </div>
+        <div style="font-size:1.3rem;opacity:.5">›</div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:.65rem;color:var(--tx3);margin-bottom:3px">🧠 단어 암기</div>
-        <div style="font-size:1.1rem;font-weight:800;color:var(--tx)">${mastPct}%</div>
-        <div style="font-size:.65rem;color:var(--tx3);margin-top:6px">⏱ ${fmtSecs(totalSecs)||'0초'}</div>
+      <div style="background:${tg.color}18;border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box">
+        <div style="font-size:.8rem;font-weight:700;color:${tg.color};margin-bottom:2px">🎯 ${ctaKo}</div>
+        <div style="font-size:.68rem;color:var(--tx3)">${ctaEn}</div>
+        <div style="font-size:.67rem;color:var(--tx2);margin-top:5px">→ <strong>${_recCat.ko}</strong> 폴더에서 시작하기 · Tap to study</div>
       </div>
     </div>
 
@@ -3177,50 +3209,50 @@ const LEVELS = [
 // thresh: quizzes|perfects|mastery|streak|cats|xp|level  val: threshold
 const BADGES = [
   // ─── 🎯 퀴즈 도전 (Quiz Challenge) ───────────────────────────
-  {id:'quiz1',    cat:'quiz',tier:0,icon:'🌱',name:'첫 도전',     nameEn:'First Step',      desc:'첫 퀴즈 완료!',          thresh:'quizzes', val:1},
-  {id:'quiz10',   cat:'quiz',tier:1,icon:'📝',name:'퀴즈 입문자', nameEn:'Quiz Rookie',     desc:'퀴즈 10세트 완료!',      thresh:'quizzes', val:10},
-  {id:'quiz30',   cat:'quiz',tier:2,icon:'📊',name:'퀴즈 도전자', nameEn:'Quiz Challenger', desc:'퀴즈 30세트 완료!',      thresh:'quizzes', val:30},
-  {id:'quiz60',   cat:'quiz',tier:3,icon:'🎓',name:'퀴즈 고수',   nameEn:'Quiz Expert',     desc:'퀴즈 60세트 완료!',      thresh:'quizzes', val:60},
-  {id:'quiz100',  cat:'quiz',tier:4,icon:'🏆',name:'퀴즈 챔피언', nameEn:'Quiz Champion',   desc:'퀴즈 100세트 완료!',     thresh:'quizzes', val:100},
+  {id:'quiz1',    cat:'quiz',tier:0,icon:'🌱',name:'첫 도전',     nameEn:'First Step',      desc:'첫 퀴즈 완료!',          descEn:'First quiz complete!',           thresh:'quizzes', val:1},
+  {id:'quiz10',   cat:'quiz',tier:1,icon:'📝',name:'퀴즈 입문자', nameEn:'Quiz Rookie',     desc:'퀴즈 10세트 완료!',      descEn:'10 quiz sets complete!',         thresh:'quizzes', val:10},
+  {id:'quiz30',   cat:'quiz',tier:2,icon:'📊',name:'퀴즈 도전자', nameEn:'Quiz Challenger', desc:'퀴즈 30세트 완료!',      descEn:'30 quiz sets complete!',         thresh:'quizzes', val:30},
+  {id:'quiz60',   cat:'quiz',tier:3,icon:'🎓',name:'퀴즈 고수',   nameEn:'Quiz Expert',     desc:'퀴즈 60세트 완료!',      descEn:'60 quiz sets complete!',         thresh:'quizzes', val:60},
+  {id:'quiz100',  cat:'quiz',tier:4,icon:'🏆',name:'퀴즈 챔피언', nameEn:'Quiz Champion',   desc:'퀴즈 100세트 완료!',     descEn:'100 quiz sets complete!',        thresh:'quizzes', val:100},
   // ─── 💯 완벽주의자 (Perfectionist) ───────────────────────────
-  {id:'perf1',    cat:'perf',tier:0,icon:'⭐',name:'첫 만점',     nameEn:'First Perfect',   desc:'퀴즈 100% 달성!',        thresh:'perfects',val:1},
-  {id:'perf3',    cat:'perf',tier:1,icon:'🌟',name:'3회 만점',    nameEn:'Triple Perfect',  desc:'만점 3회 달성!',         thresh:'perfects',val:3},
-  {id:'perf10',   cat:'perf',tier:2,icon:'✨',name:'만점 달인',   nameEn:'Perfect Expert',  desc:'만점 10회 달성!',        thresh:'perfects',val:10},
-  {id:'perf30',   cat:'perf',tier:3,icon:'💫',name:'완벽주의자',  nameEn:'Perfectionist',   desc:'만점 30회 달성!',        thresh:'perfects',val:30},
-  {id:'perf50',   cat:'perf',tier:4,icon:'👑',name:'완벽 황제',   nameEn:'Perfection King', desc:'만점 50회 달성!',        thresh:'perfects',val:50},
+  {id:'perf1',    cat:'perf',tier:0,icon:'⭐',name:'첫 만점',     nameEn:'First Perfect',   desc:'퀴즈 100% 달성!',        descEn:'First perfect score!',           thresh:'perfects',val:1},
+  {id:'perf3',    cat:'perf',tier:1,icon:'🌟',name:'3회 만점',    nameEn:'Triple Perfect',  desc:'만점 3회 달성!',         descEn:'3 perfect scores!',              thresh:'perfects',val:3},
+  {id:'perf10',   cat:'perf',tier:2,icon:'✨',name:'만점 달인',   nameEn:'Perfect Expert',  desc:'만점 10회 달성!',        descEn:'10 perfect scores!',             thresh:'perfects',val:10},
+  {id:'perf30',   cat:'perf',tier:3,icon:'💫',name:'완벽주의자',  nameEn:'Perfectionist',   desc:'만점 30회 달성!',        descEn:'30 perfect scores!',             thresh:'perfects',val:30},
+  {id:'perf50',   cat:'perf',tier:4,icon:'👑',name:'완벽 황제',   nameEn:'Perfection King', desc:'만점 50회 달성!',        descEn:'50 perfect scores!',             thresh:'perfects',val:50},
   // ─── 🧠 단어 마스터 (Word Mastery) ───────────────────────────
-  {id:'mast10',   cat:'mast',tier:0,icon:'🌱',name:'새싹',        nameEn:'Seedling',        desc:'단어 10개 완전 암기!',   thresh:'mastery', val:10},
-  {id:'mast50',   cat:'mast',tier:1,icon:'🌿',name:'성장 중',     nameEn:'Sprouting',       desc:'단어 50개 완전 암기!',   thresh:'mastery', val:50},
-  {id:'mast150',  cat:'mast',tier:2,icon:'🌳',name:'단어 숲',     nameEn:'Word Forest',     desc:'단어 150개 완전 암기!',  thresh:'mastery', val:150},
-  {id:'mast400',  cat:'mast',tier:3,icon:'🏰',name:'단어 왕국',   nameEn:'Word Kingdom',    desc:'단어 400개 완전 암기!',  thresh:'mastery', val:400},
-  {id:'mast_all', cat:'mast',tier:4,icon:'👑',name:'단어 황제',   nameEn:'Word Emperor',    desc:'전체 단어 완전 암기!',   thresh:'mastery', val:0},
+  {id:'mast10',   cat:'mast',tier:0,icon:'🌱',name:'새싹',        nameEn:'Seedling',        desc:'단어 10개 완전 암기!',   descEn:'10 words fully mastered!',       thresh:'mastery', val:10},
+  {id:'mast50',   cat:'mast',tier:1,icon:'🌿',name:'성장 중',     nameEn:'Sprouting',       desc:'단어 50개 완전 암기!',   descEn:'50 words fully mastered!',       thresh:'mastery', val:50},
+  {id:'mast150',  cat:'mast',tier:2,icon:'🌳',name:'단어 숲',     nameEn:'Word Forest',     desc:'단어 150개 완전 암기!',  descEn:'150 words fully mastered!',      thresh:'mastery', val:150},
+  {id:'mast400',  cat:'mast',tier:3,icon:'🏰',name:'단어 왕국',   nameEn:'Word Kingdom',    desc:'단어 400개 완전 암기!',  descEn:'400 words fully mastered!',      thresh:'mastery', val:400},
+  {id:'mast_all', cat:'mast',tier:4,icon:'👑',name:'단어 황제',   nameEn:'Word Emperor',    desc:'전체 단어 완전 암기!',   descEn:'All words fully mastered!',      thresh:'mastery', val:0},
   // ─── 🔥 학습 스트릭 (Study Streak) ───────────────────────────
-  {id:'str3',     cat:'str', tier:0,icon:'🔥',name:'3일 연속',    nameEn:'3-Day Streak',    desc:'3일 연속 학습!',         thresh:'streak',  val:3},
-  {id:'str7',     cat:'str', tier:1,icon:'🌊',name:'일주일 전사', nameEn:'7-Day Warrior',   desc:'7일 연속 학습!',         thresh:'streak',  val:7},
-  {id:'str30',    cat:'str', tier:2,icon:'⚡',name:'한달 전사',   nameEn:'1-Month Warrior', desc:'30일 연속 학습!',        thresh:'streak',  val:30},
-  {id:'str100',   cat:'str', tier:3,icon:'💎',name:'100일 전설',  nameEn:'100-Day Legend',  desc:'100일 연속 학습!',       thresh:'streak',  val:100},
-  {id:'str365',   cat:'str', tier:4,icon:'🌞',name:'1년 전설',    nameEn:'365-Day Legend',  desc:'365일 연속 학습!',       thresh:'streak',  val:365},
+  {id:'str3',     cat:'str', tier:0,icon:'🔥',name:'3일 연속',    nameEn:'3-Day Streak',    desc:'3일 연속 학습!',         descEn:'3-day study streak!',            thresh:'streak',  val:3},
+  {id:'str7',     cat:'str', tier:1,icon:'🌊',name:'일주일 전사', nameEn:'7-Day Warrior',   desc:'7일 연속 학습!',         descEn:'7-day study streak!',            thresh:'streak',  val:7},
+  {id:'str30',    cat:'str', tier:2,icon:'⚡',name:'한달 전사',   nameEn:'1-Month Warrior', desc:'30일 연속 학습!',        descEn:'30-day study streak!',           thresh:'streak',  val:30},
+  {id:'str100',   cat:'str', tier:3,icon:'💎',name:'100일 전설',  nameEn:'100-Day Legend',  desc:'100일 연속 학습!',       descEn:'100-day study streak!',          thresh:'streak',  val:100},
+  {id:'str365',   cat:'str', tier:4,icon:'🌞',name:'1년 전설',    nameEn:'365-Day Legend',  desc:'365일 연속 학습!',       descEn:'365-day study streak!',          thresh:'streak',  val:365},
   // ─── 📂 카테고리 정복 (Category Conquest) ────────────────────
-  {id:'cat1',     cat:'cat', tier:0,icon:'🗺️',name:'첫 정복',     nameEn:'First Conqueror', desc:'카테고리 1개 완성!',     thresh:'cats',    val:1},
-  {id:'cat5',     cat:'cat', tier:1,icon:'🌍',name:'5개 정복',    nameEn:'5 Categories',    desc:'카테고리 5개 완성!',     thresh:'cats',    val:5},
-  {id:'cat15',    cat:'cat', tier:2,icon:'🏅',name:'절반 정복',   nameEn:'Halfway Hero',    desc:'카테고리 15개 완성!',    thresh:'cats',    val:15},
-  {id:'cat_half', cat:'cat', tier:3,icon:'🎖️',name:'대정복자',    nameEn:'Great Conqueror', desc:'카테고리 25개 완성!',    thresh:'cats',    val:25},
-  {id:'cat_all',  cat:'cat', tier:4,icon:'🌏',name:'전체 정복',   nameEn:'Full Conqueror',  desc:'모든 카테고리 완성!',    thresh:'cats',    val:0},
+  {id:'cat1',     cat:'cat', tier:0,icon:'🗺️',name:'첫 정복',     nameEn:'First Conqueror', desc:'카테고리 1개 완성!',     descEn:'1 category completed!',          thresh:'cats',    val:1},
+  {id:'cat5',     cat:'cat', tier:1,icon:'🌍',name:'5개 정복',    nameEn:'5 Categories',    desc:'카테고리 5개 완성!',     descEn:'5 categories completed!',        thresh:'cats',    val:5},
+  {id:'cat15',    cat:'cat', tier:2,icon:'🏅',name:'절반 정복',   nameEn:'Halfway Hero',    desc:'카테고리 15개 완성!',    descEn:'15 categories completed!',       thresh:'cats',    val:15},
+  {id:'cat_half', cat:'cat', tier:3,icon:'🎖️',name:'대정복자',    nameEn:'Great Conqueror', desc:'카테고리 25개 완성!',    descEn:'25 categories completed!',       thresh:'cats',    val:25},
+  {id:'cat_all',  cat:'cat', tier:4,icon:'🌏',name:'전체 정복',   nameEn:'Full Conqueror',  desc:'모든 카테고리 완성!',    descEn:'All categories completed!',      thresh:'cats',    val:0},
   // ─── ✨ XP & 레벨 (XP & Level) ───────────────────────────────
-  {id:'xp100',    cat:'xp',  tier:0,icon:'⚡',name:'XP 100',      nameEn:'100 XP',          desc:'경험치 100 달성!',       thresh:'xp',      val:100},
-  {id:'xp300',    cat:'xp',  tier:1,icon:'💫',name:'XP 300',      nameEn:'300 XP',          desc:'경험치 300 달성!',       thresh:'xp',      val:300},
-  {id:'xp800',    cat:'xp',  tier:2,icon:'🌠',name:'XP 800',      nameEn:'800 XP',          desc:'경험치 800 달성!',       thresh:'xp',      val:800},
-  {id:'xp2000',   cat:'xp',  tier:3,icon:'🚀',name:'XP 2000',     nameEn:'2000 XP',         desc:'경험치 2000 달성!',      thresh:'xp',      val:2000},
-  {id:'xp5000',   cat:'xp',  tier:4,icon:'🌌',name:'XP 5000',     nameEn:'5000 XP',         desc:'경험치 5000 달성!',      thresh:'xp',      val:5000},
+  {id:'xp100',    cat:'xp',  tier:0,icon:'⚡',name:'XP 100',      nameEn:'100 XP',          desc:'경험치 100 달성!',       descEn:'100 XP earned!',                 thresh:'xp',      val:100},
+  {id:'xp300',    cat:'xp',  tier:1,icon:'💫',name:'XP 300',      nameEn:'300 XP',          desc:'경험치 300 달성!',       descEn:'300 XP earned!',                 thresh:'xp',      val:300},
+  {id:'xp800',    cat:'xp',  tier:2,icon:'🌠',name:'XP 800',      nameEn:'800 XP',          desc:'경험치 800 달성!',       descEn:'800 XP earned!',                 thresh:'xp',      val:800},
+  {id:'xp2000',   cat:'xp',  tier:3,icon:'🚀',name:'XP 2000',     nameEn:'2000 XP',         desc:'경험치 2000 달성!',      descEn:'2000 XP earned!',                thresh:'xp',      val:2000},
+  {id:'xp5000',   cat:'xp',  tier:4,icon:'🌌',name:'XP 5000',     nameEn:'5000 XP',         desc:'경험치 5000 달성!',      descEn:'5000 XP earned!',                thresh:'xp',      val:5000},
   // ─── ⏱ 학습 시간 (Study Time) ─────────────────────────────────
-  {id:'time30m',  cat:'time',tier:0,icon:'⏰',name:'첫 30분',      nameEn:'30 Minutes',      desc:'누적 30분 학습!',        thresh:'studySecs',val:1800},
-  {id:'time2h',   cat:'time',tier:1,icon:'📚',name:'2시간 학습',   nameEn:'2 Hours',         desc:'누적 2시간 학습!',       thresh:'studySecs',val:7200},
-  {id:'time10h',  cat:'time',tier:2,icon:'📖',name:'10시간 학습',  nameEn:'10 Hours',        desc:'누적 10시간 학습!',      thresh:'studySecs',val:36000},
-  {id:'time50h',  cat:'time',tier:3,icon:'🌙',name:'50시간 학습',  nameEn:'50 Hours',        desc:'누적 50시간 학습!',      thresh:'studySecs',val:180000},
-  {id:'time200h', cat:'time',tier:4,icon:'🏛️',name:'200시간 학습', nameEn:'200 Hours',       desc:'누적 200시간 학습!',     thresh:'studySecs',val:720000},
+  {id:'time30m',  cat:'time',tier:0,icon:'⏰',name:'첫 30분',      nameEn:'30 Minutes',      desc:'누적 30분 학습!',        descEn:'30 minutes studied!',            thresh:'studySecs',val:1800},
+  {id:'time2h',   cat:'time',tier:1,icon:'📚',name:'2시간 학습',   nameEn:'2 Hours',         desc:'누적 2시간 학습!',       descEn:'2 hours studied!',               thresh:'studySecs',val:7200},
+  {id:'time10h',  cat:'time',tier:2,icon:'📖',name:'10시간 학습',  nameEn:'10 Hours',        desc:'누적 10시간 학습!',      descEn:'10 hours studied!',              thresh:'studySecs',val:36000},
+  {id:'time50h',  cat:'time',tier:3,icon:'🌙',name:'50시간 학습',  nameEn:'50 Hours',        desc:'누적 50시간 학습!',      descEn:'50 hours studied!',              thresh:'studySecs',val:180000},
+  {id:'time200h', cat:'time',tier:4,icon:'🏛️',name:'200시간 학습', nameEn:'200 Hours',       desc:'누적 200시간 학습!',     descEn:'200 hours studied!',             thresh:'studySecs',val:720000},
   // ─── 🐋 특별 업적 (Special) ──────────────────────────────────
-  {id:'topik_i',  cat:'spec',tier:3,icon:'📋',name:'TOPIK I 준비',nameEn:'TOPIK I Ready',   desc:'퀴즈 50세트 + 단어 150개 암기 달성!', thresh:'topik1',  val:0},
-  {id:'legend',   cat:'spec',tier:4,icon:'🐋',name:'TOPIK 전설',  nameEn:'TOPIK Legend',    desc:'최고 레벨 Lv.10 달성!', thresh:'level',   val:10},
+  {id:'topik_i',  cat:'spec',tier:3,icon:'📋',name:'TOPIK I 준비',nameEn:'TOPIK I Ready',   desc:'퀴즈 50세트 + 단어 150개 암기 달성!', descEn:'50 quiz sets + 150 words mastered!', thresh:'topik1',  val:0},
+  {id:'legend',   cat:'spec',tier:4,icon:'🐋',name:'TOPIK 전설',  nameEn:'TOPIK Legend',    desc:'최고 레벨 Lv.10 달성!',               descEn:'Max level Lv.10 reached!',          thresh:'level',   val:10},
 ];
 
 let GAME_DATA = {xp:0,level:1,badges:[],quizzes:0,perfects:0,wordsStudied:0,maxStreak:0,lastLoginDay:'',studySecs:0};
@@ -3425,7 +3457,7 @@ function renderMpBadges() {
               padding:1px 6px;border-radius:8px;border:1px solid ${t.border}">${t.ko}</span>
           </div>
           <div style="font-size:.67rem;color:var(--tx3);margin-bottom:5px">
-            ${p.dual?p.dual.join(' · '):b.thresh==='studySecs'?`${fmtHM(p.curr)} / ${fmtHM(p.max)}`:`${p.curr} / ${p.max}`} — ${b.desc}
+            ${p.dual?p.dual.join(' · '):b.thresh==='studySecs'?`${fmtHM(p.curr)} / ${fmtHM(p.max)}`:`${p.curr} / ${p.max}`} — ${b.desc} · ${b.descEn}
           </div>
           <div style="height:6px;background:var(--brd2);border-radius:3px;overflow:hidden">
             <div style="width:${p.pct}%;height:100%;background:${t.color};border-radius:3px;transition:.5s"></div>
