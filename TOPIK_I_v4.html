@@ -454,6 +454,57 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 .mp-ccat{border-radius:11px;padding:10px 12px;border:1.5px solid var(--brd2);
   background:var(--surf);border-left-width:4px;cursor:pointer;transition:transform .15s}
 .mp-ccat:hover{transform:translateY(-1px)}
+/* ── Evaluation Tab ── */
+.eval-start{padding:8px 0}
+.eval-start-hero{background:linear-gradient(135deg,#6366f122,#8b5cf611);
+  border:1.5px solid #6366f133;border-radius:16px;padding:20px;margin-bottom:16px;text-align:center}
+.eval-pair-dots{display:flex;gap:10px;justify-content:center;margin:12px 0}
+.eval-dot{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--brd);
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800}
+.eval-dot.done{background:#10b981;border-color:#10b981;color:#fff}
+.eval-dot.active{background:#6366f1;border-color:#6366f1;color:#fff;animation:eval-pulse 1.5s infinite}
+.eval-dot.empty{background:var(--surf2);color:var(--tx3)}
+@keyframes eval-pulse{0%,100%{box-shadow:0 0 0 0 #6366f140}50%{box-shadow:0 0 0 8px #6366f100}}
+.eval-btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:.92rem;font-weight:800;
+  font-family:inherit;cursor:pointer;transition:opacity .2s}
+.eval-btn:hover{opacity:.85}
+.eval-btn-primary{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.eval-btn-secondary{background:var(--surf2);color:var(--tx2);margin-top:8px}
+.eval-q-wrap{display:flex;flex-direction:column;gap:0;min-height:300px}
+.eval-topbar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.eval-progress{flex:1;height:6px;background:var(--brd2);border-radius:3px;overflow:hidden}
+.eval-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#6366f1,#8b5cf6);transition:width .4s}
+.eval-qnum{font-size:.72rem;font-weight:700;color:var(--tx3);white-space:nowrap}
+.eval-diff{font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:8px}
+.eval-prompt-wrap{background:var(--surf);border:1.5px solid var(--brd2);border-radius:14px;
+  padding:20px;margin-bottom:14px;text-align:center}
+.eval-type-lbl{font-size:.62rem;font-weight:700;color:var(--tx3);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:8px}
+.eval-word{font-size:1.8rem;font-weight:900;color:var(--tx);line-height:1.2;margin-bottom:6px}
+.eval-sentence{font-size:.75rem;color:var(--tx3);font-style:italic;margin-top:6px;line-height:1.5}
+.eval-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.eval-choice{padding:12px 10px;border:2px solid var(--brd2);border-radius:12px;
+  background:var(--surf);cursor:pointer;font-size:.82rem;font-weight:600;color:var(--tx);
+  font-family:inherit;text-align:left;line-height:1.3;transition:border-color .15s,background .15s}
+.eval-choice:hover:not(:disabled){border-color:#6366f1;background:#6366f108}
+.eval-choice.correct{border-color:#10b981;background:#10b98115;color:#059669}
+.eval-choice.wrong{border-color:#ef4444;background:#ef444415;color:#dc2626}
+.eval-choice:disabled{cursor:default}
+.eval-feedback{font-size:.78rem;font-weight:700;text-align:center;padding:8px;
+  border-radius:8px;margin-top:8px}
+.eval-feedback.ok{background:#10b98115;color:#059669}
+.eval-feedback.no{background:#ef444415;color:#dc2626}
+.eval-result{padding:4px 0}
+.eval-res-grade{font-size:3rem;font-weight:900;line-height:1;margin:8px 0 2px}
+.eval-res-en{font-size:.85rem;font-weight:600;opacity:.8;margin-bottom:14px}
+.eval-lv-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.eval-lv-bar{flex:1;height:6px;background:var(--brd2);border-radius:3px;overflow:hidden}
+.eval-lv-fill{height:100%;border-radius:3px;transition:width .6s}
+.eval-hist-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.eval-hist-table th{text-align:left;padding:6px 8px;color:var(--tx3);font-size:.67rem;
+  border-bottom:1px solid var(--brd2)}
+.eval-hist-table td{padding:7px 8px;border-bottom:1px solid var(--brd2);color:var(--tx)}
+.eval-grade-chip{font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:8px;display:inline-block}
 .mp-ccat-nm{font-size:.79rem;font-weight:700;color:var(--tx);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mp-ccat-en{font-size:.63rem;color:var(--tx3);margin-bottom:7px}
@@ -1464,10 +1515,12 @@ body {
       <button class="mptab active" onclick="switchMpTab(0,this)">📊 실력 현황</button>
       <button class="mptab" onclick="switchMpTab(1,this)">🏅 뱃지</button>
       <button class="mptab" onclick="switchMpTab(2,this)">📝 퀴즈 기록</button>
+      <button class="mptab" onclick="switchMpTab(3,this);renderEvalPanel()">🎯 등급 평가</button>
     </div>
     <div id="mp-panel-0" class="mp-panel active"></div>
     <div id="mp-panel-1" class="mp-panel"></div>
     <div id="mp-panel-2" class="mp-panel"></div>
+    <div id="mp-panel-3" class="mp-panel"></div>
   </div>
 </div>
 
@@ -3317,6 +3370,407 @@ function toggleMobileSearch(){
   } else {
     s.style.display=''; s.value=''; doSearch('');
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EVALUATION TAB — Adaptive TOPIK Level Test
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const EVAL_TOTAL_Q = 50;
+const EVAL_ABILITY_START = 2.5;
+const EVAL_ABILITY_MAX = 6.5;
+const EVAL_ABILITY_MIN = 0.5;
+const EVAL_CORRECT_DELTA = 0.25;
+const EVAL_WRONG_DELTA   = 0.20;
+const EVAL_MIN_Q_PER_LV  = 3; // min questions needed at a level to be graded on it
+const TOPIK_GRADE_COLORS  = {'입문':'#94a3b8','1급':'#10b981','2급':'#3b82f6','3급':'#6366f1','4급':'#8b5cf6','5급':'#f59e0b','6급':'#ef4444'};
+const TOPIK_GRADE_NUM     = {'입문':0,'1급':1,'2급':2,'3급':3,'4급':4,'5급':5,'6급':6};
+const TOPIK_GRADE_LIST    = ['입문','1급','2급','3급','4급','5급','6급'];
+
+let EVAL_STATE = null; // active test
+let EVAL_POOLS = null; // word pools by difficulty 1–6
+
+// ── Build word pools ──────────────────────────────────────────────────────────
+function buildEvalPools() {
+  const pools = {1:[],2:[],3:[],4:[],5:[],6:[]};
+  DATA.forEach(cat => {
+    const lvMin = cat.lv_min || 1;
+    cat.words.forEach(w => {
+      let d = lvMin <= 2 ? (w.lv <= 1 ? 1 : 2) : lvMin;
+      d = Math.min(6, Math.max(1, d));
+      pools[d].push({cat, w});
+    });
+  });
+  return pools;
+}
+
+// ── Grade from final ability ──────────────────────────────────────────────────
+// Adaptive equilibrium ≈ 44% accuracy at current level.
+// So ability=3.8 means ~70%+ on lv3, ~44% on lv4 → 3급
+function abilityToGrade(ability) {
+  if (ability < 1.8) return '입문';
+  if (ability < 2.8) return '1급';
+  if (ability < 3.8) return '2급';
+  if (ability < 4.6) return '3급';
+  if (ability < 5.2) return '4급';
+  if (ability < 5.7) return '5급';
+  return '6급';
+}
+function gradeInfo(grade) {
+  const en = {
+    '입문':'Pre-TOPIK','1급':'TOPIK Level 1','2급':'TOPIK Level 2',
+    '3급':'TOPIK Level 3','4급':'TOPIK Level 4','5급':'TOPIK Level 5','6급':'TOPIK Level 6'
+  };
+  return {grade, gradeEn: en[grade]||grade, color: TOPIK_GRADE_COLORS[grade]||'#94a3b8'};
+}
+function averageGrades(g1, g2) {
+  const n1 = TOPIK_GRADE_NUM[g1]||0, n2 = TOPIK_GRADE_NUM[g2]||0;
+  return TOPIK_GRADE_LIST[Math.round((n1+n2)/2)];
+}
+
+// ── Difficulty label ──────────────────────────────────────────────────────────
+function diffLabel(d) {
+  return ['','1급','2급','3급','4급','5급','6급'][d] || d+'급';
+}
+function diffColor(d) {
+  return ['','#10b981','#3b82f6','#6366f1','#8b5cf6','#f59e0b','#ef4444'][d] || '#94a3b8';
+}
+
+// ── Generate one question ─────────────────────────────────────────────────────
+function generateEvalQuestion(ability, usedSet) {
+  if (!EVAL_POOLS) EVAL_POOLS = buildEvalPools();
+  const d = Math.min(6, Math.max(1, Math.round(ability)));
+
+  // Try current difficulty, then adjacent
+  let entry = null;
+  for (const td of [d, d-1, d+1, d-2, d+2, 1, 2, 3]) {
+    const pool = (EVAL_POOLS[td]||[]).filter(x => !usedSet.has(x.cat.id+'_'+x.w.no));
+    if (pool.length) { entry = pool[Math.floor(Math.random()*pool.length)]; break; }
+  }
+  if (!entry) return null;
+  const {cat, w} = entry;
+  usedSet.add(cat.id+'_'+w.no);
+
+  // Distractors: from same or nearby difficulty
+  const distPool = [];
+  for (const td of [d, d-1, d+1, d+2]) {
+    (EVAL_POOLS[td]||[]).forEach(x => {
+      if (x.w.e !== w.e && x.w.k !== w.k) distPool.push(x);
+    });
+  }
+  // Shuffle and pick 3
+  for (let i=distPool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[distPool[i],distPool[j]]=[distPool[j],distPool[i]];}
+  const dists = distPool.slice(0, 3);
+
+  // 70% type A: Korean → English,  30% type B: English → Korean
+  const typeA = Math.random() < 0.70;
+  let prompt, sentence, choices, correctIdx;
+  if (typeA) {
+    prompt = w.k;
+    sentence = w.s || null;
+    const raw = [w.e, ...dists.map(x=>x.w.e)];
+    for (let i=raw.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[raw[i],raw[j]]=[raw[j],raw[i]];}
+    choices = raw; correctIdx = choices.indexOf(w.e);
+  } else {
+    prompt = w.e;
+    sentence = null;
+    const raw = [w.k, ...dists.map(x=>x.w.k)];
+    for (let i=raw.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[raw[i],raw[j]]=[raw[j],raw[i]];}
+    choices = raw; correctIdx = choices.indexOf(w.k);
+  }
+  return { typeA, prompt, sentence, choices, correctIdx, difficulty: d, word: w, cat };
+}
+
+// ── Eval history (localStorage) ───────────────────────────────────────────────
+function getEvalHistory() {
+  try { return JSON.parse(localStorage.getItem('bwk_eval_history')||'[]'); } catch(e) { return []; }
+}
+function saveEvalResult(result) {
+  const h = getEvalHistory();
+  h.unshift(result);
+  if (h.length > 20) h.length = 20;
+  try { localStorage.setItem('bwk_eval_history', JSON.stringify(h)); } catch(e) {}
+}
+
+// Returns info about the current pair (2-attempt system)
+function evalPairStatus() {
+  const h = getEvalHistory();
+  if (!h.length) return {phase:'start', attempt:1};
+  const latest = h[0];
+  if (latest.attemptNum === 1) return {phase:'one_done', attempt:2, pairId:latest.pairId, g1:latest.grade};
+  return {phase:'pair_done', g1:h[1]?.grade, g2:latest.grade, finalGrade:latest.finalGrade};
+}
+
+// ── Start test ────────────────────────────────────────────────────────────────
+function startEval() {
+  if (!EVAL_POOLS) EVAL_POOLS = buildEvalPools();
+  const status = evalPairStatus();
+  const pairId = status.phase === 'one_done' ? status.pairId : Date.now();
+  EVAL_STATE = {
+    questions: [],
+    currentQ: -1,
+    answers: [],            // {correct, difficulty}
+    stats: {1:{c:0,t:0},2:{c:0,t:0},3:{c:0,t:0},4:{c:0,t:0},5:{c:0,t:0},6:{c:0,t:0}},
+    ability: EVAL_ABILITY_START,
+    usedSet: new Set(),
+    pairId,
+    attemptNum: status.phase === 'one_done' ? 2 : 1,
+    answerLocked: false
+  };
+  // Pre-generate first question
+  const q = generateEvalQuestion(EVAL_STATE.ability, EVAL_STATE.usedSet);
+  if (q) { EVAL_STATE.questions.push(q); EVAL_STATE.currentQ = 0; }
+  renderEvalQuestion();
+}
+
+// ── Render helpers ────────────────────────────────────────────────────────────
+function renderEvalPanel() {
+  const panel = document.getElementById('mp-panel-3');
+  if (EVAL_STATE && EVAL_STATE.currentQ >= 0 && EVAL_STATE.currentQ < EVAL_TOTAL_Q && !EVAL_STATE.finished) {
+    renderEvalQuestion(); return;
+  }
+  if (EVAL_STATE && EVAL_STATE.finished) {
+    renderEvalResult(); return;
+  }
+  // Landing screen
+  const status = evalPairStatus();
+  const history = getEvalHistory();
+
+  let pairHtml = '';
+  if (status.phase === 'start') {
+    pairHtml = `
+      <div class="eval-pair-dots">
+        <div class="eval-dot active">1</div>
+        <div class="eval-dot empty">2</div>
+      </div>
+      <div style="font-size:.75rem;color:var(--tx3);margin-bottom:16px">2번 시험 후 평균 등급이 확정됩니다<br>Grade is set after 2 attempts</div>
+      <button class="eval-btn eval-btn-primary" onclick="startEval()">🎯 시험 시작 · Start Test</button>`;
+  } else if (status.phase === 'one_done') {
+    const c = TOPIK_GRADE_COLORS[status.g1]||'#6366f1';
+    pairHtml = `
+      <div style="font-size:.72rem;color:var(--tx3);margin-bottom:6px">1차 결과 · Attempt 1 Result</div>
+      <div style="font-size:1.6rem;font-weight:900;color:${c};margin-bottom:4px">${status.g1}</div>
+      <div class="eval-pair-dots">
+        <div class="eval-dot done">✓</div>
+        <div class="eval-dot active">2</div>
+      </div>
+      <div style="font-size:.75rem;color:var(--tx3);margin-bottom:16px">2차 시험으로 등급이 확정됩니다<br>Take attempt 2 to finalize your grade</div>
+      <button class="eval-btn eval-btn-primary" onclick="startEval()">🎯 2차 시험 시작 · Start Attempt 2</button>`;
+  } else {
+    const c1 = TOPIK_GRADE_COLORS[status.g1]||'#6366f1';
+    const c2 = TOPIK_GRADE_COLORS[status.g2]||'#6366f1';
+    const cf = TOPIK_GRADE_COLORS[status.finalGrade]||'#6366f1';
+    pairHtml = `
+      <div style="font-size:.72rem;color:var(--tx3);margin-bottom:4px">최종 등급 · Final Grade</div>
+      <div style="font-size:2.5rem;font-weight:900;color:${cf};margin-bottom:2px">${status.finalGrade}</div>
+      <div style="font-size:.7rem;color:var(--tx3);margin-bottom:10px">${gradeInfo(status.finalGrade).gradeEn}</div>
+      <div class="eval-pair-dots">
+        <div class="eval-dot done" style="background:${c1};border-color:${c1}">1</div>
+        <div class="eval-dot done" style="background:${c2};border-color:${c2}">2</div>
+      </div>
+      <div style="font-size:.72rem;color:var(--tx3);margin-bottom:4px">1차: <strong style="color:${c1}">${status.g1}</strong> · 2차: <strong style="color:${c2}">${status.g2}</strong></div>
+      <button class="eval-btn eval-btn-secondary" style="margin-top:12px" onclick="resetEvalPair()">🔄 다시 평가하기 · Retake Evaluation</button>`;
+  }
+
+  // History table
+  let histHtml = '';
+  if (history.length) {
+    const rows = history.slice(0,10).map(h => {
+      const c = TOPIK_GRADE_COLORS[h.grade]||'#94a3b8';
+      const dt = h.date ? new Date(h.date).toLocaleDateString('ko-KR',{month:'short',day:'numeric'}) : '—';
+      const acc = h.totalQ ? Math.round(h.totalCorrect/h.totalQ*100)+'%' : '—';
+      return `<tr>
+        <td>${dt}</td>
+        <td><span class="eval-grade-chip" style="background:${c}22;color:${c}">${h.grade}</span></td>
+        <td>${acc} (${h.totalCorrect||0}/${h.totalQ||50})</td>
+        <td style="font-size:.65rem;color:var(--tx3)">${h.attemptNum}차</td>
+      </tr>`;
+    }).join('');
+    histHtml = `
+      <div class="mp-sec-title" style="margin:18px 0 10px">📋 평가 기록 · Evaluation History</div>
+      <table class="eval-hist-table">
+        <thead><tr><th>날짜</th><th>등급</th><th>정답률</th><th>시도</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  panel.innerHTML = `
+    <div class="eval-start">
+      <div class="eval-start-hero">
+        <div style="font-size:1.1rem;font-weight:900;color:var(--tx);margin-bottom:4px">🎯 TOPIK 등급 평가</div>
+        <div style="font-size:.73rem;color:var(--tx3);margin-bottom:14px">
+          50문제 적응형 테스트 · 70%: 한국어→영어, 30%: 영어→한국어<br>
+          쉬운 문제부터 실력에 맞게 난이도가 올라갑니다
+        </div>
+        ${pairHtml}
+      </div>
+      ${histHtml}
+    </div>`;
+}
+
+function renderEvalQuestion() {
+  const panel = document.getElementById('mp-panel-3');
+  if (!EVAL_STATE) return;
+  const s = EVAL_STATE;
+  const qIdx = s.currentQ;
+  const q = s.questions[qIdx];
+  if (!q) return;
+  const pct = Math.round(qIdx/EVAL_TOTAL_Q*100);
+  const d = q.difficulty;
+  const dc = diffColor(d);
+
+  panel.innerHTML = `
+    <div class="eval-q-wrap">
+      <div class="eval-topbar">
+        <div class="eval-qnum">${qIdx+1} / ${EVAL_TOTAL_Q}</div>
+        <div class="eval-progress"><div class="eval-progress-fill" style="width:${pct}%"></div></div>
+        <div class="eval-diff" style="background:${dc}22;color:${dc}">${diffLabel(d)}</div>
+      </div>
+      <div class="eval-prompt-wrap">
+        <div class="eval-type-lbl">${q.typeA ? '한국어 → 영어 뜻 선택' : '영어 → 한국어 단어 선택'}</div>
+        <div class="eval-word">${q.prompt}</div>
+        ${q.sentence ? `<div class="eval-sentence">"${q.sentence}"</div>` : ''}
+      </div>
+      <div class="eval-choices">
+        ${q.choices.map((ch,i)=>`
+          <button class="eval-choice" id="ec${i}" onclick="submitEvalAnswer(${i})">${ch}</button>
+        `).join('')}
+      </div>
+      <div id="eval-feedback" style="min-height:36px;margin-top:8px"></div>
+    </div>`;
+}
+
+function submitEvalAnswer(chosen) {
+  if (!EVAL_STATE || EVAL_STATE.answerLocked) return;
+  EVAL_STATE.answerLocked = true;
+  const s = EVAL_STATE;
+  const q = s.questions[s.currentQ];
+  const correct = chosen === q.correctIdx;
+
+  // Visual feedback
+  document.querySelectorAll('.eval-choice').forEach((btn,i)=>{
+    btn.disabled = true;
+    if (i === q.correctIdx) btn.classList.add('correct');
+    else if (i === chosen && !correct) btn.classList.add('wrong');
+  });
+  const fb = document.getElementById('eval-feedback');
+  if (fb) {
+    fb.className = 'eval-feedback ' + (correct?'ok':'no');
+    fb.textContent = correct ? '✓ 정답! Correct!' : `✗ 오답. 정답: ${q.choices[q.correctIdx]}`;
+  }
+
+  // Update state
+  s.answers.push({correct, difficulty:q.difficulty});
+  const st = s.stats[q.difficulty];
+  if (st) { st.t++; if (correct) st.c++; }
+  if (correct) s.ability = Math.min(EVAL_ABILITY_MAX, s.ability + EVAL_CORRECT_DELTA);
+  else          s.ability = Math.max(EVAL_ABILITY_MIN, s.ability - EVAL_WRONG_DELTA);
+
+  // Next question after 800ms
+  setTimeout(() => {
+    if (s.currentQ + 1 >= EVAL_TOTAL_Q) {
+      finishEval();
+    } else {
+      const nextQ = generateEvalQuestion(s.ability, s.usedSet);
+      if (nextQ) { s.questions.push(nextQ); s.currentQ++; }
+      else s.currentQ++;
+      s.answerLocked = false;
+      renderEvalQuestion();
+    }
+  }, 800);
+}
+
+function finishEval() {
+  const s = EVAL_STATE;
+  const totalCorrect = s.answers.filter(a=>a.correct).length;
+  const grade = abilityToGrade(s.ability);
+
+  // 2-attempt averaging
+  const status = evalPairStatus();
+  let finalGrade = grade;
+  if (s.attemptNum === 2 && status.phase === 'one_done') {
+    finalGrade = averageGrades(status.g1, grade);
+  }
+
+  const result = {
+    date: Date.now(),
+    grade,
+    finalGrade,
+    totalCorrect,
+    totalQ: EVAL_TOTAL_Q,
+    finalAbility: s.ability,
+    stats: s.stats,
+    attemptNum: s.attemptNum,
+    pairId: s.pairId
+  };
+  saveEvalResult(result);
+  s.finished = true;
+  s.result = result;
+  renderEvalResult();
+}
+
+function renderEvalResult() {
+  const panel = document.getElementById('mp-panel-3');
+  const s = EVAL_STATE;
+  const r = s.result;
+  const gi = gradeInfo(r.grade);
+  const status = evalPairStatus();
+  const acc = Math.round(r.totalCorrect/r.totalQ*100);
+
+  // Per-level breakdown
+  const lvNames = {1:'Lv1 (1급)',2:'Lv2 (2급)',3:'Lv3 (3급)',4:'Lv4 (4급)',5:'Lv5 (5급)',6:'Lv6 (6급)'};
+  let lvHtml = '';
+  for (let d=1;d<=6;d++) {
+    const st = r.stats[d];
+    if (!st || st.t === 0) continue;
+    const p = Math.round(st.c/st.t*100);
+    const dc = diffColor(d);
+    lvHtml += `<div class="eval-lv-row">
+      <span style="font-size:.67rem;color:var(--tx3);min-width:68px">${lvNames[d]}</span>
+      <div class="eval-lv-bar"><div class="eval-lv-fill" style="width:${p}%;background:${dc}"></div></div>
+      <span style="font-size:.67rem;color:var(--tx3);min-width:44px;text-align:right">${st.c}/${st.t} (${p}%)</span>
+    </div>`;
+  }
+
+  let actionHtml = '';
+  if (r.attemptNum === 1) {
+    actionHtml = `
+      <div style="font-size:.75rem;color:var(--tx3);margin:12px 0 8px">1차 완료 · 2차 시험으로 등급이 확정됩니다</div>
+      <button class="eval-btn eval-btn-primary" onclick="startEval()">🎯 2차 시험 시작 · Start Attempt 2</button>
+      <button class="eval-btn eval-btn-secondary" onclick="EVAL_STATE=null;renderEvalPanel()">나중에 하기 · Later</button>`;
+  } else {
+    const fg = r.finalGrade;
+    const fc = TOPIK_GRADE_COLORS[fg]||'#6366f1';
+    const prev = getEvalHistory()[1];
+    actionHtml = `
+      <div style="background:${fc}18;border-radius:12px;padding:14px;margin:14px 0;text-align:center">
+        <div style="font-size:.72rem;color:var(--tx3);margin-bottom:4px">최종 확정 등급 · Final Grade</div>
+        <div style="font-size:2.2rem;font-weight:900;color:${fc}">${fg}</div>
+        <div style="font-size:.72rem;color:${fc};opacity:.8">${gradeInfo(fg).gradeEn}</div>
+        ${prev?`<div style="font-size:.67rem;color:var(--tx3);margin-top:4px">1차: ${prev.grade} · 2차: ${r.grade} → 평균</div>`:''}
+      </div>
+      <button class="eval-btn eval-btn-secondary" onclick="resetEvalPair()">🔄 다시 평가하기 · Retake</button>`;
+  }
+
+  panel.innerHTML = `
+    <div class="eval-result">
+      <div style="text-align:center;padding:16px 0 12px;border-bottom:1px solid var(--brd2);margin-bottom:14px">
+        <div style="font-size:.7rem;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">${r.attemptNum}차 결과 · Attempt ${r.attemptNum}</div>
+        <div class="eval-res-grade" style="color:${gi.color}">${r.grade}</div>
+        <div class="eval-res-en" style="color:${gi.color}">${gi.gradeEn}</div>
+        <div style="font-size:.82rem;color:var(--tx2)">정답률 ${acc}% · ${r.totalCorrect} / ${r.totalQ}</div>
+      </div>
+      <div style="font-size:.72rem;font-weight:700;color:var(--tx3);margin-bottom:8px">레벨별 성취도 · Performance by Level</div>
+      ${lvHtml}
+      ${actionHtml}
+    </div>`;
+}
+
+function resetEvalPair() {
+  // Clear only the pairing state (keep history for records)
+  // We add a sentinel entry to mark "new pair started"
+  EVAL_STATE = null;
+  renderEvalPanel();
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
