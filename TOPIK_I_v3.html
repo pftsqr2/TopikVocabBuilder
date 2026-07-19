@@ -2033,6 +2033,26 @@ function getRecentCats() {
   try { return JSON.parse(localStorage.getItem('bwk_recent_cats')||'[]'); } catch(e) { return []; }
 }
 
+// ── Grade-appropriate category recommendations ───────────────────────────────
+function getGradeRecommendedCats(grade, n) {
+  const gNum = (typeof TOPIK_GRADE_NUM !== 'undefined' ? TOPIK_GRADE_NUM[grade] : null) ?? 0;
+  // Map numeric grade → lv_min range of matching categories
+  const rangeMap = {0:[1,2],1:[1,2],2:[1,2],3:[3,4],4:[3,4],5:[5,6],6:[5,6]};
+  const [lo, hi] = rangeMap[gNum] || [1,2];
+  let cats = DATA.filter(c => { const lm=c.lv_min||1; return lm>=lo && lm<=hi; });
+  if (!cats.length) cats = DATA;
+  return cats
+    .map(c => {
+      const unmastered = c.words.filter(w => getMastery(c.id, w.no) < 2).length;
+      const started = c.words.some(w => getMastery(c.id, w.no) > 0);
+      return { cat:c, unmastered, sort:(started?10000:0)+unmastered };
+    })
+    .filter(x => x.unmastered > 0)
+    .sort((a,b) => b.sort - a.sort)
+    .slice(0, n||5)
+    .map(x => x.cat);
+}
+
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 // ── CARD MASTERY ──────────────────────────────────────────────────────────────
@@ -2195,24 +2215,54 @@ function updateWelcomeCTA() {
   let ctaEmoji  = '👋';
   let ctaSub    = '';
 
+  // Check for eval-derived grade to drive recommendations
+  const _evalH = (() => { try { return JSON.parse(localStorage.getItem('bwk_eval_history')||'[]'); } catch(e){ return []; } })();
+  const _evalGradeWel = _evalH.find(h=>h.finalGrade)?.finalGrade || null;
+
   if (isNewUser) {
-    // Brand-new: send to category 1
-    targetCat = DATA[0];
-    ctaLabel  = '🚀 처음이라면 여기서 시작하세요! · Start here if you\'re new';
-    ctaEmoji  = '👋';
+    // Brand-new: if eval grade exists, send to grade-appropriate category; else category 1
+    if (_evalGradeWel) {
+      const recCats = getGradeRecommendedCats(_evalGradeWel, 1);
+      targetCat = recCats[0] || DATA[0];
+      ctaLabel  = `🎯 ${_evalGradeWel} 추천 폴더 · Recommended for ${_evalGradeWel}`;
+      ctaEmoji  = '⭐';
+    } else {
+      targetCat = DATA[0];
+      ctaLabel  = '🚀 처음이라면 여기서 시작하세요! · Start here if you\'re new';
+      ctaEmoji  = '👋';
+    }
   } else {
     // Returning user: find where to continue
     let continueCat = null;
+    let isGradeRec = false;
 
-    // 1st priority — last studied category if not fully mastered
-    if (lastId) {
-      const lc = DATA.find(c => c.id === lastId);
-      if (lc && catMasteredCount(lc) < lc.words.length) continueCat = lc;
+    if (_evalGradeWel) {
+      // 1st priority — last studied cat if grade-appropriate AND unfinished
+      if (lastId) {
+        const lc = DATA.find(c => c.id === lastId);
+        if (lc && catMasteredCount(lc) < lc.words.length) {
+          // Check if it's in the right grade range
+          const gNum = (typeof TOPIK_GRADE_NUM !== 'undefined' ? TOPIK_GRADE_NUM[_evalGradeWel] : 0) || 0;
+          const rangeMap = {0:[1,2],1:[1,2],2:[1,2],3:[3,4],4:[3,4],5:[5,6],6:[5,6]};
+          const [lo,hi] = rangeMap[gNum]||[1,2];
+          const lm = lc.lv_min||1;
+          if (lm>=lo && lm<=hi) continueCat = lc;
+        }
+      }
+      // 2nd priority — top grade-appropriate category with most unmastered words
+      if (!continueCat) {
+        const recs = getGradeRecommendedCats(_evalGradeWel, 1);
+        if (recs.length) { continueCat = recs[0]; isGradeRec = true; }
+      }
     }
 
-    // 2nd priority — first category that still has unmastered words
+    // Fallback — last studied or first unmastered (original logic)
     if (!continueCat) {
-      continueCat = DATA.find(c => catMasteredCount(c) < c.words.length) || DATA[0];
+      if (lastId) {
+        const lc = DATA.find(c => c.id === lastId);
+        if (lc && catMasteredCount(lc) < lc.words.length) continueCat = lc;
+      }
+      if (!continueCat) continueCat = DATA.find(c => catMasteredCount(c) < c.words.length) || DATA[0];
     }
 
     targetCat = continueCat;
@@ -2220,17 +2270,21 @@ function updateWelcomeCTA() {
     const total = targetCat.words.length;
     const pct   = Math.round(done / total * 100);
 
-    if (done === 0) {
+    if (isGradeRec) {
+      ctaLabel = `🎯 ${_evalGradeWel} 추천 폴더 · Recommended for ${_evalGradeWel}`;
+      ctaEmoji = '⭐';
+      ctaSub   = done > 0 ? ` · ${done}/${total}단어 (${pct}%)` : '';
+    } else if (done === 0) {
       ctaLabel = `⏭ 다음 카테고리 · Next up`;
       ctaEmoji = '🎯';
     } else {
       ctaLabel = `▶ 이어서 학습하기 · Continue`;
       ctaEmoji = '🔄';
+      ctaSub = ` · ${done}/${total}단어 (${pct}%)`;
     }
-    ctaSub = ` · ${done}/${total}단어 (${pct}%)`;
 
     // If last cat is done, show a completion nudge
-    if (lastId && (() => { const lc = DATA.find(c=>c.id===lastId); return lc && catMasteredCount(lc)>=lc.words.length; })()) {
+    if (!isGradeRec && lastId && (() => { const lc = DATA.find(c=>c.id===lastId); return lc && catMasteredCount(lc)>=lc.words.length; })()) {
       ctaLabel = `✅ 완료! 다음으로 이동 · Category complete — next!`;
       ctaEmoji = '🏆';
       ctaSub   = '';
@@ -2981,7 +3035,8 @@ function renderMpDashboard(prog, timeSpent, ud){
   else if(_p2<0.65){const n=Math.ceil(_t2*0.65)-_d2;ctaKo=`TOPIK 5급까지 중급 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more intermediate words to reach Level 5!`;}
   else if(_p3<0.50){const n=Math.ceil(_t3*0.50)-_d3;ctaKo=`TOPIK 6급까지 고급 단어 ${n}개를 더 마스터하세요!`;ctaEn=`Master ${n} more advanced words to reach Level 6!`;}
   else{ctaKo='모든 단어를 마스터했어요! 최고 등급 달성 🏆';ctaEn='All words mastered! Top grade achieved 🏆';}
-  const _recCat=DATA.find(c=>c.words.some(w=>getMastery(c.id,w.no)<2))||DATA[0];
+  const _gradeRecs = getGradeRecommendedCats(_dg.grade, 4);
+  const _recCat = _gradeRecs[0] || DATA.find(c=>c.words.some(w=>getMastery(c.id,w.no)<2)) || DATA[0];
 
   // ── Recent folders ────────────────────────────────────────────
   const recentIds = getRecentCats();
@@ -3097,6 +3152,37 @@ function renderMpDashboard(prog, timeSpent, ud){
         <div class="kl">일 연속<br>Day Streak</div>
       </div>
     </div>
+
+    ${_gradeRecs.length ? `
+    <div class="mp-sec-title" style="margin:16px 0 10px">🎯 ${_dg.grade} 추천 폴더 · Recommended for ${_dg.gradeEn}</div>
+    <div class="mp-recent-grid">
+      ${_gradeRecs.map(cat=>{
+        const ns=Math.ceil(cat.words.length/10);
+        let qs=0; for(let i=0;i<ns;i++){const e=prog[String(cat.id)+'_'+i];if(e?.pct)qs+=e.pct;}
+        const qp=Math.round(qs/ns);
+        let _cm1=0,_cm2=0;
+        cat.words.forEach(w=>{const lv=getMastery(cat.id,w.no);if(lv===2)_cm2++;else if(lv===1)_cm1++;});
+        const mp2=Math.round(_cm2/cat.words.length*100);
+        const mp1=Math.round(_cm1/cat.words.length*100);
+        const unmastered=cat.words.filter(w=>getMastery(cat.id,w.no)<2).length;
+        return `<div class="mp-recent-card" onclick="closeMyPage();showCat(${cat.id});setMode('card')" style="border-top:3px solid ${_dg.color}">
+          <div class="mp-recent-nm">${cat.ko}</div>
+          <div class="mp-recent-en">${cat.en}</div>
+          <div style="font-size:.6rem;color:${_dg.color};font-weight:700;margin-top:3px">${unmastered}단어 남음 · ${unmastered} left</div>
+          <div style="margin-top:5px">
+            <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--tx3);margin-bottom:2px"><span>🃏 암기</span><span>${mp2}%</span></div>
+            <div style="height:4px;background:var(--brd2);border-radius:2px;display:flex;overflow:hidden">
+              <div style="width:${mp2}%;background:#10b981"></div>
+              <div style="width:${mp1}%;background:#f59e0b"></div>
+            </div>
+          </div>
+          <div style="margin-top:5px">
+            <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--tx3);margin-bottom:2px"><span>📝 퀴즈</span><span>${qp}%</span></div>
+            <div style="height:4px;background:var(--brd2);border-radius:2px"><div style="width:${qp}%;height:100%;border-radius:2px;background:#3b82f6"></div></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
 
     ${recentHtml}
 
