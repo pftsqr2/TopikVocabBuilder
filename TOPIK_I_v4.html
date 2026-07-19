@@ -2964,20 +2964,27 @@ function renderMpDashboard(prog, timeSpent, ud){
       <span style="font-size:.8rem;font-weight:700;color:#f59e0b">${nextBadge.pct}%</span>
     </div>` : '';
 
-  // ── Quiz progress: current folder or overall ──────────────────
-  let quizLabel='전체 퀴즈 진도 · Overall Quiz', quizVal='', quizPct2=0;
-  if (CC) {
-    const ns=Math.ceil(CC.words.length/10);
-    let qs=0,qd=0;
-    for(let i=0;i<ns;i++){const e=prog[String(CC.id)+'_'+i];if(e?.pct){qs+=e.pct;qd++;}}
-    quizPct2=Math.round(qs/ns);
-    quizVal=`${qd}/${ns} Sets`;
-    quizLabel=`📂 ${CC.ko} 퀴즈`;
-  } else {
-    quizPct2=Math.round(doneSets/TOTAL_SETS*100);
-    quizVal=`${doneSets}/${TOTAL_SETS}`;
-    quizLabel='퀴즈 진도 · Quiz';
-  }
+  // ── Grade-specific quiz progress ─────────────────────────────
+  // Filter categories by primary word level matching current grade focus
+  let _gradeQuizLv = 1;
+  if (tg.grade==='3급'||tg.grade==='4급') _gradeQuizLv=2;
+  else if (tg.grade==='5급') _gradeQuizLv=3;
+  const _gradeCats = tg.grade==='6급' ? DATA : DATA.filter(c=>{
+    let lv1=0,lv2=0,lv3=0;
+    c.words.forEach(w=>{if(w.lv<=1)lv1++;else if(w.lv===2)lv2++;else lv3++;});
+    if(_gradeQuizLv===1) return lv1>=lv2&&lv1>=lv3;
+    if(_gradeQuizLv===2) return lv2>lv1&&lv2>=lv3;
+    return lv3>lv1&&lv3>lv2;
+  });
+  const _gradeTotal=_gradeCats.reduce((s,c)=>s+Math.ceil(c.words.length/10),0);
+  let _gradeDone=0;
+  _gradeCats.forEach(c=>{
+    const ns=Math.ceil(c.words.length/10);
+    for(let i=0;i<ns;i++){if(prog[String(c.id)+'_'+i])_gradeDone++;}
+  });
+  const _gradeQuizPct=_gradeTotal?Math.round(_gradeDone/_gradeTotal*100):0;
+  const _nextGrade=tg.grade==='입문'?'1급':tg.grade==='1급'?'2급':tg.grade==='2급'?'3급':tg.grade==='3급'?'4급':tg.grade==='4급'?'5급':tg.grade==='5급'?'6급':'완료';
+  const _gradeQuizStatus=_gradeQuizPct>=100?`✅ ${_nextGrade} 준비 완료! · Ready for ${_nextGrade}!`:`${_nextGrade} 달성 중 · Working toward ${_nextGrade}`;
 
   // ── Grade CTA ─────────────────────────────────────────────────
   let _t1=0,_d1=0,_t2=0,_d2=0,_t3=0,_d3=0;
@@ -3078,9 +3085,18 @@ function renderMpDashboard(prog, timeSpent, ud){
     ${nextGoalHtml}
 
     <div class="mp-kpi-grid">
-      <div class="mp-kpi">
-        <div class="kn" style="font-size:1.1rem">${quizPct2}%</div>
-        <div class="kl" style="font-size:.6rem">${quizLabel}<br><span style="color:var(--tx3)">${quizVal}</span></div>
+      <div class="mp-kpi" style="grid-column:span 2;text-align:left;gap:6px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="kl" style="font-size:.65rem">🎓 등급 퀴즈 진도 · Grade Quiz Progress</span>
+          <span style="font-size:1rem;font-weight:800;color:${tg.color}">${_gradeDone}<span style="font-size:.68rem;font-weight:400;color:var(--tx3)"> / ${_gradeTotal} sets</span></span>
+        </div>
+        <div style="height:7px;background:var(--brd2);border-radius:4px;margin:4px 0">
+          <div style="width:${_gradeQuizPct}%;height:100%;border-radius:4px;background:linear-gradient(90deg,${tg.color},${tg.color}99);transition:.5s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:.6rem;color:${_gradeQuizPct>=100?'#10b981':'var(--tx3)'}">${_gradeQuizStatus}</span>
+          <span style="font-size:.6rem;color:var(--tx3)">${_gradeQuizPct}%</span>
+        </div>
       </div>
       <div class="mp-kpi">
         <div class="kn" style="color:${avgScore>=80?'#10b981':avgScore>=60?'#f59e0b':'#ef4444'}">${avgScore?avgScore+'%':'—'}</div>
@@ -3089,10 +3105,6 @@ function renderMpDashboard(prog, timeSpent, ud){
       <div class="mp-kpi">
         <div class="kn">${streak>0?'🔥':''}<span style="font-size:1.4rem">${streak}</span></div>
         <div class="kl">일 연속<br>Day Streak</div>
-      </div>
-      <div class="mp-kpi">
-        <div class="kn" style="font-size:1rem">✨${GAME_DATA.xp||0}</div>
-        <div class="kl">XP<br>🎯${GAME_DATA.quizzes||0}회 · 💯${GAME_DATA.perfects||0}회</div>
       </div>
     </div>
 
