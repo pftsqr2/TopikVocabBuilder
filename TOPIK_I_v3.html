@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="BW Korean">
 <link rel="manifest" href="manifest.json">
-<title>TOPIK 1-2급 단어장 · Blue Whale Korean</title>
+<title>TOPIK 1-6급 단어장 · Blue Whale Korean</title>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -544,61 +544,101 @@ body{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif
 
 /* ── Mobile ── */
 @media(max-width:700px){
-  /* Header */
+  /* ── Header ── */
   #hbg{display:block}
   #srch{display:none}
   #srch.sb-search-open{display:block;position:fixed;top:var(--hh);left:0;right:0;
     width:100%;padding:10px 16px;border-radius:0;background:#3730a3;
     border:none;border-bottom:2px solid rgba(255,255,255,.2);z-index:301;
-    font-size:.92rem;color:#fff}
+    font-size:1rem;color:#fff} /* 1rem = no iOS zoom */
   #search-icon-btn{display:flex}
+  /* Compact header: hide username, shrink buttons */
+  #uname{display:none !important}
+  .htxt{flex:1;min-width:0}
+  .htxt h1{font-size:.85rem !important}
+  .htxt .sub{display:none}
+  #mypage-btn,#logout-btn,#signin-btn{padding:5px 9px !important;font-size:.68rem !important}
+  #uarea{gap:5px}
 
-  /* Sidebar */
-  #sb{transform:translateX(-100%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
+  /* ── Sidebar ── */
+  #sb{transform:translateX(-100%);transition:transform .26s cubic-bezier(.4,0,.2,1);
+    width:min(var(--sw),82vw)} /* never wider than 82% of screen */
   #sb.open{transform:translateX(0);box-shadow:6px 0 32px rgba(30,10,60,.35)}
 
-  /* Main content */
-  #main{margin-left:0;padding:12px}
+  /* ── Main content ── */
+  #main{margin-left:0;padding:12px;
+    padding-bottom:calc(12px + env(safe-area-inset-bottom))} /* iPhone home bar */
 
-  /* Landing page quick-access */
+  /* ── iOS input zoom fix: font-size < 16px triggers auto-zoom ── */
+  .ainput{font-size:1rem !important}
+
+  /* ── Landing page ── */
   .wel-mobile-open{display:flex}
-
-  /* Eval bar labels: fewer labels on mobile */
   .wel-eval-scale span:nth-child(2),.wel-eval-scale span:nth-child(4){display:none}
   .wel-eval-scale{font-size:.62rem}
 
-  /* Card mode: bigger touch targets */
+  /* ── List view: hide example column (too many cols for 375px) ── */
+  .wt th:nth-child(4),.wt td:nth-child(4){display:none}
+  .wt th,.wt td{padding:7px 8px !important}
+  .wt td{font-size:.84rem !important}
+  /* Set header: wrap buttons and compact */
+  .bh{flex-wrap:wrap;padding:8px 10px !important;gap:5px}
+  .bh-left{flex:1 1 100%} /* full width so buttons go below */
+  .fbt{font-size:.68rem !important;padding:4px 9px !important}
+  .en-toggle{font-size:.68rem !important;padding:4px 9px !important}
+
+  /* ── Card mode: bigger touch targets ── */
   .card-filter-row{gap:5px}
   .cft{padding:8px 10px !important;font-size:.77rem !important;flex:1;text-align:center}
   .card-nav{gap:8px}
   .cnav{padding:13px 18px !important;font-size:.9rem !important}
   .cconfirm{flex:1;padding:13px 10px !important;font-size:.82rem !important}
 
-  /* Quiz */
+  /* ── Quiz ── */
   .qopts{grid-template-columns:1fr}
   .qword{font-size:1.65rem !important}
   .opt{padding:15px 14px !important}
 
-  /* Modebar: wrap buttons */
+  /* ── Evaluation tab: single-column choices ── */
+  .eval-choices{grid-template-columns:1fr !important}
+  .eval-choice{padding:14px 14px !important;font-size:.86rem !important}
+  .eval-word{font-size:1.55rem !important}
+
+  /* ── Modebar ── */
   .modebar{flex-wrap:nowrap;gap:4px;padding:4px 6px}
   .mbtn{padding:9px 8px !important;font-size:.78rem !important}
 
-  /* Stats grid */
+  /* ── Stats grid ── */
   .lv-stat-row{grid-template-columns:1fr}
 
-  /* My Page: full screen modal */
+  /* ── My Page: full screen modal ── */
   #mp-overlay{padding:0 !important;align-items:flex-start}
   #mp-box{border-radius:0 !important;max-width:100% !important;
     min-height:100dvh !important;min-height:100vh !important}
-  .mp-tabs{position:sticky;top:0;z-index:10;background:var(--surf2)}
-  .mptab{padding:12px 13px;font-size:.76rem}
+  .mp-tabs{position:sticky;top:0;z-index:10;background:var(--surf2);
+    scrollbar-width:none} /* hide tab bar scrollbar */
+  .mp-tabs::-webkit-scrollbar{display:none}
+  .mptab{padding:12px 11px;font-size:.74rem}
+  /* Tighter panel padding on full-screen */
+  .mp-panel{padding:14px !important}
+  #mp-hdr{padding:14px 16px !important}
+  /* Bottom safe area inside My Page */
+  .mp-panel.active{padding-bottom:calc(14px + env(safe-area-inset-bottom)) !important}
 
-  /* Badge notification: keep above mobile browser bar */
+  /* ── Badge notification ── */
   .badge-notif{bottom:90px;right:14px;max-width:240px}
 
-  /* XP bar */
+  /* ── XP bar ── */
   #xp-bar-row{padding:4px 12px}
   #xp-label{display:none}
+}
+
+/* ── Extra narrow (375px and below) ── */
+@media(max-width:380px){
+  .htxt h1{font-size:.78rem !important}
+  .hchip{padding:4px 6px !important;font-size:.62rem !important}
+  .mptab{padding:10px 9px !important;font-size:.68rem !important}
+  .mp-kpi-grid{grid-template-columns:repeat(2,1fr) !important}
 }
 
 /* ─── SET COMPLETE PULSE ─── */
@@ -1216,7 +1256,7 @@ body {
 <div id="auth-overlay">
   <div id="auth-box">
     <div class="auth-logo">📚</div>
-    <div class="auth-title">TOPIK 1-2급 단어장<br><span style="font-size:.75rem;font-weight:400;color:var(--tx3)">Korean Vocabulary</span></div>
+    <div class="auth-title">TOPIK 1-6급 단어장<br><span style="font-size:.75rem;font-weight:400;color:var(--tx3)">Korean Vocabulary</span></div>
     <div class="auth-sub" id="auth-sub">진도와 XP를 저장하고 뱃지를 모아보세요!<br><span style="font-size:.72rem;opacity:.7">Save your progress, earn XP &amp; collect badges</span></div>
     <div class="auth-tabs">
       <button class="atab active" id="tab-login" onclick="switchAuthTab('login')">로그인 · Login</button>
@@ -1238,8 +1278,8 @@ body {
   <button id="hbg" onclick="toggleSB()">☰</button>
   <button id="search-icon-btn" onclick="toggleMobileSearch()" title="검색">🔍</button>
   <div class="htxt" onclick="showWelcome()" style="cursor:pointer" title="홈으로">
-    <div class="sub">TOPIK 1-2급 · 339단어 · 16 Categories</div>
-    <h1>📚 TOPIK 1-2급 단어장</h1>
+    <div class="sub">TOPIK 1-6급 · 80 카테고리 · 10,326단어</div>
+    <h1>📚 TOPIK 1-6급 단어장</h1>
   </div>
   <input id="srch" type="text" placeholder="🔍 검색 · Search..." oninput="doSearch(this.value)">
   <div id="uarea">
@@ -1291,10 +1331,9 @@ body {
     </div>
     <div class="wel-eval-status" id="eval-status">로그인 후 확인 · Log in to see your level</div>
     <div class="wel-eval-opinion">
-      💬 <b>선생님 코멘트</b>: 이 단어장의 339개를 모두 외우면 <b>TOPIK 1-6급</b> 기초 어휘 완성!
-      3급을 목표로 한다면 추가 단어(~2,000개)와 문법이 추가로 필요해요.
-      하지만 이 339개는 <b>가장 자주 쓰이는 핵심 어휘</b>라서 시작하기에 완벽합니다 🐋<br>
-      <span style="color:var(--tx3)">Teacher's note: These 339 words cover essential TOPIK Level 1–6 vocabulary. Start with Level 1–2 scenarios and work your way up!</span>
+      💬 <b>선생님 코멘트</b>: 이 단어장의 10,326개를 모두 외우면 <b>TOPIK 1-6급</b> 핵심 어휘 완성!
+      각 급수별로 필수 단어를 단계적으로 학습하고, 문법과 함께 실력을 키워 보세요 🐋<br>
+      <span style="color:var(--tx3)">Teacher's note: These 10,326 words cover essential TOPIK Level 1–6 vocabulary across 80 categories. Work through each level step by step!</span>
     </div>
   </div>
 
@@ -1351,8 +1390,8 @@ body {
 
   <!-- ④ 앱 브랜딩 (최하단) -->
   <div class="wel-hero">
-    <h2>🐋 TOPIK 1-2급 단어장</h2>
-    <div class="sub">TOPIK Level 1–2 · 339단어 · 16 카테고리</div>
+    <h2>🐋 TOPIK 1-6급 단어장</h2>
+    <div class="sub">TOPIK Level 1–6 · 10,326단어 · 80 카테고리</div>
     <div class="wel-stats">
       <div class="wel-stat"><div class="n" id="ws-words">339</div><div class="l">단어 · Words</div></div>
       <div class="wel-stat"><div class="n">16</div><div class="l">카테고리 · Cats</div></div>
